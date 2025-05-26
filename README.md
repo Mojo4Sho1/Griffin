@@ -46,7 +46,7 @@ This section describes how to prepare the datasets for use with this project.
 
 ### Using Provided Processed Datasets
 
-We provide already processed datasets for your convenience. You can download them from [Google Drive](https://drive.google.com/drive/folders/1-_00000000000000000000000000000000000000000?usp=sharing).
+We provide already processed datasets for your convenience. You can download them from [Google Drive](https://drive.google.com/drive/folders/117Wuj5dCvLyPCQrLefBXnBSn40GrEy5N?usp=share_link).
 
 The datasets are organized as follows:
 
@@ -68,7 +68,7 @@ This section covers how to use or pretrain your own models, and finetune them on
 
 ### Using Provided Pretrained Checkpoints
 
-We provide pretrained model checkpoints to get you started quickly. You can download them from [Google Drive](https://drive.google.com/drive/folders/1-_00000000000000000000000000000000000000000?usp=sharing).
+We provide pretrained model checkpoints to get you started quickly. You can download them from [Google Drive](https://drive.google.com/drive/folders/117Wuj5dCvLyPCQrLefBXnBSn40GrEy5N?usp=share_link).
 
 The checkpoints are organized as follows:
 
