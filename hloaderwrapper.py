@@ -184,7 +184,6 @@ def buildindice_sample(shuffle, lens, batch_size, sample_config, sample_seed=42)
             ind.append(idx)
     return torch.cat(ind, dim=0) # shuffle within nodetype. node type not shuffled, left for dataloader shuffle
 
-defaultsubgraphargs = {"hop": 0, "floatemb": SimpleRepeater(), "fanout": INF}
 
 class LoaderWrapper:
 
