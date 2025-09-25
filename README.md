@@ -46,8 +46,7 @@ This section describes how to prepare the datasets for use with this project.
 
 ### Using Provided Processed Datasets
 
-We provide already processed datasets for your convenience. You can download them from [Hugging Face RDB datasets collection](https://huggingface.co/datasets/yamboo/Griffin_datasets_joint_v65) and [Hugging Face Single datasets collection](https://huggingface.co/datasets/yamboo/Griffin_datasets_single_pretrain_v3). You can also download them from [Google Drive](https://drive.google.com/drive/folders/117Wuj5dCvLyPCQrLefBXnBSn40GrEy5N?usp=share_link).
-
+We provide already processed datasets for your convenience. You can download them from [Hugging Face RDB datasets collection](https://huggingface.co/datasets/yamboo/Griffin_datasets_joint_v65) and [Hugging Face Single datasets collection](https://huggingface.co/datasets/yamboo/Griffin_datasets_single_pretrain_v3).
 The datasets are organized as follows:
 
 ```bash
@@ -68,7 +67,7 @@ This section covers how to use or pretrain your own models, and finetune them on
 
 ### Using Provided Pretrained Checkpoints
 
-We provide pretrained model checkpoints to get you started quickly. You can download them from [Hugging Face checkpoints collection](https://huggingface.co/yamboo/Griffin_models). You can also download them from [Google Drive](https://drive.google.com/drive/folders/117Wuj5dCvLyPCQrLefBXnBSn40GrEy5N?usp=share_link).
+We provide pretrained model checkpoints to get you started quickly. You can download them from [Hugging Face checkpoints collection](https://huggingface.co/yamboo/Griffin_models).
 
 The checkpoints are organized as follows:
 
