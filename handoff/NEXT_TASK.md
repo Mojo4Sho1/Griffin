@@ -8,7 +8,7 @@ Verify and document one minimal, representative baseline profiling slice command
 - A confirmed minimal slice is required before any reliable baseline measurements or annotation work.
 
 ## Exact Outputs Expected
-- Run `make profiling-preflight` first, then execute the readiness checklist in `profiling/PREFLIGHT.md`; document pass/fail at the top of the run record.
+- Activate the project environment, then run `make profiling-preflight`, then execute the readiness checklist in `profiling/PREFLIGHT.md`; document pass/fail at the top of the run record.
 - Update `profiling/ASSETS_STATUS.md` with current path availability for assets required by the selected minimal slice.
 - Update `profiling/COMMANDS.md` with one verified baseline profiling command (including resolved script, required args, and output path conventions).
 - Fill the `Known-Good Commands` section in `profiling/COMMANDS.md` (status and concrete commands).

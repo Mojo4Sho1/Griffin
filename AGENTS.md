@@ -30,7 +30,7 @@ This fork exists to profile and analyze Griffin GPU execution behavior to identi
 - Track only lightweight summaries, manifests, and findings docs in version control.
 
 ## Execution Environment
-- Before any run or profiling task, execute `make profiling-preflight`.
+- Before any run or profiling task, activate the project environment, then execute `make profiling-preflight`.
 - Environment definition is `environment.yml`.
 - For baseline profiling slices, prefer `hconfig_profiling_single_gpu.yaml` unless the task explicitly requires multi-process behavior.
 - If preflight or environment setup fails, document the blocker in `profiling/RUNS.md` and `handoff/CURRENT_STATUS.md`.

@@ -2,15 +2,7 @@
 
 Use this checklist before executing the task in `handoff/NEXT_TASK.md`.
 
-## 0) Run The One-Command Preflight (Preferred)
-
-```bash
-make profiling-preflight
-```
-
-If this fails, resolve the first failing check, then rerun.
-
-## 1) Create And Activate Conda Environment
+## 0) Create And Activate Conda Environment
 
 ```bash
 conda env create -f environment.yml
@@ -23,7 +15,7 @@ If the env already exists:
 conda activate griffin-profiling
 ```
 
-## 2) Install GPU-Coupled Runtime Packages
+## 1) Install GPU-Coupled Runtime Packages
 
 Install PyTorch matching this server's CUDA/runtime stack first, then PyG.
 Example pattern (adjust CUDA index URL if needed):
@@ -33,7 +25,15 @@ pip install --index-url https://download.pytorch.org/whl/cu121 torch torchvision
 pip install torch_geometric
 ```
 
-## 3) Verify Core Tooling
+## 2) Run The One-Command Preflight (Preferred)
+
+```bash
+make profiling-preflight
+```
+
+If this fails, resolve the first failing check, then rerun.
+
+## 3) Verify Core Tooling (Optional Manual Check)
 
 ```bash
 command -v nsys
