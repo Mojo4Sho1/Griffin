@@ -1,0 +1,24 @@
+name: griffin-profiling
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pyyaml
+  - numpy
+  - seaborn
+  - pip:
+      - accelerate
+      - datasets
+      - evaluate
+      - sentence_transformers
+      - einops
+      - torchmetrics
+      - tensorboard
+      - safetensors
+      - pqdm
+
+# NOTE:
+# - torch and torch_geometric are intentionally not pinned here because they
+#   must match the server CUDA/driver stack. Install them after activating
+#   this env using commands in profiling/PREFLIGHT.md.

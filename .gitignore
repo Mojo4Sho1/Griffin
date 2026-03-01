@@ -1,3 +1,7 @@
 checkpoints
 datasets
 logs
+artifacts/profiles/nsys/*
+!artifacts/profiles/nsys/.gitkeep
+artifacts/profiles/ncu/*
+!artifacts/profiles/ncu/.gitkeep
