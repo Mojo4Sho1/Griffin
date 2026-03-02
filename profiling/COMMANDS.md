@@ -113,25 +113,24 @@ cat hconfig_profiling_single_gpu.yaml
 
 ## Known-Good Commands (Fill As Soon As First Run Succeeds)
 
-Status: `blocked` (last attempted 2026-03-02 UTC)
+Status: `verified` (last attempted 2026-03-02 UTC)
 
-Minimal no-profiler smoke command (attempted; launcher works, workload fails):  
-`scripts/profile_baseline.sh smoke 20260302-1541-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+Minimal no-profiler smoke command (verified end-to-end):  
+`scripts/profile_baseline.sh smoke 20260302-1636-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
 
-Minimal baseline profiler command (attempted; profiler runs and emits artifact):  
-`scripts/profile_baseline.sh nsys 20260302-1542-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+Minimal baseline profiler command (verified end-to-end with artifact):  
+`scripts/profile_baseline.sh nsys 20260302-1637-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
 
 Raw output destination used:  
-`artifacts/profiles/nsys/20260302-1542-train-completion-01.nsys-rep` (generated)
+`artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep` (generated)
 
 Blockers:
-- Selected baseline dataset path/content is missing for the chosen slice.
-- Required dataset metadata file is missing: `datasets/single-pretrain-v3/metanode.yaml`.
+- None for this bounded completion slice command path after the gather-device fix.
 
 Notes:
-- `make profiling-preflight` now passes in `griffin-profiling`.
-- Runtime dependency imports for this slice now pass (`torch_geometric` available).
-- `scripts/profile_baseline.sh` `nsys` mode remains `nsys profile ... accelerate launch ...` (no extra `--` separator).
+- `hmaintask_completion.py` gather path now uses `accelerator.device` instead of `model.device`.
+- `make profiling-preflight` passes in `griffin-profiling`.
+- Current staged dataset remains a minimal synthetic fixture for command-path verification; not production-scale profiling data.
 
 ## Annotation and Deep-Dive Command Classes
 

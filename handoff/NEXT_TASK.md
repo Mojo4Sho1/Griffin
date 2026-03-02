@@ -1,21 +1,21 @@
 # Next Task
 
 ## Single Bounded Task
-Stage `datasets/single-pretrain-v3` with required metadata files (including `metanode.yaml`), then rerun one smoke and one `nsys` baseline slice to verify execution progresses beyond `Graph(args.dataset)` initialization.
+Generate a concise baseline summary from successful `nsys` run `20260302-1637-train-completion-01` (top time consumers and runtime-domain breakdown), and record findings in profiling docs.
 
 ## Why This Is Immediate Priority
-- Environment and dependency gates are now validated (`make profiling-preflight` passes and smoke/nsys launch).
-- Dataset content is now the primary blocker preventing meaningful baseline progression.
+- The bounded completion smoke/`nsys` command path is now verified end-to-end.
+- Phase 4 requires converting the fresh successful artifact into a short actionable baseline summary before any annotation or hotspot prioritization work.
 
 ## Exact Outputs Expected
-- Stage `datasets/single-pretrain-v3` so required files exist for `Graph(args.dataset)` initialization (`metanode.yaml` minimum, plus any other required metadata/files in that dataset tree).
-- Reconfirm asset availability in `profiling/ASSETS_STATUS.md`.
-- Execute:
-  - smoke: `scripts/profile_baseline.sh smoke <run_id> hmaintask_completion.py datasets/single-pretrain-v3 logs/prof smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
-  - nsys: same command with mode `nsys` and distinct `<run_id>`
-- Add run records for both attempts in `profiling/RUNS.md` with command, commit hash, outputs, status, and concise findings.
-- Update `profiling/COMMANDS.md` `Known-Good Commands` with the latest status (`verified` if progression succeeds; `blocked` with precise blocker details if not).
-- Update `profiling/ASSETS_STATUS.md`, `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md`, and append `handoff/SESSION_LOG.md`.
+- Use `nsys` CLI reporting tools against:
+  - `artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep`
+- Produce a lightweight summary covering:
+  - overall runtime duration for the profiled run
+  - top CUDA kernels / API calls by time share (coarse, not deep kernel dive)
+  - high-level CPU/CUDA time-domain distribution sufficient to guide next instrumentation decisions
+- Record summary in profiling docs (`profiling/RUNS.md` and/or `profiling/COMMANDS.md` notes section), with commands used.
+- Update `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md`, and append `handoff/SESSION_LOG.md` to reflect findings and next blocker/next step.
 
 ## Must Not Change
 - No model semantic changes.
@@ -24,14 +24,10 @@ Stage `datasets/single-pretrain-v3` with required metadata files (including `met
 - No detailed NVTX instrumentation yet.
 
 ## Stopping Criteria
-- Smoke command progresses beyond dataset initialization (`Graph(args.dataset)`), or failure is documented with actionable blocker detail.
-- `nsys` baseline command generates artifact and workload progresses beyond dataset initialization, or failure is documented with actionable blocker detail.
+- A concise baseline summary exists for `20260302-1637-train-completion-01.nsys-rep`, or an actionable blocker to obtaining summary output is documented.
 - Handoff and profiling docs are updated so a fresh agent can resume without additional discovery.
 
 ## Definition Of Done (Template Style)
-- [ ] `make profiling-preflight` passes in `griffin-profiling`.
-- [ ] Required dataset path/content for completion smoke slice is present (`datasets/single-pretrain-v3/metanode.yaml` exists).
-- [ ] Smoke run progresses past `Graph(args.dataset)` initialization.
-- [ ] `nsys` run progresses past `Graph(args.dataset)` initialization and emits artifact.
-- [ ] `profiling/COMMANDS.md` `Known-Good Commands` reflects latest verified/blocked state.
-- [ ] `profiling/ASSETS_STATUS.md`, `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md`, and `handoff/SESSION_LOG.md` updated.
+- [ ] `nsys` report commands run successfully on `artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep` (or blocker documented).
+- [ ] Baseline runtime + top-time-consumer summary is written in profiling docs.
+- [ ] `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md`, and `handoff/SESSION_LOG.md` updated.

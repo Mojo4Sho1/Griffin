@@ -106,3 +106,46 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Stage `datasets/single-pretrain-v3` with required metadata files and rerun the same smoke/nsys commands to verify progression beyond `Graph(args.dataset)` initialization.
+
+## 2026-03-02T16:28:53Z - Dataset staging completed; new completion-script blocker
+- task_scope: Stage `datasets/single-pretrain-v3`, then rerun smoke and `nsys` baseline slices to move beyond `Graph(args.dataset)` initialization.
+- actions_taken:
+  - Staged a minimal synthetic dataset tree at `datasets/single-pretrain-v3` with required metadata (`metanode.yaml`, `metaadj.yaml`, `metatask.yaml`), embedding tensors, and HF datasets for node/task loading.
+  - Ran `make profiling-preflight` in `griffin-profiling` and confirmed pass.
+  - Executed smoke run `20260302-1705-train-completion-01` and nsys run `20260302-1706-train-completion-01`; both progressed through training/validation setup beyond dataset initialization.
+  - Confirmed `nsys` artifact generation at `artifacts/profiles/nsys/20260302-1706-train-completion-01.nsys-rep`.
+  - Updated profiling and handoff docs to reflect cleared dataset blocker and new runtime blocker boundary.
+- outcome: partial
+- blockers:
+  - `hmaintask_completion.py` fails in validation gather path with `AttributeError: 'GriffinMod' object has no attribute 'device'` (`model.device` usage).
+- files_updated:
+  - `profiling/RUNS.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/ASSETS_STATUS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Apply a minimal non-semantic fix for the `model.device` gather call in `hmaintask_completion.py`, then rerun the same smoke/nsys slice IDs pattern to verify completion past validation gather.
+
+## 2026-03-02T16:43:25Z - Completion gather-device fix validated with smoke and nsys
+- task_scope: Apply surgical `hmaintask_completion.py` gather-device fix, rerun smoke + `nsys`, and synchronize profiling/handoff docs.
+- actions_taken:
+  - Updated `hmaintask_completion.py` gather tensor device allocation to `accelerator.device` (replacing invalid `model.device` usage).
+  - Re-ran `make profiling-preflight` in `griffin-profiling`; preflight passed.
+  - Executed smoke run `20260302-1636-train-completion-01`; run completed train/valid/test flow successfully.
+  - Executed nsys run `20260302-1637-train-completion-01`; run completed successfully and generated a new profiler artifact.
+  - Updated profiling docs and handoff state to mark the completion-slice command path as verified.
+- outcome: success
+- blockers:
+  - none for the bounded completion smoke/`nsys` slice.
+- files_updated:
+  - `hmaintask_completion.py`
+  - `profiling/RUNS.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/ASSETS_STATUS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Extract a concise baseline summary from `artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep` (top kernels/time domains) and record it in profiling docs.

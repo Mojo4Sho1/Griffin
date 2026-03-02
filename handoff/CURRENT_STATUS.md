@@ -3,8 +3,8 @@
 ## Snapshot
 - Date: 2026-03-02 (UTC)
 - Branch: `main-public`
-- Commit: `eebeccb1d752a14cd22488459870f876957a2748`
-- Profiling effort phase: Phase 3 actively executed; smoke and nsys attempts now pass dependency/preflight gates and are blocked at dataset staging boundary.
+- Commit: `682e683816ae5a0fafc3b08955abca08a4961800`
+- Profiling effort phase: Phase 3 objective completed and completion baseline smoke/`nsys` reruns now execute end-to-end after a surgical gather-device fix.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -24,6 +24,8 @@
 - One-command readiness check exists: `make profiling-preflight`.
 - `make profiling-preflight` now passes in `griffin-profiling` for the current environment.
 - Profiling asset-availability tracker now exists at `profiling/ASSETS_STATUS.md`.
+- Dataset path `datasets/single-pretrain-v3` is now staged with minimal required metadata/embeddings/HF dataset tree so `Graph(args.dataset)` and `Task(args.dataset)` initialize successfully for command-path verification.
+- Completion-script fix applied at `hmaintask_completion.py:246` to use `accelerator.device` in the metric gather tensor allocation (non-semantic runtime compatibility fix).
 - Raw profiling artifact directories exist at:
   - `artifacts/profiles/nsys/`
   - `artifacts/profiles/ncu/`
@@ -75,16 +77,15 @@
   - Nsight Systems: `artifacts/profiles/nsys/<run_id>` (`scripts/profile_baseline.sh:70`)
   - Nsight Compute: `artifacts/profiles/ncu/<run_id>` (`scripts/profile_baseline.sh:79`)
 - Generated artifact from latest attempt:
-  - `artifacts/profiles/nsys/20260302-1542-train-completion-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep`
 - Transfer script stdout/stderr logs: `output/transfer/.../*.log`.
 
 ## Blockers, Uncertainties, Assumptions
-- Smoke and nsys workload launches now fail at dataset initialization boundary:
-  - `FileNotFoundError: datasets/single-pretrain-v3/metanode.yaml`
-- Baseline slice assets validated as missing:
-  - `datasets/single-pretrain-v3`
-  - `datasets/joint-v65`
-  - `checkpoints/single-completion/best_checkpoint`
-  - `checkpoints/single-sft`
-  - `checkpoints/transfer`
-- Canonical smoke and nsys commands are executable and profiler artifacts are generated; successful workload progression now requires dataset staging only.
+- Baseline slice asset status now:
+  - `datasets/single-pretrain-v3`: present (minimal synthetic staging for command-path verification)
+  - `checkpoints/single-completion/best_checkpoint`: present (generated in successful reruns)
+  - `datasets/joint-v65`: missing
+  - `checkpoints/single-sft`: missing
+  - `checkpoints/transfer`: missing
+- Canonical smoke and nsys commands are now executable end-to-end for the bounded completion slice, and `nsys` emits `.nsys-rep`.
+- Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads.

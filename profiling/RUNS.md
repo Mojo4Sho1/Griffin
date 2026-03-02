@@ -173,3 +173,99 @@ Example:
   - Previous dependency/runtime blocker class is resolved; dataset staging is now the only gating blocker for this slice.
 - status: failed
 - blocker_if_any: Dataset not staged; required file `datasets/single-pretrain-v3/metanode.yaml` is missing.
+
+### Run: 20260302-1705-train-completion-01
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed (`python deps ok`)
+  - asset path probe: `datasets/single-pretrain-v3/metanode.yaml` present
+- date_time_utc: 2026-03-02T16:27:48Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3`
+- command: `scripts/profile_baseline.sh smoke 20260302-1705-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `682e683816ae5a0fafc3b08955abca08a4961800`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: One-epoch, small-batch completion training smoke slice with staged minimal dataset.
+- profiler: none
+- outputs:
+  - `logs/prof/smoke/`
+  - `checkpoints/single-completion/checkpoint-0-1/`
+- findings_notes:
+  - Workload progressed beyond `Graph(args.dataset)` and `Task(args.dataset)` initialization (`['toy_rmse']`, `Epoch 0 starts`).
+  - Train and validation phases both started; validation metric was produced.
+  - Failure moved to later training-script logic: `AttributeError: 'GriffinMod' object has no attribute 'device'` at `hmaintask_completion.py:246`.
+- status: failed
+- blocker_if_any: Completion script uses `model.device` during `accelerator.gather(...)`, but `GriffinMod` does not define a `device` attribute.
+
+### Run: 20260302-1706-train-completion-01
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed (`python deps ok`)
+  - asset path probe: `datasets/single-pretrain-v3/metanode.yaml` present
+- date_time_utc: 2026-03-02T16:28:53Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3`
+- command: `scripts/profile_baseline.sh nsys 20260302-1706-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `682e683816ae5a0fafc3b08955abca08a4961800`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Baseline `nsys` wrapper of the same bounded completion slice after dataset staging.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260302-1706-train-completion-01.nsys-rep`
+  - `logs/prof/nsys/`
+- findings_notes:
+  - `nsys` wrapper executed and emitted a profiler artifact.
+  - Workload progressed beyond dataset initialization and into training/validation (same boundary as smoke run).
+  - Failure boundary matches smoke run: `AttributeError: 'GriffinMod' object has no attribute 'device'` at `hmaintask_completion.py:246`.
+- status: failed
+- blocker_if_any: Completion script uses `model.device` during `accelerator.gather(...)`, but `GriffinMod` does not define a `device` attribute.
+
+### Run: 20260302-1636-train-completion-01
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed (`python deps ok`)
+  - code patch check: `hmaintask_completion.py` gather device now uses `accelerator.device`
+  - asset path probe: `datasets/single-pretrain-v3/metanode.yaml` present
+- date_time_utc: 2026-03-02T16:42:27Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3`
+- command: `scripts/profile_baseline.sh smoke 20260302-1636-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `682e683816ae5a0fafc3b08955abca08a4961800`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: One-epoch, small-batch completion training smoke slice after surgical gather-device fix.
+- profiler: none
+- outputs:
+  - `logs/prof/smoke/`
+  - `checkpoints/single-completion/checkpoint-0-1/`
+  - `checkpoints/single-completion/best_checkpoint/`
+- findings_notes:
+  - Previous blocker is resolved: run passed prior `model.device` failure point and completed end-to-end.
+  - Train/valid/test sections all executed; checkpoint load/save path completed.
+  - Reported metrics: `valid_metric/toy_rmse/rmse=-1.7689979076385498`, `test_metric/toy_rmse=-2.278367757797241`.
+- status: success
+- blocker_if_any: none
+
+### Run: 20260302-1637-train-completion-01
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed (`python deps ok`)
+  - code patch check: `hmaintask_completion.py` gather device now uses `accelerator.device`
+  - asset path probe: `datasets/single-pretrain-v3/metanode.yaml` present
+- date_time_utc: 2026-03-02T16:43:25Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3`
+- command: `scripts/profile_baseline.sh nsys 20260302-1637-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `682e683816ae5a0fafc3b08955abca08a4961800`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Baseline `nsys` wrapper of the same bounded completion slice after surgical gather-device fix.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep`
+  - `logs/prof/nsys/`
+  - `checkpoints/single-completion/best_checkpoint/`
+- findings_notes:
+  - Previous blocker is resolved under profiler wrapper as well; workload completed end-to-end.
+  - `nsys` emitted a new artifact while running full train/valid/test flow.
+  - Runtime metrics match smoke run for the staged dataset (`valid=-1.7689979076385498`, `test=-2.278367757797241`).
+- status: success
+- blocker_if_any: none
