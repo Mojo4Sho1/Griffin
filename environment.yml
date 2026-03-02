@@ -6,7 +6,14 @@ dependencies:
   - pip
   - pyyaml
   - numpy
+  - pandas
   - seaborn
+  - matplotlib
+  - libstdcxx-ng
+  - libgcc-ng
+  - pytorch
+  - pytorch_geometric
+  - pytorch_scatter
   - pip:
       - accelerate
       - datasets
@@ -17,8 +24,3 @@ dependencies:
       - tensorboard
       - safetensors
       - pqdm
-
-# NOTE:
-# - torch and torch_geometric are intentionally not pinned here because they
-#   must match the server CUDA/driver stack. Install them after activating
-#   this env using commands in profiling/PREFLIGHT.md.

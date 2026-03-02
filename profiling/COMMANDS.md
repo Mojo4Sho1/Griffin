@@ -46,7 +46,7 @@ Use this config for minimal baseline profiling slices:
 nsys profile <nsys_flags> \
   --output artifacts/profiles/nsys/<run_id> \
   --force-overwrite true \
-  -- accelerate launch --config_file hconfig_profiling_single_gpu.yaml <task_script.py> ...
+  accelerate launch --config_file hconfig_profiling_single_gpu.yaml <task_script.py> ...
 ```
 
 `ncu` wrapper pattern:
@@ -113,16 +113,25 @@ cat hconfig_profiling_single_gpu.yaml
 
 ## Known-Good Commands (Fill As Soon As First Run Succeeds)
 
-Status: `pending`
+Status: `blocked` (last attempted 2026-03-02 UTC)
 
-Minimal no-profiler smoke command (verified):  
-`<pending>`
+Minimal no-profiler smoke command (attempted; launcher works, workload fails):  
+`scripts/profile_baseline.sh smoke 20260302-1541-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
 
-Minimal baseline profiler command (verified):  
-`<pending>`
+Minimal baseline profiler command (attempted; profiler runs and emits artifact):  
+`scripts/profile_baseline.sh nsys 20260302-1542-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
 
 Raw output destination used:  
-`<pending>`
+`artifacts/profiles/nsys/20260302-1542-train-completion-01.nsys-rep` (generated)
+
+Blockers:
+- Selected baseline dataset path/content is missing for the chosen slice.
+- Required dataset metadata file is missing: `datasets/single-pretrain-v3/metanode.yaml`.
+
+Notes:
+- `make profiling-preflight` now passes in `griffin-profiling`.
+- Runtime dependency imports for this slice now pass (`torch_geometric` available).
+- `scripts/profile_baseline.sh` `nsys` mode remains `nsys profile ... accelerate launch ...` (no extra `--` separator).
 
 ## Annotation and Deep-Dive Command Classes
 

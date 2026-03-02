@@ -41,3 +41,68 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `hconfig_profiling_single_gpu.yaml`
   - `Makefile`
 - next_hint: Run `make profiling-preflight` first, then verify one minimal no-profiler smoke command and one baseline profiler command.
+
+## 2026-03-01T18:48:36Z - Baseline command verification attempt blocked
+- task_scope: Verify one minimal representative baseline profiling slice command and document safe annotation/output locations.
+- actions_taken:
+  - Ran/attempted required preflight sequence (`conda activate griffin-profiling`, `conda env create -f environment.yml`, `make profiling-preflight`) and recorded failures.
+  - Validated asset availability matrix and updated all tracked dataset/checkpoint paths as `missing`.
+  - Added a canonical run record in `profiling/RUNS.md` with checklist pass/fail, exact attempted command, commit hash, and blocker details.
+  - Updated `profiling/COMMANDS.md` `Known-Good Commands` with concrete attempted smoke command, resolved nsys command shape, output conventions, and explicit blockers.
+  - Confirmed and documented file/function-level coarse annotation insertion points and runtime/profiler output destinations in `handoff/CURRENT_STATUS.md`.
+- outcome: partial
+- blockers:
+  - Conda env setup is blocked (`NoWritableEnvsDirError` and DNS resolution failures to `repo.anaconda.com`).
+  - `accelerate` is not installed in the active environment, causing `make profiling-preflight` failure.
+  - Required dataset/checkpoint assets are absent in workspace.
+- files_updated:
+  - `profiling/ASSETS_STATUS.md`
+  - `profiling/RUNS.md`
+  - `profiling/COMMANDS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+- next_hint: First unblock environment provisioning + asset staging, then rerun the same smoke command and immediately wrap it with `nsys`.
+
+## 2026-03-02T00:21:29Z - Phase 3 rerun with active env and profiler artifact
+- task_scope: Unblock environment and asset prerequisites, then execute one smoke and one nsys baseline slice attempt.
+- actions_taken:
+  - Verified `conda activate griffin-profiling` now succeeds and reran `make profiling-preflight`.
+  - Executed smoke slice `20260301-2005-train-completion-01`; command launched but failed on `ModuleNotFoundError: torch_geometric`.
+  - Executed nsys slice `20260301-2007-train-completion-01` (outside sandbox due profiler restrictions); profiler artifact generated and app failed on same missing `torch_geometric` import.
+  - Updated profiling docs and handoff state with run records, artifact path, and current blockers.
+  - Applied minimal wrapper fix in `scripts/profile_baseline.sh` for local `nsys` compatibility (removed extra `--` separator before `accelerate`).
+- outcome: partial
+- blockers:
+  - `make profiling-preflight` still fails due matplotlib/libstdc++ ABI mismatch (`CXXABI_1.3.15` not found).
+  - Runtime dependency missing: `torch_geometric`.
+  - Required dataset/checkpoint paths remain missing.
+- files_updated:
+  - `scripts/profile_baseline.sh`
+  - `profiling/RUNS.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/ASSETS_STATUS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+- next_hint: Install/repair `torch_geometric` and preflight import ABI stack first, then rerun the same smoke and nsys commands once `datasets/single-pretrain-v3` is present.
+
+## 2026-03-02T15:42:51Z - Dependency blockers cleared, dataset boundary confirmed
+- task_scope: Re-run preflight, smoke, and nsys checks after environment updates and sync docs to current blocker boundary.
+- actions_taken:
+  - Re-ran `make profiling-preflight` in `griffin-profiling`; it passed end-to-end.
+  - Re-ran smoke command `20260302-1541-train-completion-01`; failure moved to dataset boundary (`metanode.yaml` missing).
+  - Re-ran nsys command `20260302-1542-train-completion-01`; profiler artifact regenerated and workload failed at same dataset boundary.
+  - Updated profiling + handoff docs to remove prior dependency blockers and align on dataset staging as the gating item.
+- outcome: partial
+- blockers:
+  - Required dataset content is missing for selected slice (`datasets/single-pretrain-v3/metanode.yaml`).
+- files_updated:
+  - `profiling/RUNS.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/ASSETS_STATUS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Stage `datasets/single-pretrain-v3` with required metadata files and rerun the same smoke/nsys commands to verify progression beyond `Graph(args.dataset)` initialization.

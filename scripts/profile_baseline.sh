@@ -72,7 +72,7 @@ case "$MODE" in
     if [[ -n "${NSYS_FLAGS:-}" ]]; then
       read -r -a NSYS_FLAG_ARR <<< "${NSYS_FLAGS}"
     fi
-    CMD=(nsys profile "${NSYS_FLAG_ARR[@]}" --output "$OUT_PATH" --force-overwrite true -- "${ACCEL_CMD[@]}")
+    CMD=(nsys profile "${NSYS_FLAG_ARR[@]}" --output "$OUT_PATH" --force-overwrite true "${ACCEL_CMD[@]}")
     ;;
   ncu)
     command -v ncu >/dev/null
