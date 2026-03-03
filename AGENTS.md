@@ -33,6 +33,10 @@ This fork exists to profile and analyze Griffin GPU execution behavior to identi
 - Before any run or profiling task, activate the project environment, then execute `make profiling-preflight`.
 - Environment definition is `environment.yml`.
 - For baseline profiling slices, prefer `hconfig_profiling_single_gpu.yaml` unless the task explicitly requires multi-process behavior.
+- This profiling host is a shared 4-GPU system; default and required profiling target is GPU3.
+- Before any smoke/profiler run, execute `nvidia-smi` and `nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv` to check occupancy.
+- Launch profiling commands with `CUDA_VISIBLE_DEVICES=3 ...`.
+- If GPU3 has any active compute process attached, do not run profiling; notify the human operator and document the blocker in `profiling/RUNS.md`, `handoff/CURRENT_STATUS.md`, and `handoff/SESSION_LOG.md`.
 - If preflight or environment setup fails, document the blocker in `profiling/RUNS.md` and `handoff/CURRENT_STATUS.md`.
 - Do not modify `hconfig.yaml` for profiling tasks; use `hconfig_profiling_single_gpu.yaml` or add a new profiling-specific config file.
 

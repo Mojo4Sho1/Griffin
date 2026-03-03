@@ -39,11 +39,29 @@ bash transfer.sh <gpu_ids> <split_1> <split_2> <task> <model_idx> [eval_sample_r
 Use this config for minimal baseline profiling slices:
 - `hconfig_profiling_single_gpu.yaml` (`num_processes: 1`, `distributed_type: "NO"`)
 
+## Shared GPU Guardrail (Required On This Host)
+
+- This is a shared 4-GPU server. Profiling runs must target GPU3 only.
+- Before any smoke/profiler command, run:
+```bash
+nvidia-smi
+nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv
+```
+- If GPU3 has any compute process attached, do not run profiling commands.
+- Notify the human operator and document blocker details in:
+  - `profiling/RUNS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+- Command prefix requirement:
+```bash
+CUDA_VISIBLE_DEVICES=3 <command>
+```
+
 ## Baseline Profiling Wrapper Patterns (To Validate)
 
 `nsys` wrapper pattern:
 ```bash
-nsys profile <nsys_flags> \
+CUDA_VISIBLE_DEVICES=3 nsys profile <nsys_flags> \
   --output artifacts/profiles/nsys/<run_id> \
   --force-overwrite true \
   accelerate launch --config_file hconfig_profiling_single_gpu.yaml <task_script.py> ...
@@ -51,7 +69,7 @@ nsys profile <nsys_flags> \
 
 `ncu` wrapper pattern:
 ```bash
-ncu <ncu_flags> \
+CUDA_VISIBLE_DEVICES=3 ncu <ncu_flags> \
   --export artifacts/profiles/ncu/<run_id> \
   --target-processes all \
   -- accelerate launch --config_file hconfig_profiling_single_gpu.yaml <task_script.py> ...
@@ -67,12 +85,12 @@ scripts/profile_baseline.sh <smoke|nsys|ncu> <run_id> <task_script.py> <dataset>
 
 Example smoke run:
 ```bash
-scripts/profile_baseline.sh smoke 20260228-1640-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof smoke -- --maxepoch 1 --batchsize 64
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke 20260228-1640-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof smoke -- --maxepoch 1 --batchsize 64
 ```
 
 Example nsys run:
 ```bash
-scripts/profile_baseline.sh nsys 20260228-1641-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof nsys -- --maxepoch 1 --batchsize 64
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260228-1641-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof nsys -- --maxepoch 1 --batchsize 64
 ```
 
 ## Concrete Starter Command (Template)
@@ -81,7 +99,7 @@ Use this as the default first command shape for a bounded smoke run.
 Replace only the placeholder values before running.
 
 ```bash
-scripts/profile_baseline.sh smoke <YYYYMMDD-HHMM-train-completion-01> hmaintask_completion.py <dataset_path> <log_dir> <log_name> -- --savepath <checkpoint_dir> --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke <YYYYMMDD-HHMM-train-completion-01> hmaintask_completion.py <dataset_path> <log_dir> <log_name> -- --savepath <checkpoint_dir> --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 After smoke success, switch `smoke` to `nsys` or `ncu` and keep the rest of the command structure unchanged unless the task requires it.
@@ -98,6 +116,8 @@ Tool availability checks:
 command -v nsys
 command -v ncu
 command -v accelerate
+nvidia-smi
+nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv
 ```
 
 Conda environment bootstrap:
@@ -116,10 +136,10 @@ cat hconfig_profiling_single_gpu.yaml
 Status: `verified` (last attempted 2026-03-02 UTC)
 
 Minimal no-profiler smoke command (verified end-to-end):  
-`scripts/profile_baseline.sh smoke 20260302-1636-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+`CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke 20260302-1636-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
 
 Minimal baseline profiler command (verified end-to-end with artifact):  
-`scripts/profile_baseline.sh nsys 20260302-1637-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+`CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260302-1637-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
 
 Raw output destination used:  
 `artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep` (generated)
@@ -130,6 +150,7 @@ Blockers:
 Notes:
 - `hmaintask_completion.py` gather path now uses `accelerator.device` instead of `model.device`.
 - `make profiling-preflight` passes in `griffin-profiling`.
+- Shared-host policy: run GPU3 occupancy checks first; do not run commands if GPU3 has active compute processes.
 - Current staged dataset remains a minimal synthetic fixture for command-path verification; not production-scale profiling data.
 
 ## Annotation and Deep-Dive Command Classes
@@ -147,5 +168,5 @@ Deep hotspot investigation class (after hotspot selection):
 ## Pending Confirmation Items
 - Which single script/args define the minimal representative baseline slice in this environment.
 - Available profiler binaries and required flags on this machine.
-- Any required `CUDA_VISIBLE_DEVICES` / process-count adjustments for minimal reproducible runs.
+- Process-count adjustments for minimal reproducible runs.
 - Required asset path availability (tracked in `profiling/ASSETS_STATUS.md`).

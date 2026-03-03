@@ -33,7 +33,29 @@ make profiling-preflight
 
 If this fails, resolve the first failing check, then rerun.
 
-## 3) Verify Core Tooling (Optional Manual Check)
+## 3) Check Shared-GPU Occupancy (Required Before Any Run)
+
+On this shared 4-GPU server, profiling must run on GPU3 only.
+Run these commands before smoke or profiler commands:
+
+```bash
+nvidia-smi
+nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv
+```
+
+Interpretation rule:
+- Proceed only if GPU3 has no compute processes attached.
+- If any compute process is attached to GPU3, do not run profiling. Notify the human operator and document a blocker in:
+  - `profiling/RUNS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+
+Launch convention for this shared host:
+```bash
+CUDA_VISIBLE_DEVICES=3 <profiling_command>
+```
+
+## 4) Verify Core Tooling (Optional Manual Check)
 
 ```bash
 command -v nsys
@@ -45,7 +67,7 @@ python -c "import torch_geometric; print('pyg ok')"
 
 The command above is automated by `make profiling-preflight`.
 
-## 4) Verify Expected Local Paths
+## 5) Verify Expected Local Paths
 
 ```bash
 ls -d datasets checkpoints logs 2>/dev/null || true
@@ -58,17 +80,19 @@ If datasets/checkpoints are missing, document that blocker in:
 - `handoff/CURRENT_STATUS.md`
 - `handoff/SESSION_LOG.md`
 
-## 5) Confirm Minimal Launch Mechanics Without Profiler
+## 6) Confirm Minimal Launch Mechanics Without Profiler
 
 Before profiler wrapping, run one minimal no-profiler smoke launch with the exact script/args selected for the baseline slice.  
 Use `--config_file hconfig_profiling_single_gpu.yaml` for this verification slice.
+Use `CUDA_VISIBLE_DEVICES=3` for this shared host.
 Use a bounded slice (for example one epoch and small batch size) and keep outputs under existing `logs/` + `checkpoints/` conventions.
 
-## 6) Then Run Baseline Profiler Slice
+## 7) Then Run Baseline Profiler Slice
 
 After smoke launch success, run the baseline `nsys` or `ncu` command and write raw outputs to:
 - `artifacts/profiles/nsys/`
 - `artifacts/profiles/ncu/`
 
 For first-pass reproducibility, keep `--config_file hconfig_profiling_single_gpu.yaml` unless explicitly validating multi-process behavior.
+Use `CUDA_VISIBLE_DEVICES=3` for this shared host.
 Record the full command and outcome in `profiling/RUNS.md`.
