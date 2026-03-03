@@ -18,6 +18,10 @@ Example:
 - `20260228-1640-train-completion-01`
 
 ## Required Record Fields
+- Campaign ID (`campaign_id`)
+- Scenario (`train` | `finetune` | `inference`)
+- Slice ID (from `profiling/CAMPAIGN_PLAN.md`)
+- Profile stage (`baseline_unannotated` | `baseline_annotated` | `ncu_hotspot`)
 - Date/time (UTC)
 - Mode (`train` / `fine-tune` / `inference`)
 - Dataset
@@ -33,6 +37,10 @@ Example:
 
 ```markdown
 ### Run: <run_id>
+- campaign_id: <campaign_id>
+- scenario: <train|finetune|inference>
+- slice_id: <slice_id_from_campaign_plan>
+- profile_stage: <baseline_unannotated|baseline_annotated|ncu_hotspot>
 - date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
 - mode: <train|fine-tune|inference>
 - dataset: <dataset_id_or_path>
@@ -53,6 +61,24 @@ Example:
 - Use the canonical run ID format above for every run record.
 - For reruns of the same slice, keep separate records and reference prior `run_id`.
 - Do not paste raw profiler dumps; link paths only.
+- Every run record must map to exactly one row in `profiling/CAMPAIGN_PLAN.md` (`campaign_id + slice_id`).
+
+## Campaign/Stage Counting Rules
+
+- Checklist completion counters use only successful profiler runs (`status: success`) that match required stage + profiler type.
+- Phase 4 baseline minimums count only runs where:
+  - `profile_stage: baseline_unannotated`
+  - `profiler: nsys`
+  - `status: success`
+- Phase 5 annotated minimums count only runs where:
+  - `profile_stage: baseline_annotated`
+  - `profiler: nsys`
+  - `status: success`
+- Phase 7 deep-dive minimums count only runs where:
+  - `profile_stage: ncu_hotspot`
+  - `profiler: ncu`
+  - `status: success`
+- Legacy records from pre-campaign sessions may omit campaign fields; new records must include them.
 
 ### Run: 20260301-1848-train-completion-01
 - readiness_checklist:

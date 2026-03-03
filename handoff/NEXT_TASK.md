@@ -1,33 +1,41 @@
 # Next Task
 
 ## Single Bounded Task
-Generate a concise baseline summary from successful `nsys` run `20260302-1637-train-completion-01` (top time consumers and runtime-domain breakdown), and record findings in profiling docs.
+Execute campaign row `gfm-20260303-r01 / TR-S2 / baseline_unannotated`: run one additional successful bounded `train` baseline `nsys` slice (with smoke prerequisite), then update campaign/run/result/handoff state.
 
 ## Why This Is Immediate Priority
-- The bounded completion smoke/`nsys` command path is now verified end-to-end.
-- Phase 4 requires converting the fresh successful artifact into a short actionable baseline summary before any annotation or hotspot prioritization work.
+- Phase 4a gate requires `>=2` successful unannotated baseline `nsys` slices for `train`.
+- Current campaign status has only one successful `train` baseline `nsys` slice (`TR-S1` is done; `TR-S2` is pending).
+- Campaign execution policy is one-slice-at-a-time; this row is the next required unit of work.
 
 ## Exact Outputs Expected
-- Use `nsys` CLI reporting tools against:
-  - `artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep`
-- Produce a lightweight summary covering:
-  - overall runtime duration for the profiled run
-  - top CUDA kernels / API calls by time share (coarse, not deep kernel dive)
-  - high-level CPU/CUDA time-domain distribution sufficient to guide next instrumentation decisions
-- Record summary in profiling docs (`profiling/RUNS.md` and/or `profiling/COMMANDS.md` notes section), with commands used.
-- Update `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md`, and append `handoff/SESSION_LOG.md` to reflect findings and next blocker/next step.
+- Confirm shared-host preconditions:
+  - `conda activate griffin-profiling`
+  - `make profiling-preflight`
+  - GPU3 occupancy checks (`nvidia-smi` commands per policy)
+- Execute row commands for `TR-S2`:
+  - smoke (bounded train completion slice)
+  - `nsys` (same slice and args, distinct run_id)
+- Update documentation/state:
+  - `profiling/CAMPAIGN_PLAN.md` row `TR-S2` (`status`, `smoke_run_id`, `nsys_run_id`, `blocker`)
+  - `profiling/RUNS.md` records with required campaign fields (`campaign_id`, `scenario`, `slice_id`, `profile_stage`)
+  - `profiling/RESULTS.md` baseline scenario summary update for `train`
+  - `handoff/CURRENT_STATUS.md` counters and snapshot
+  - `handoff/CHECKLIST.md` Phase 4a progress note
+  - append `handoff/SESSION_LOG.md`
 
 ## Must Not Change
 - No model semantic changes.
 - No kernel optimization.
-- No deep training-loop refactor.
-- No detailed NVTX instrumentation yet.
+- No detailed NVTX instrumentation yet (Phase 5 gates are not active).
 
 ## Stopping Criteria
-- A concise baseline summary exists for `20260302-1637-train-completion-01.nsys-rep`, or an actionable blocker to obtaining summary output is documented.
+- `TR-S2` has a documented successful smoke+`nsys` completion in campaign + run logs, or an actionable blocker is documented.
 - Handoff and profiling docs are updated so a fresh agent can resume without additional discovery.
 
 ## Definition Of Done (Template Style)
-- [ ] `nsys` report commands run successfully on `artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep` (or blocker documented).
-- [ ] Baseline runtime + top-time-consumer summary is written in profiling docs.
+- [ ] `TR-S2` smoke run executed or blocked with actionable reason.
+- [ ] `TR-S2` baseline `nsys` run executed successfully (or blocked with actionable reason) and artifact path recorded.
+- [ ] `profiling/CAMPAIGN_PLAN.md` and `profiling/RUNS.md` are synchronized for `TR-S2`.
+- [ ] `train` baseline summary in `profiling/RESULTS.md` reflects both successful baseline slices (`TR-S1`, `TR-S2`) or documented blocker.
 - [ ] `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md`, and `handoff/SESSION_LOG.md` updated.

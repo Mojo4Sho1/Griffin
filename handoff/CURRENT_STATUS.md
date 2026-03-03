@@ -1,10 +1,10 @@
 # Current Status
 
 ## Snapshot
-- Date: 2026-03-02 (UTC)
+- Date: 2026-03-03 (UTC)
 - Branch: `main-public`
 - Commit: `682e683816ae5a0fafc3b08955abca08a4961800`
-- Profiling effort phase: Phase 3 objective completed and completion baseline smoke/`nsys` reruns now execute end-to-end after a surgical gather-device fix.
+- Profiling effort phase: Multi-scenario campaign framework is established; active execution gate is Phase 4a (`train` baseline unannotated) row `gfm-20260303-r01 / TR-S2`.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -12,12 +12,27 @@
   - `accelerate`: available in `griffin-profiling`
   - `torch_geometric`: available in `griffin-profiling` (import verified)
 
+## Campaign Counters (`gfm-20260303-r01`)
+- baseline_nsys_success:
+  - train: 1
+  - finetune: 0
+  - inference: 0
+- annotated_nsys_success:
+  - train: 0
+  - finetune: 0
+  - inference: 0
+- ncu_success:
+  - train: 0
+  - finetune: 0
+  - inference: 0
+
 ## What Is Established
 - Stable project operating rules now live in `AGENTS.md`.
 - Handoff system is initialized in `handoff/` with strict file roles.
 - Session history log now exists at `handoff/SESSION_LOG.md`.
 - Profiling documentation scaffold is initialized in `profiling/`.
 - Profiling overview doc is `profiling/_PROFILING_GUIDE.md` (no additional README files).
+- Campaign matrix now exists at `profiling/CAMPAIGN_PLAN.md` with explicit rows for `train`/`finetune`/`inference` across `baseline_unannotated`, `baseline_annotated`, and `ncu_hotspot` stages.
 - Environment scaffold now exists at `environment.yml` with GPU-coupled package guidance in `profiling/PREFLIGHT.md`.
 - Environment contract: `environment.yml` now uses conda-native PyTorch/PyG stack entries (`pytorch`, `pytorch_geometric`, `pytorch_scatter`) and is treated as the canonical setup baseline.
 - Single-process profiling accelerate config exists at `hconfig_profiling_single_gpu.yaml` for baseline slice reproducibility.
@@ -26,6 +41,7 @@
 - Profiling asset-availability tracker now exists at `profiling/ASSETS_STATUS.md`.
 - Dataset path `datasets/single-pretrain-v3` is now staged with minimal required metadata/embeddings/HF dataset tree so `Graph(args.dataset)` and `Task(args.dataset)` initialize successfully for command-path verification.
 - Completion-script fix applied at `hmaintask_completion.py:246` to use `accelerator.device` in the metric gather tensor allocation (non-semantic runtime compatibility fix).
+- Workflow sequencing is now explicit in docs: baseline `nsys` -> minimal NVTX annotation -> annotated `nsys` validation -> hotspot shortlist -> targeted `ncu`.
 - Raw profiling artifact directories exist at:
   - `artifacts/profiles/nsys/`
   - `artifacts/profiles/ncu/`
@@ -87,5 +103,8 @@
   - `datasets/joint-v65`: missing
   - `checkpoints/single-sft`: missing
   - `checkpoints/transfer`: missing
-- Canonical smoke and nsys commands are now executable end-to-end for the bounded completion slice, and `nsys` emits `.nsys-rep`.
+- Current campaign blocker surface:
+  - `finetune` and `inference` rows depend on `checkpoints/single-sft/best_checkpoint`, which is not yet available.
+  - `train` Phase 4a gate still needs one additional successful baseline unannotated `nsys` slice (`TR-S2`).
+- Canonical smoke and `nsys` commands are executable end-to-end for bounded `train` completion slices, and `nsys` emits `.nsys-rep`.
 - Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads.

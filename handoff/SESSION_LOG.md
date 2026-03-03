@@ -149,3 +149,26 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Extract a concise baseline summary from `artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep` (top kernels/time domains) and record it in profiling docs.
+
+## 2026-03-03T16:41:09Z - Multi-scenario campaign workflow and NVTX gate scaffolding
+- task_scope: Implement workflow upgrade docs with explicit NVTX stage between baseline `nsys` and hotspot `ncu`, plus campaign-based scenario tracking.
+- actions_taken:
+  - Refactored checklist phases into scenario-granular baseline gates (`4a-4d`) and explicit annotation/deep-dive gates (`5a-5d`, `6`, `7`).
+  - Added `profiling/CAMPAIGN_PLAN.md` with pre-seeded rows for `train`/`finetune`/`inference` across `baseline_unannotated`, `baseline_annotated`, and `ncu_hotspot` stages.
+  - Extended `profiling/RUNS.md` and `profiling/RESULTS.md` templates with campaign/stage fields and stage-specific counting/summary rules.
+  - Reworked `profiling/COMMANDS.md` to include canonical command classes for all scenarios in baseline-unannotated, baseline-annotated, and targeted-`ncu` stages.
+  - Updated `_PROFILING_GUIDE.md`, `CURRENT_STATUS.md`, and `NEXT_TASK.md` to align with campaign-row-driven execution and per-scenario counters.
+- outcome: success
+- blockers:
+  - `checkpoints/single-sft/best_checkpoint` is missing, so `finetune`/`inference` campaign rows remain blocked until generated or staged.
+- files_updated:
+  - `handoff/CHECKLIST.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `profiling/_PROFILING_GUIDE.md`
+- next_hint: Execute `gfm-20260303-r01 / TR-S2 / baseline_unannotated` (smoke + `nsys`) and update campaign/run/results counters for Phase 4a progress.
