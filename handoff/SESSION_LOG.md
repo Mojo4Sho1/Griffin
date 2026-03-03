@@ -258,3 +258,24 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute campaign row `gfm-20260303-r01 / FT-B2 / baseline_validation`, then continue baseline validation sequencing before entering steady-state capture rows.
+
+## 2026-03-03T19:46:31Z - FT-B2 finetune baseline-validation gate completed
+- task_scope: Execute `gfm-20260303-r01 / FT-B2 / baseline_validation` (smoke + `nsys`) and synchronize campaign/results/handoff state.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); confirmed GPU3 had no active compute process attached.
+  - Attempted FT-B2 smoke run `20260303-1944-finetune-combine-01` in sandbox; captured expected sandbox CUDA/multiprocessing restriction failure and reran outside sandbox.
+  - Executed FT-B2 smoke rerun `20260303-1944-finetune-combine-02` on GPU3; completed end-to-end.
+  - Executed FT-B2 `nsys` run `20260303-1945-finetune-combine-01` on GPU3; completed end-to-end and generated `artifacts/profiles/nsys/20260303-1945-finetune-combine-01.nsys-rep`.
+  - Updated campaign row `FT-B2`, appended run records, added finetune baseline-validation reproducibility summary (`FT-B1` vs `FT-B2`), and advanced handoff to `IF-B1`.
+- outcome: success
+- blockers:
+  - none for FT-B2 execution after required out-of-sandbox rerun.
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260303-r01 / IF-B1 / baseline_validation` (smoke then `nsys`) on GPU3 using `hmaintask_combine.py --mode test --loadpath checkpoints/single-sft/best_checkpoint`.

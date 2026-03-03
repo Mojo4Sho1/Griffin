@@ -528,3 +528,86 @@ Example:
   - Runtime metrics matched smoke rerun (`valid=-1.7689979076385498`, `test=-2.278367519378662`).
 - status: success
 - blocker_if_any: none
+
+### Run: 20260303-1944-finetune-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- slice_id: FT-B2
+- profile_stage: baseline_validation
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T19:44:32Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke 20260303-1944-finetune-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-baseline-smoke -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `a73d00436591eadd9634af5fa5c067f78a4cdb65`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Bounded 1-epoch finetune combine-train smoke prerequisite for FT-B2 baseline nsys.
+- profiler: none
+- outputs:
+  - `logs/prof/finetune-baseline-smoke/` (partial)
+- findings_notes:
+  - Sandbox execution could not access CUDA/NVML and failed in dataloader multiprocessing (`SemLock`, `PermissionError: [Errno 13]`).
+  - Re-run outside sandbox was required for valid GPU-backed profiling execution.
+- status: failed
+- blocker_if_any: Sandbox restrictions prevented valid GPU-backed smoke execution.
+
+### Run: 20260303-1944-finetune-combine-02
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- slice_id: FT-B2
+- profile_stage: baseline_validation
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T19:44:57Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke 20260303-1944-finetune-combine-02 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-baseline-smoke -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `a73d00436591eadd9634af5fa5c067f78a4cdb65`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Bounded 1-epoch finetune combine-train smoke prerequisite for FT-B2 baseline nsys.
+- profiler: none
+- outputs:
+  - `logs/prof/finetune-baseline-smoke/`
+  - `checkpoints/single-sft/best_checkpoint/`
+- findings_notes:
+  - Smoke run completed end-to-end on GPU3.
+  - Metrics were stable versus FT-B1 (`valid=-1.7689979076385498`, `test=-2.278367519378662`).
+- status: success
+- blocker_if_any: none
+
+### Run: 20260303-1945-finetune-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- slice_id: FT-B2
+- profile_stage: baseline_validation
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - smoke prerequisite: `20260303-1944-finetune-combine-02` success
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T19:45:21Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260303-1945-finetune-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-baseline-nsys -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `a73d00436591eadd9634af5fa5c067f78a4cdb65`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Second bounded baseline validation finetune profiling slice for campaign row FT-B2.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260303-1945-finetune-combine-01.nsys-rep`
+  - `logs/prof/finetune-baseline-nsys/`
+  - `checkpoints/single-sft/best_checkpoint/`
+- findings_notes:
+  - `nsys` run completed end-to-end and emitted the expected FT-B2 artifact.
+  - Metrics matched FT-B1 and FT-B2 smoke (`valid=-1.7689979076385498`, `test=-2.278367519378662`).
+  - Phase 4b finetune baseline validation gate is now satisfied (`2/2`).
+- status: success
+- blocker_if_any: none

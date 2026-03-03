@@ -260,3 +260,29 @@ It is for conclusions and interpretation, not raw logs.
 - caveats:
   - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
 - next_action: Execute `gfm-20260303-r01 / FT-S2 / baseline_unannotated` (smoke then `nsys`) to advance Phase 4b toward the `2/2` finetune gate.
+
+## Result: gfm-20260303-r01-finetune-baseline-validation-01
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- profile_stage: baseline_validation
+- date_time_utc: 2026-03-03T19:46:31Z
+- related_runs:
+  - 20260303-1745-finetune-combine-01
+  - 20260303-1945-finetune-combine-01
+- question: Is the bounded finetune baseline validation trace reproducible across FT-B1 and FT-B2?
+- summary: Yes. Both FT-B1 and FT-B2 `nsys` finetune baseline-validation slices completed end-to-end on GPU3 with matching validation/test metrics. No new blockers were observed, and FT-B2 reproduces FT-B1 behavior under the same command/config surface. This closes the Phase 4b finetune baseline-validation `2/2` gate.
+- runtime_overview:
+  - wall_time_sec: unknown
+  - gpu_busy_fraction: unknown
+- key_observations:
+  - FT-B1 (`20260303-1745-finetune-combine-01`) and FT-B2 (`20260303-1945-finetune-combine-01`) both produced `.nsys-rep` artifacts.
+  - Metrics were stable across both slices (`valid=-1.7689979076385498`, `test=-2.278367519378662`).
+  - Smoke prerequisite for FT-B2 succeeded after rerunning outside sandbox constraints.
+- comparison:
+  - baseline: 20260303-1745-finetune-combine-01
+  - variant: 20260303-1945-finetune-combine-01
+  - delta: no observed behavior change in bounded finetune baseline-validation completion or reported metrics
+- confidence: medium
+- caveats:
+  - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
+- next_action: Execute `gfm-20260303-r01 / IF-B1 / baseline_validation` (smoke then `nsys`) on GPU3.
