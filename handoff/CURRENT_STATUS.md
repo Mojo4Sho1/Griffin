@@ -3,8 +3,8 @@
 ## Snapshot
 - Date: 2026-03-03 (UTC)
 - Branch: `main-public`
-- Commit: `ddb8878c47111ae9bfb82a558ffd3b7023ad2d7a`
-- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c) are complete across `train`/`finetune`/`inference`; Phase 5 (`steady_unannotated` representativeness) is active with `TR-SU1` and `FT-SU1` complete and next row `gfm-20260303-r01 / IF-SU1`.
+- Commit: `0aff6d7afdbbf466f9f73119f50439edaa2f3266`
+- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c) and Phase 5 (`steady_unannotated` representativeness) are complete across `train`/`finetune`/`inference`; next active phase is 6a (coarse annotation spec) before steady annotated captures.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -20,7 +20,7 @@
 - steady_unannotated_representative_pairs:
   - train: 1
   - finetune: 1
-  - inference: 0
+  - inference: 1
 - annotated_nsys_success:
   - train: 0
   - finetune: 0
@@ -105,7 +105,7 @@
   - Nsight Systems: `artifacts/profiles/nsys/<run_id>` (`scripts/profile_baseline.sh:70`)
   - Nsight Compute: `artifacts/profiles/ncu/<run_id>` (`scripts/profile_baseline.sh:79`)
 - Generated artifact from latest attempt:
-  - `artifacts/profiles/nsys/20260303-2059-finetune-combine-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260303-2138-inference-combine-01.nsys-rep`
 - Transfer script stdout/stderr logs: `output/transfer/.../*.log`.
 
 ## Blockers, Uncertainties, Assumptions
@@ -121,7 +121,8 @@
   - Phase 4c inference baseline-validation gate is complete (`IF-B1` + `IF-B2`).
   - Phase 5 steady-state representativeness train row `TR-SU1` is complete (`representative_pass=true`, `top3_overlap=3/3`, `timeshare_drift_pct=1.72`).
   - Phase 5 steady-state representativeness finetune row `FT-SU1` is complete (`representative_pass=true`, `top3_overlap=3/3`, `timeshare_drift_pct=1.16`).
-  - Next active Phase 5 row is `IF-SU1`.
+  - Phase 5 steady-state representativeness inference row `IF-SU1` is complete (`representative_pass=true`, `top3_overlap=3/3`, `timeshare_drift_pct=0.86`).
+  - Next active work item is Phase 6a coarse annotation spec for minimal NVTX taxonomy and insertion mapping.
 - Optimization/recommendation policy surface:
   - Optimization recommendations are prohibited until capture_complete and review_complete are both true.
   - `ncu` runs are prohibited until `ncu_allowed: true` (post-review gate).

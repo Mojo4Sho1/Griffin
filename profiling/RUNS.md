@@ -882,3 +882,82 @@ Example:
 - actual_runtime_minutes: 0.50
 - overrun_reason_if_any: none
 - review_gate_state_at_run: not_done
+
+### Run: 20260303-2134-inference-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: inference
+- slice_id: IF-SU1
+- profile_stage: steady_unannotated
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+  - note: initial in-sandbox launch attempt hit expected `nsys` sandbox restriction (`open: Operation not permitted`); rerun outside sandbox succeeded
+- date_time_utc: 2026-03-03T21:37:58Z
+- mode: inference
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260303-2134-inference-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof inference-steady-unannot-nsys-a -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `0aff6d7afdbbf466f9f73119f50439edaa2f3266`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: IF-SU1 steady-state unannotated inference window A under stable bounded settings (policy window metadata recorded below).
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260303-2134-inference-combine-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260303-2134-inference-combine-01.sqlite`
+  - `logs/prof/inference-steady-unannot-nsys-a/`
+- findings_notes:
+  - Run completed end-to-end on GPU3 in combine `--mode test` and emitted expected `nsys` artifact.
+  - Top-3 GPU kernel set (from `cuda_gpu_kern_sum`) is `gemv2T_kernel_val`, `gemmSN_TN_kernel`, and `fmha_cutlassF_f32_aligned_64x64_rf_sm80`.
+  - Test metric matched prior inference slices (`test=-2.278367519378662`).
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: 5
+- window_profile_iterations: 25
+- stability_pair_run_id: 20260303-2138-inference-combine-01
+- top3_overlap: 3/3
+- timeshare_drift_pct: 0.86
+- representative_pass: true
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: 0.38
+- overrun_reason_if_any: none
+- review_gate_state_at_run: not_done
+
+### Run: 20260303-2138-inference-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: inference
+- slice_id: IF-SU1
+- profile_stage: steady_unannotated
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T21:39:06Z
+- mode: inference
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260303-2138-inference-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof inference-steady-unannot-nsys-b -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `0aff6d7afdbbf466f9f73119f50439edaa2f3266`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: IF-SU1 steady-state unannotated inference window B under same settings as paired window A.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260303-2138-inference-combine-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260303-2138-inference-combine-01.sqlite`
+  - `logs/prof/inference-steady-unannot-nsys-b/`
+- findings_notes:
+  - Run completed end-to-end on GPU3 in combine `--mode test` and emitted expected `nsys` artifact.
+  - Top-3 GPU kernel set matched paired run A exactly (`top3_overlap=3/3`).
+  - Max per-hotspot relative time-share drift across shared top-3 kernels was `0.86%` (pass threshold `<=20%`).
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: 5
+- window_profile_iterations: 25
+- stability_pair_run_id: 20260303-2134-inference-combine-01
+- top3_overlap: 3/3
+- timeshare_drift_pct: 0.86
+- representative_pass: true
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: 0.38
+- overrun_reason_if_any: none
+- review_gate_state_at_run: not_done

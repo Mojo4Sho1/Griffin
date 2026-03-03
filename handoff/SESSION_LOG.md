@@ -363,3 +363,24 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `gfm-20260303-r01 / IF-SU1 / steady_unannotated` paired inference windows under `nsys` and record representativeness metrics.
+
+## 2026-03-03T21:40:54Z - IF-SU1 inference steady-unannotated representativeness gate passed
+- task_scope: Execute `gfm-20260303-r01 / IF-SU1 / steady_unannotated` paired `nsys` inference windows and synchronize campaign/results/handoff state.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); confirmed GPU3 had no active compute process attached.
+  - Attempted IF-SU1 run A `20260303-2134-inference-combine-01` in sandbox; captured expected `nsys` sandbox restriction (`open: Operation not permitted`) and reran outside sandbox.
+  - Executed IF-SU1 run A `20260303-2134-inference-combine-01` and run B `20260303-2138-inference-combine-01` on GPU3; both completed end-to-end and generated `.nsys-rep` artifacts.
+  - Extracted paired `cuda_gpu_kern_sum` summaries and computed representativeness metrics (`top3_overlap=3/3`, `timeshare_drift_pct=0.86`, `representative_pass=true`).
+  - Updated campaign row `IF-SU1`, appended run records and inference representativeness result summary, and advanced handoff to Phase 6a taxonomy-spec work.
+- outcome: success
+- blockers:
+  - none for IF-SU1 execution.
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Draft Phase 6a minimal coarse NVTX taxonomy and insertion map for `hmaintask_completion.py` and `hmaintask_combine.py` before any annotation code edits.
