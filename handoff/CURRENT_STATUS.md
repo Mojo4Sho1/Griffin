@@ -4,7 +4,7 @@
 - Date: 2026-03-03 (UTC)
 - Branch: `main-public`
 - Commit: `b7a35f60ccba494e2e533ab38fec2c8ffaa26952`
-- Profiling effort phase: Phase 4a (`train` baseline unannotated) is complete; Phase 4b (`finetune` baseline unannotated) is active with row `gfm-20260303-r01 / FT-S1` complete and next row `gfm-20260303-r01 / FT-S2`.
+- Profiling effort phase: Phase 4a (`train` baseline validation) is complete; Phase 4b (`finetune` baseline validation) is active with row `gfm-20260303-r01 / FT-B1` complete and next row `gfm-20260303-r01 / FT-B2`.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -26,13 +26,19 @@
   - finetune: 0
   - inference: 0
 
+## Workflow Gate State
+- capture_complete: false
+- review_complete: false
+- ncu_allowed: false
+- optimization_discussion_allowed: false
+
 ## What Is Established
 - Stable project operating rules now live in `AGENTS.md`.
 - Handoff system is initialized in `handoff/` with strict file roles.
 - Session history log now exists at `handoff/SESSION_LOG.md`.
 - Profiling documentation scaffold is initialized in `profiling/`.
 - Profiling overview doc is `profiling/_PROFILING_GUIDE.md` (no additional README files).
-- Campaign matrix now exists at `profiling/CAMPAIGN_PLAN.md` with explicit rows for `train`/`finetune`/`inference` across `baseline_unannotated`, `baseline_annotated`, and `ncu_hotspot` stages.
+- Campaign matrix now exists at `profiling/CAMPAIGN_PLAN.md` with explicit rows for `train`/`finetune`/`inference` across `baseline_validation`, `steady_unannotated`, `steady_annotated`, `review_gate`, and `ncu_post_review` stages.
 - Environment scaffold now exists at `environment.yml` with GPU-coupled package guidance in `profiling/PREFLIGHT.md`.
 - Environment contract: `environment.yml` now uses conda-native PyTorch/PyG stack entries (`pytorch`, `pytorch_geometric`, `pytorch_scatter`) and is treated as the canonical setup baseline.
 - Single-process profiling accelerate config exists at `hconfig_profiling_single_gpu.yaml` for baseline slice reproducibility.
@@ -42,7 +48,8 @@
 - Dataset path `datasets/single-pretrain-v3` is now staged with minimal required metadata/embeddings/HF dataset tree so `Graph(args.dataset)` and `Task(args.dataset)` initialize successfully for command-path verification.
 - Completion-script fix applied at `hmaintask_completion.py:246` to use `accelerator.device` in the metric gather tensor allocation (non-semantic runtime compatibility fix).
 - Finetune combine-script compatibility fix applied at `hmaintask_combine.py:238` to use `accelerator.device` for validation metric gather tensor allocation (non-semantic runtime compatibility fix).
-- Workflow sequencing is now explicit in docs: baseline `nsys` -> minimal NVTX annotation -> annotated `nsys` validation -> hotspot shortlist -> targeted `ncu`.
+- Baseline validation slices are now explicitly treated as pipeline-validation evidence only; optimization evidence requires steady-state gates.
+- Workflow sequencing is now explicit in docs: baseline validation -> steady-state unannotated -> minimal NVTX annotation -> steady-state annotated final capture -> human review -> post-review targeted `ncu` -> post-review optimization discussion.
 - Raw profiling artifact directories exist at:
   - `artifacts/profiles/nsys/`
   - `artifacts/profiles/ncu/`
@@ -105,7 +112,10 @@
   - `datasets/joint-v65`: missing
   - `checkpoints/transfer`: missing
 - Current campaign blocker surface:
-  - no active runtime blocker in `train`/`finetune` baseline-unannotated paths.
-  - `finetune` baseline gate still requires one additional successful `nsys` slice (`FT-S2`) to reach the `2/2` Phase 4b threshold.
+  - no active runtime blocker in `train`/`finetune` baseline-validation paths.
+  - `finetune` baseline validation gate still requires one additional successful `nsys` slice (`FT-B2`) to reach the `2/2` Phase 4b threshold.
+- Optimization/recommendation policy surface:
+  - Optimization recommendations are prohibited until capture_complete and review_complete are both true.
+  - `ncu` runs are prohibited until `ncu_allowed: true` (post-review gate).
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train` completion slices, and `nsys` emits `.nsys-rep`.
 - Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads.

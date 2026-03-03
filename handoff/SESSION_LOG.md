@@ -236,3 +236,25 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `gfm-20260303-r01 / FT-S2 / baseline_unannotated` (smoke then `nsys`) to close the Phase 4b finetune `2/2` gate.
+
+## 2026-03-03T18:39:28Z - Capture-first review-first workflow enforcement docs update
+- task_scope: Implement policy/docs upgrade to enforce baseline validation -> steady-state capture -> human review -> post-review deep-dive/optimization sequencing.
+- actions_taken:
+  - Reframed checklist phases to separate baseline validation from steady-state evidence gates and inserted explicit human review and post-review stages.
+  - Reworked campaign plan stages/rows to include `baseline_validation`, `steady_unannotated`, `steady_annotated`, campaign `review_gate`, and `ncu_post_review` gating.
+  - Updated command, run, and results docs with representativeness/stability policy, iteration-window growth, and soft-cap-finish behavior.
+  - Added explicit policy guardrails prohibiting optimization recommendations before capture + review gates are complete.
+  - Synced handoff current status and next task to new row naming (`FT-B2`) and workflow gate state fields.
+- outcome: success
+- blockers:
+  - none for documentation/policy migration.
+- files_updated:
+  - `handoff/CHECKLIST.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute campaign row `gfm-20260303-r01 / FT-B2 / baseline_validation`, then continue baseline validation sequencing before entering steady-state capture rows.

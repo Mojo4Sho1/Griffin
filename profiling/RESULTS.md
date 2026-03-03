@@ -9,7 +9,7 @@ It is for conclusions and interpretation, not raw logs.
 ## Result: <result_id>
 - campaign_id: <campaign_id>
 - scenario: <train|finetune|inference>
-- profile_stage: baseline_unannotated
+- profile_stage: baseline_validation
 - date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
 - related_runs:
   - <run_id_1>
@@ -32,17 +32,45 @@ It is for conclusions and interpretation, not raw logs.
 - next_action: <single bounded follow-up action>
 ```
 
+## Steady-State Representativeness Template
+
+```markdown
+## Result: <result_id>
+- campaign_id: <campaign_id>
+- scenario: <train|finetune|inference>
+- profile_stage: <steady_unannotated|steady_annotated>
+- date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
+- related_runs:
+  - <window_run_id_a>
+  - <window_run_id_b>
+- question: Is the scenario representative/stable enough for downstream analysis?
+- summary: <2-5 sentences>
+- stability_checks:
+  - top3_overlap: <ratio>
+  - timeshare_drift_pct: <value>
+  - thresholds: overlap>=2/3, drift<=20%
+  - representative_pass: <true|false>
+- runtime_policy:
+  - planned_soft_cap_minutes: 45
+  - actual_runtime_minutes: <value>
+  - overrun_reason_if_any: <none|reason>
+- confidence: <low|medium|high>
+- caveats:
+  - <limitations>
+- next_action: <single bounded follow-up action>
+```
+
 ## Annotated Scenario Summary Template
 
 ```markdown
 ## Result: <result_id>
 - campaign_id: <campaign_id>
 - scenario: <train|finetune|inference>
-- profile_stage: baseline_annotated
+- profile_stage: steady_annotated
 - date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
 - related_runs:
   - <annotated_nsys_run_id>
-  - <optional_baseline_unannotated_run_id>
+  - <optional_steady_unannotated_run_id>
 - question: <what label interpretability question was tested>
 - summary: <2-5 sentences>
 - nvtx_label_coverage:
@@ -63,7 +91,7 @@ It is for conclusions and interpretation, not raw logs.
 ```markdown
 ## Result: <result_id>
 - campaign_id: <campaign_id>
-- profile_stage: <baseline_unannotated|baseline_annotated>
+- profile_stage: <baseline_validation|steady_unannotated|steady_annotated>
 - date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
 - related_runs:
   - <train_run_id>
@@ -81,13 +109,51 @@ It is for conclusions and interpretation, not raw logs.
 - next_action: <single bounded follow-up action>
 ```
 
+## Capture Completion Gate Template
+
+```markdown
+## Result: <result_id>
+- campaign_id: <campaign_id>
+- profile_stage: capture_gate
+- date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
+- question: Are all baseline + steady-state captures complete (or non-actionably blocked)?
+- capture_gate:
+  - baseline_validation_complete: <true|false>
+  - steady_unannotated_complete: <true|false>
+  - steady_annotated_complete: <true|false>
+  - non_actionable_blockers_documented: <true|false>
+  - capture_complete: <true|false>
+- summary: <2-5 sentences>
+- confidence: <low|medium|high>
+- next_action: <single bounded follow-up action>
+```
+
+## Human Review Summary Template
+
+```markdown
+## Result: <result_id>
+- campaign_id: <campaign_id>
+- profile_stage: review_gate
+- date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
+- related_runs:
+  - <capture_result_ids_or_run_ids>
+- question: Has human review approved progression to post-review deep dives?
+- review_outcome:
+  - review_complete: <true|false>
+  - ncu_allowed: <true|false>
+  - optimization_discussion_allowed: <true|false>
+- summary: <2-5 sentences>
+- approved_hotspots_or_focus: <list_or_none>
+- next_action: <single bounded follow-up action>
+```
+
 ## NCU Hotspot Result Template
 
 ```markdown
 ## Result: <result_id>
 - campaign_id: <campaign_id>
 - scenario: <train|finetune|inference>
-- profile_stage: ncu_hotspot
+- profile_stage: ncu_post_review
 - date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
 - related_runs:
   - <ncu_run_id>
@@ -109,11 +175,13 @@ It is for conclusions and interpretation, not raw logs.
 - If a result is uncertain, mark confidence low and capture the blocker.
 - Cross-scenario comparisons are valid only after required scenario gates are complete for the selected stage.
 - `ncu` hotspot results must reference hotspot candidates from annotated `nsys` analysis.
+- `ncu` results are valid only after human review gate marks `ncu_allowed: true`.
 
 ## Exclusions
 - No raw trace text dumps.
 - No large metric tables copied from profiler outputs.
 - No unbounded backlog items.
+- No optimization proposal content before a completed human review summary explicitly allows it.
 
 ## Result: gfm-20260303-r01-train-baseline-unannotated-01
 - campaign_id: gfm-20260303-r01

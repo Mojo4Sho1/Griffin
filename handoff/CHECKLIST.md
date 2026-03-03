@@ -2,20 +2,22 @@
 
 Status values: `not started` | `in progress` | `done`
 
+Policy gate: no optimization recommendations are permitted before Phase 8 (`Human analysis/review`) is complete.
+
 | Phase | Status | Notes |
 |---|---|---|
 | Phase 1: Repo reconnaissance (entry points, launch flow, outputs) | done | Initial mapping completed. |
 | Phase 2: Stable governance and handoff scaffolding | done | `AGENTS.md`, `handoff/`, and `profiling/` initialized. |
 | Phase 2b: Environment and preflight readiness scaffolding | done | `environment.yml` and `profiling/PREFLIGHT.md` added. |
 | Phase 2c: Session continuity and asset-status scaffolding | done | `handoff/SESSION_LOG.md` and `profiling/ASSETS_STATUS.md` added. |
-| Phase 3: Baseline profiling slice command verification | done | `datasets/single-pretrain-v3` staged for command-path verification; smoke and nsys runs both progress beyond `Graph(args.dataset)` initialization. |
-| Phase 4a: Baseline `nsys` run capture (`train`) | done | Gate met: `2/2` successful `baseline_unannotated` train `nsys` slices (`20260302-1637-train-completion-01`, `20260303-1727-train-completion-01`). |
-| Phase 4b: Baseline `nsys` run capture (`finetune`) | in progress | Gate: `>=2` successful `baseline_unannotated` `nsys` slices for finetune path. `FT-S1` now complete (`20260303-1745-finetune-combine-01` success) after `hmaintask_combine.py:238` gather-device fix; next row is `gfm-20260303-r01 / FT-S2`. |
-| Phase 4c: Baseline `nsys` run capture (`inference`) | not started | Gate: `>=2` successful `baseline_unannotated` `nsys` slices; canonical path is `hmaintask_combine.py --mode test --loadpath checkpoints/single-sft/best_checkpoint`. |
-| Phase 4d: Cross-scenario baseline comparison (`train` vs `finetune` vs `inference`) | not started | Starts only after 4a/4b/4c are done; summarize in `profiling/RESULTS.md`. |
-| Phase 5a: Coarse annotation spec (minimal NVTX taxonomy) | not started | Define human-interpretable label taxonomy and insertion points before any annotation code changes. |
-| Phase 5b: Coarse annotation insertion (`hmaintask_completion.py`, `hmaintask_combine.py`) | not started | Minimal, reversible NVTX ranges at high-level boundaries only; no model semantic changes. |
-| Phase 5c: Annotated validation `nsys` runs | not started | Gate: `>=1` successful `baseline_annotated` `nsys` slice per scenario (`train`, `finetune`, `inference`). |
-| Phase 5d: Annotated comparison + hotspot shortlist | not started | Compare annotated traces across scenarios and produce shortlist for targeted deep dives. |
-| Phase 6: Hotspot analysis and prioritized optimization candidates | not started | Rank one primary hotspot per scenario from annotated `nsys` evidence. |
-| Phase 7: Deep kernel investigation (`ncu` targeted) | not started | Gate: `>=1` successful `ncu_hotspot` slice per scenario after Phase 5d/6 gates are met. |
+| Phase 3: Baseline validation command-path verification (short slices) | done | Validation-only scope; confirms profiling pipeline and command/runtime health. |
+| Phase 4a: Baseline validation `nsys` capture (`train`) | done | Gate met: `2/2` successful short validation slices. |
+| Phase 4b: Baseline validation `nsys` capture (`finetune`) | in progress | Gate: `>=2` successful short validation slices; `FT-B1` complete, `FT-B2` pending. |
+| Phase 4c: Baseline validation `nsys` capture (`inference`) | not started | Gate: `>=2` successful short validation slices for combine test path. |
+| Phase 5: Steady-state unannotated representativeness gate | not started | Iteration-window stability required before analysis decisions; this is optimization evidence, unlike Phase 4 validation slices. |
+| Phase 6a: Coarse annotation spec (minimal NVTX taxonomy) | not started | Define human-readable labels and insertion points before code edits. |
+| Phase 6b: Coarse annotation insertion (`hmaintask_completion.py`, `hmaintask_combine.py`) | not started | Minimal, reversible NVTX ranges at high-level boundaries only; no model semantic changes. |
+| Phase 7: Steady-state annotated profiling capture (final capture set) | not started | Capture complete only after baseline + steady-state (unannotated + annotated) rows are finished or documented as non-actionable blockers. |
+| Phase 8: Human analysis/review gate | not started | Review captured logs/results; no optimization recommendations before this phase is complete. |
+| Phase 9: Post-review targeted deep kernel investigation (`ncu`) | not started | Allowed only after Phase 8 review gate is complete and approved. |
+| Phase 10: Post-review optimization strategy discussion | not started | Discussion/planning only after capture and review gates are complete. |

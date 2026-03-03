@@ -21,7 +21,7 @@ Example:
 - Campaign ID (`campaign_id`)
 - Scenario (`train` | `finetune` | `inference`)
 - Slice ID (from `profiling/CAMPAIGN_PLAN.md`)
-- Profile stage (`baseline_unannotated` | `baseline_annotated` | `ncu_hotspot`)
+- Profile stage (`baseline_validation` | `steady_unannotated` | `steady_annotated` | `ncu_post_review`)
 - Date/time (UTC)
 - Mode (`train` / `fine-tune` / `inference`)
 - Dataset
@@ -32,6 +32,18 @@ Example:
 - Profiler used
 - Output file paths
 - Short notes on findings
+- Steady-state metadata when applicable:
+  - `window_warmup_iterations`
+  - `window_profile_iterations`
+  - `stability_pair_run_id`
+  - `top3_overlap`
+  - `timeshare_drift_pct`
+  - `representative_pass`
+  - `planned_soft_cap_minutes`
+  - `actual_runtime_minutes`
+  - `overrun_reason_if_any`
+- Post-review deep-dive metadata when applicable:
+  - `review_gate_state_at_run` (must be `done` for `ncu_post_review`)
 
 ## Run Template
 
@@ -40,7 +52,7 @@ Example:
 - campaign_id: <campaign_id>
 - scenario: <train|finetune|inference>
 - slice_id: <slice_id_from_campaign_plan>
-- profile_stage: <baseline_unannotated|baseline_annotated|ncu_hotspot>
+- profile_stage: <baseline_validation|steady_unannotated|steady_annotated|ncu_post_review>
 - date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
 - mode: <train|fine-tune|inference>
 - dataset: <dataset_id_or_path>
@@ -55,6 +67,16 @@ Example:
 - findings_notes: <1-5 concise bullets or sentences>
 - status: <success|failed|partial>
 - blocker_if_any: <none or short blocker statement>
+- window_warmup_iterations: <int_or_na>
+- window_profile_iterations: <int_or_na>
+- stability_pair_run_id: <run_id_or_na>
+- top3_overlap: <ratio_or_na>
+- timeshare_drift_pct: <value_or_na>
+- representative_pass: <true|false|na>
+- planned_soft_cap_minutes: <int_or_na>
+- actual_runtime_minutes: <value_or_na>
+- overrun_reason_if_any: <none or reason>
+- review_gate_state_at_run: <done|not_done|na>
 ```
 
 ## Conventions
@@ -66,19 +88,30 @@ Example:
 ## Campaign/Stage Counting Rules
 
 - Checklist completion counters use only successful profiler runs (`status: success`) that match required stage + profiler type.
-- Phase 4 baseline minimums count only runs where:
-  - `profile_stage: baseline_unannotated`
+- Phase 4 baseline-validation minimums count only runs where:
+  - `profile_stage: baseline_validation`
   - `profiler: nsys`
   - `status: success`
-- Phase 5 annotated minimums count only runs where:
-  - `profile_stage: baseline_annotated`
+- Steady-state gates count only runs where:
+  - `profile_stage: steady_unannotated` or `steady_annotated`
+  - `status: success`
+  - `representative_pass: true`
+- Annotated stage minimums count only runs where:
+  - `profile_stage: steady_annotated`
   - `profiler: nsys`
   - `status: success`
-- Phase 7 deep-dive minimums count only runs where:
-  - `profile_stage: ncu_hotspot`
+- Post-review deep-dive minimums count only runs where:
+  - `profile_stage: ncu_post_review`
   - `profiler: ncu`
   - `status: success`
+- `ncu_post_review` rows are invalid unless `review_gate_state_at_run: done`.
 - Legacy records from pre-campaign sessions may omit campaign fields; new records must include them.
+- Legacy campaign records that still use `baseline_unannotated` / `baseline_annotated` remain valid historical context; new records must use the updated stage enum.
+
+## Recommendation Guardrail
+
+- Do not add optimization recommendations in this file before capture-complete and human-review gates are complete.
+- Prior to review completion, run entries may only document capture health, representativeness, and blocker boundaries.
 
 ### Run: 20260301-1848-train-completion-01
 - readiness_checklist:

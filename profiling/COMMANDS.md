@@ -1,6 +1,6 @@
 # Profiling Command Patterns
 
-This file stores canonical command patterns for baseline and follow-on profiling.
+This file stores canonical command patterns for validation slices, steady-state captures, and post-review deep dives.
 Use placeholders where environment-specific details are not yet confirmed.
 
 ## Shared GPU Guardrail (Required On This Host)
@@ -24,15 +24,29 @@ nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=c
 CUDA_VISIBLE_DEVICES=3 <command>
 ```
 
+## Workflow Order (Enforced)
+
+1. Baseline validation (short slices, pipeline sanity only)
+2. Steady-state unannotated profiling (representativeness gate)
+3. Minimal coarse NVTX/labels insertion
+4. Steady-state annotated profiling (final capture set)
+5. Human analysis/review
+6. Targeted `ncu` (only after review gate)
+7. Optimization strategy discussion (post-review only)
+
+Policy: no optimization recommendations before capture + review gates complete.
+
 ## Campaign Conventions
 
 - Run IDs follow `profiling/RUNS.md` canonical format:
   - `<YYYYMMDD>-<HHMM>-<mode>-<entry>-<seq>`
 - Campaign/slice/stage tracking is authoritative in `profiling/CAMPAIGN_PLAN.md`.
 - Required `profile_stage` values:
-  - `baseline_unannotated`
-  - `baseline_annotated`
-  - `ncu_hotspot`
+  - `baseline_validation`
+  - `steady_unannotated`
+  - `steady_annotated`
+  - `review_gate`
+  - `ncu_post_review`
 
 ## Preferred Baseline Wrapper
 
@@ -40,11 +54,11 @@ CUDA_VISIBLE_DEVICES=3 <command>
 scripts/profile_baseline.sh <smoke|nsys|ncu> <run_id> <task_script.py> <dataset> <log_dir> <log_name> -- <extra_task_args...>
 ```
 
-## Scenario Command Classes
+## 1) Baseline Validation Commands (Short Slices)
 
-### 1) Baseline Unannotated (`profile_stage: baseline_unannotated`)
+These are intentionally bounded to verify command/runtime/profiler path health.
 
-#### Train scenario (`hmaintask_completion.py`, mode `train`)
+### Train (`hmaintask_completion.py`, mode `train`)
 
 Smoke:
 ```bash
@@ -56,7 +70,7 @@ CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke <YYYYMMDD-HHMM-train-co
 CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-train-completion-01> hmaintask_completion.py datasets/single-pretrain-v3 logs/prof train-baseline-nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
-#### Finetune scenario (`hmaintask_combine.py`, mode `train`)
+### Finetune (`hmaintask_combine.py`, mode `train`)
 
 Smoke:
 ```bash
@@ -68,7 +82,7 @@ CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke <YYYYMMDD-HHMM-finetune
 CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-finetune-combine-01> hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-baseline-nsys -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
-#### Inference scenario (`hmaintask_combine.py`, mode `test`)
+### Inference (`hmaintask_combine.py`, mode `test`)
 
 Smoke:
 ```bash
@@ -80,13 +94,36 @@ CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke <YYYYMMDD-HHMM-inferenc
 CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-inference-combine-01> hmaintask_combine.py datasets/single-pretrain-v3 logs/prof inference-baseline-nsys -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
-### 2) Baseline Annotated (`profile_stage: baseline_annotated`)
+## 2) Steady-State Unannotated Profiling (Representativeness Gate)
 
-These commands are the same scenario command classes as baseline-unannotated and must be executed only after Phase 5b inserts minimal NVTX ranges in:
-- `hmaintask_completion.py`
-- `hmaintask_combine.py`
+Purpose: optimization-evidence capture before annotation.
 
-Annotated `nsys` templates:
+Policy:
+- Unit is iterations (training steps), not epochs/minutes.
+- Start with window `warmup=5`, `profile=25`.
+- If unstable, expand window in sequence: `10/50 -> 20/100 -> 40/200`.
+- Stability pass criteria:
+  - top-3 hotspot overlap `>= 2/3`
+  - per-hotspot time-share drift `<= 20%`
+- Runtime policy:
+  - planned soft cap `45` minutes
+  - do not terminate healthy progressing runs at 45 minutes
+  - allow completion and log overrun details
+  - terminate only for no-progress/hang/shared-host policy violations
+
+Execution note:
+- Reuse scenario command templates above with `profile_stage=steady_unannotated` in run/campaign metadata.
+- Maintain comparable args/config across paired runs for valid stability comparison.
+
+## 3) Steady-State Annotated Profiling (Final Capture Set)
+
+Execute only after minimal coarse NVTX ranges are inserted.
+
+Policy:
+- Same iteration-window and stability policy as steady-state unannotated.
+- Reuse scenario command templates with annotated log names and `profile_stage=steady_annotated`.
+
+Annotated `nsys` examples:
 
 Train:
 ```bash
@@ -103,9 +140,11 @@ Inference:
 CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-inference-combine-annot-01> hmaintask_combine.py datasets/single-pretrain-v3 logs/prof inference-annot-nsys -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
-### 3) Targeted Deep Dive (`profile_stage: ncu_hotspot`)
+## 4) Targeted Deep Dive (`ncu_post_review`)
 
-Run only after hotspot shortlist is confirmed from annotated `nsys` traces.
+Run only after:
+- capture-complete gate passes
+- human review gate is marked done
 
 Train:
 ```bash
@@ -148,23 +187,3 @@ Single-GPU profiling config check:
 ```bash
 cat hconfig_profiling_single_gpu.yaml
 ```
-
-## Known-Good Commands (Current Repo-Validated)
-
-Status: `partially verified` (train baseline path verified end-to-end; finetune/inference pending in campaign)
-
-Train smoke command (verified):
-`CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke 20260302-1636-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
-
-Train baseline `nsys` command (verified):
-`CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260302-1637-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
-
-Generated artifact:
-`artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep`
-
-## Pending Confirmation Items
-
-- Finetune baseline smoke + `nsys` command validation.
-- Inference baseline smoke + `nsys` command validation (`--mode test` with `checkpoints/single-sft/best_checkpoint`).
-- Minimal NVTX annotation insertion and annotated `nsys` validation per scenario.
-- Hotspot shortlist and one targeted `ncu` deep-dive per scenario.
