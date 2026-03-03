@@ -12,7 +12,20 @@ import accelerate
 import argparse
 import os.path as osp
 from typing import Union
+from contextlib import contextmanager
 from metric import compute_metric
+
+@contextmanager
+def nvtx_range(label):
+    enabled = torch.cuda.is_available() and hasattr(torch.cuda, "nvtx")
+    if enabled:
+        torch.cuda.nvtx.range_push(label)
+    try:
+        yield
+    finally:
+        if enabled:
+            torch.cuda.nvtx.range_pop()
+
 
 def eval_task(model, dec, dataset, args, accelerator, metric):
     model.eval()
@@ -106,157 +119,77 @@ def main(args):
     accelerator = Accelerator(log_with="tensorboard", project_config=tbconfig)
     accelerator.init_trackers(args.logname)
     tbtracker = accelerator.get_tracker("tensorboard")
+    with nvtx_range("gfm.setup"):
+        model = GriffinMod(hiddim=args.hiddim, num_mp=args.num_mp, use_rev=args.use_rev, use_gate=args.use_gate)
+        if args.loadpath is not None:
+            with nvtx_range("gfm.checkpoint_io"):
+                accelerate.load_checkpoint_in_model(model, args.loadpath)
+        # model.reset_parameters()
+        dec = getfloatdec(args.hiddim)
 
-    model = GriffinMod(hiddim=args.hiddim, num_mp=args.num_mp, use_rev=args.use_rev, use_gate=args.use_gate)
-    if args.loadpath is not None:
-        accelerate.load_checkpoint_in_model(model, args.loadpath)
-    # model.reset_parameters()
-    dec = getfloatdec(args.hiddim)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd)
+        graph = Graph(args.dataset)
+        task = Task(args.dataset)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd)
-    graph = Graph(args.dataset)
-    task = Task(args.dataset)
+        tasknames = args.tasks
+        if len(tasknames) == 1:
+            if tasknames[0] == "ALLTASK":
+                tasknames = [taskname for taskname in task.metatask]
+            elif tasknames[0] == "RETTASK":
+                tasknames = [
+                    taskname
+                    for taskname in task.metatask
+                    if task.metatask[taskname]["task_type"] == "retrieval"
+                ]
+            elif tasknames[0] == "REGTASK":
+                tasknames = [
+                    taskname
+                    for taskname in task.metatask
+                    if task.metatask[taskname]["task_type"] == "regression"
+                ]
+            elif tasknames[0].startswith("EXCEPT__"):
+                expect_taskname = tasknames[0][len("EXCEPT__"):]
+                tasknames = [taskname for taskname in task.metatask if taskname != expect_taskname]
 
-    tasknames = args.tasks
-    if len(tasknames) == 1:
-        if tasknames[0] == "ALLTASK":
-            tasknames = [taskname for taskname in task.metatask]
-        elif tasknames[0] == "RETTASK":
-            tasknames = [
-                taskname
-                for taskname in task.metatask
-                if task.metatask[taskname]["task_type"] == "retrieval"
-            ]
-        elif tasknames[0] == "REGTASK":
-            tasknames = [
-                taskname
-                for taskname in task.metatask
-                if task.metatask[taskname]["task_type"] == "regression"
-            ]
-        elif tasknames[0].startswith("EXCEPT__"):
-            expect_taskname = tasknames[0][len("EXCEPT__"):]
-            tasknames = [taskname for taskname in task.metatask if taskname != expect_taskname]
+        if accelerator.is_main_process:
+            print(tasknames)
 
-    if accelerator.is_main_process:
-        print(tasknames)
+        floatembmodel = SimpleRepeater(args.hiddim)
+        dataset = LoaderWrapperCompletion(
+            graph,
+            batch_size=args.batchsize,
+            subgraphargs={
+                "floatemb": SimpleRepeater(args.hiddim),
+                "fanout":args.fanout,
+                "hop": args.hop
+            },
+            shuffle=True,
+            fewshotfanout=args.fewshotfanout
+        )
+        valid_dataset_dict = {
+            taskname: construct_dataset(graph, task, [taskname], "valid", args, floatembmodel)
+            for taskname in tasknames
+        }
+        test_dataset_dict = {
+            taskname: construct_dataset(graph, task, [taskname], "test", args, floatembmodel)
+            for taskname in tasknames
+        }
+        metric_dict = {
+            taskname: task.metatask[taskname]["metric"] for taskname in tasknames
+        }
+        best_valid_metric = -torch.inf
+        best_checkpoint_path = None
 
-    floatembmodel = SimpleRepeater(args.hiddim)
-    dataset = LoaderWrapperCompletion(
-        graph,
-        batch_size=args.batchsize,
-        subgraphargs={
-            "floatemb": SimpleRepeater(args.hiddim),
-            "fanout":args.fanout,
-            "hop": args.hop
-        },
-        shuffle=True,
-        fewshotfanout=args.fewshotfanout
-    )
-    valid_dataset_dict = {
-        taskname: construct_dataset(graph, task, [taskname], "valid", args, floatembmodel)
-        for taskname in tasknames
-    }
-    test_dataset_dict = {
-        taskname: construct_dataset(graph, task, [taskname], "test", args, floatembmodel)
-        for taskname in tasknames
-    }
-    metric_dict = {
-        taskname: task.metatask[taskname]["metric"] for taskname in tasknames
-    }
-    best_valid_metric = -torch.inf
-    best_checkpoint_path = None
-
-    model, dec, optimizer = accelerator.prepare(model, dec, optimizer)
+        model, dec, optimizer = accelerator.prepare(model, dec, optimizer)
 
     if args.mode == "test":
-        test_metric = {}
-        for taskname in tasknames:
-            if accelerator.is_main_process:
-                print(f"test {taskname}...")
-            eval_metric = eval_task(
-                model,
-                dec,
-                test_dataset_dict[taskname],
-                args,
-                accelerator,
-                metric_dict[taskname],
-            )
-            test_metric[taskname] = eval_metric
-            if accelerator.is_main_process:
-                print(f"test_metric/{taskname}: {test_metric[taskname]}", flush=True)
-        accelerator.end_training()
-        return
-
-    model.train()
-    step = 0
-    for epoch in range(args.maxepoch):
-        if accelerator.is_main_process:
-            print(f"Epoch {epoch} starts")
-        dataset.rebuild_indice(accelerator)
-        loader = DataLoader(
-            dataset,
-            shuffle=True,
-            batch_size=1,
-            collate_fn=lambda xlist: xlist[0],
-            num_workers=16,
-            prefetch_factor=4,
-            persistent_workers=False,
-            pin_memory=True
-        )
-        loader = accelerator.prepare(loader)
-        for data in loader:
-            step += 1
-            optimizer.zero_grad()
-            node = data[0]
-            mask = data[1]
-            y = data[-1]
-            data = data[2:-1]
-            output = model(node, mask, *data)
-            loss = 1 - F.cosine_similarity(output[:y.shape[0]], y, 1).mean()
-            accelerator.backward(loss)
-            optimizer.step()
-            if step % 100 == 0:
-                tbtracker.log({"training_loss": loss}, step=step)
-        accelerator.wait_for_everyone()
-        checkpoint_path = osp.join(args.savepath, f"checkpoint-{epoch}-{step}") if args.savepath is not None else None
-        if args.savepath is not None:
-            accelerator.save_model(model, checkpoint_path)
-        if (epoch + 1) % args.eval_per_epoch == 0:
-            # Switch to eval mode.
-            eval_metric = {}
+        with nvtx_range("gfm.mode_test_only"):
+            test_metric = {}
             for taskname in tasknames:
                 if accelerator.is_main_process:
-                    print(f"Validating {taskname}...")
-                eval_metric[taskname] = eval_task(
-                    model,
-                    dec,
-                    valid_dataset_dict[taskname],
-                    args,
-                    accelerator,
-                    metric_dict[taskname],
-                )
-                if accelerator.is_main_process:
-                    tbtracker.log({f"valid_metric/{taskname}/{metric_dict[taskname]}": eval_metric[taskname]}, step=step)
-                    print(f"valid_metric/{taskname}/{metric_dict[taskname]}: {eval_metric[taskname]}", flush=True)
-            if accelerator.is_main_process:
-                avg_valid_metric = sum(eval_metric.values()) / len(eval_metric)
-                tbtracker.log({"avg_valid_metric": avg_valid_metric}, step=step)
-                print(f"Average valid metric: {avg_valid_metric}", flush=True)
-            # spread the metric to all processes
-            avg_valid_metric = accelerator.gather(
-                torch.tensor(
-                    [avg_valid_metric if accelerator.is_main_process else 0.0],
-                    device=accelerator.device,
-                )
-            ).mean().item()
-            if avg_valid_metric > best_valid_metric:
-                best_valid_metric = avg_valid_metric
-                best_checkpoint_path = checkpoint_path
-                eval_metric = {}
-                for taskname in tasknames:
-                    if accelerator.is_main_process:
-                        print(f"test {taskname}...")
-                    eval_metric[taskname] = eval_task(
+                    print(f"test {taskname}...")
+                with nvtx_range("gfm.eval_task"):
+                    eval_metric = eval_task(
                         model,
                         dec,
                         test_dataset_dict[taskname],
@@ -264,44 +197,136 @@ def main(args):
                         accelerator,
                         metric_dict[taskname],
                     )
-                    if accelerator.is_main_process:
-                        tbtracker.log({f"test_metric/{taskname}/{metric_dict[taskname]}": eval_metric[taskname]}, step=step)
-                        print(f"test_metric/{taskname}/{metric_dict[taskname]}: {eval_metric[taskname]}", flush=True)
+                test_metric[taskname] = eval_metric
                 if accelerator.is_main_process:
-                    avg_test_metric = sum(eval_metric.values()) / len(eval_metric)
-                    print(f"Average test metric: {avg_test_metric}", flush=True)
-            model.train()
+                    print(f"test_metric/{taskname}: {test_metric[taskname]}", flush=True)
+        accelerator.end_training()
+        return
+
+    model.train()
+    step = 0
+    for epoch in range(args.maxepoch):
+        with nvtx_range("gfm.train_epoch"):
+            if accelerator.is_main_process:
+                print(f"Epoch {epoch} starts")
+            dataset.rebuild_indice(accelerator)
+            loader = DataLoader(
+                dataset,
+                shuffle=True,
+                batch_size=1,
+                collate_fn=lambda xlist: xlist[0],
+                num_workers=16,
+                prefetch_factor=4,
+                persistent_workers=False,
+                pin_memory=True
+            )
+            loader = accelerator.prepare(loader)
+            for data in loader:
+                with nvtx_range("gfm.train_step"):
+                    step += 1
+                    optimizer.zero_grad()
+                    node = data[0]
+                    mask = data[1]
+                    y = data[-1]
+                    data = data[2:-1]
+                    output = model(node, mask, *data)
+                    loss = 1 - F.cosine_similarity(output[:y.shape[0]], y, 1).mean()
+                    accelerator.backward(loss)
+                    optimizer.step()
+                    if step % 100 == 0:
+                        tbtracker.log({"training_loss": loss}, step=step)
+            accelerator.wait_for_everyone()
+            checkpoint_path = osp.join(args.savepath, f"checkpoint-{epoch}-{step}") if args.savepath is not None else None
+            if args.savepath is not None:
+                with nvtx_range("gfm.checkpoint_io"):
+                    accelerator.save_model(model, checkpoint_path)
+            if (epoch + 1) % args.eval_per_epoch == 0:
+                # Switch to eval mode.
+                eval_metric = {}
+                for taskname in tasknames:
+                    if accelerator.is_main_process:
+                        print(f"Validating {taskname}...")
+                    with nvtx_range("gfm.eval_task"):
+                        eval_metric[taskname] = eval_task(
+                            model,
+                            dec,
+                            valid_dataset_dict[taskname],
+                            args,
+                            accelerator,
+                            metric_dict[taskname],
+                        )
+                    if accelerator.is_main_process:
+                        tbtracker.log({f"valid_metric/{taskname}/{metric_dict[taskname]}": eval_metric[taskname]}, step=step)
+                        print(f"valid_metric/{taskname}/{metric_dict[taskname]}: {eval_metric[taskname]}", flush=True)
+                if accelerator.is_main_process:
+                    avg_valid_metric = sum(eval_metric.values()) / len(eval_metric)
+                    tbtracker.log({"avg_valid_metric": avg_valid_metric}, step=step)
+                    print(f"Average valid metric: {avg_valid_metric}", flush=True)
+                # spread the metric to all processes
+                avg_valid_metric = accelerator.gather(
+                    torch.tensor(
+                        [avg_valid_metric if accelerator.is_main_process else 0.0],
+                        device=accelerator.device,
+                    )
+                ).mean().item()
+                if avg_valid_metric > best_valid_metric:
+                    best_valid_metric = avg_valid_metric
+                    best_checkpoint_path = checkpoint_path
+                    eval_metric = {}
+                    for taskname in tasknames:
+                        if accelerator.is_main_process:
+                            print(f"test {taskname}...")
+                        with nvtx_range("gfm.eval_task"):
+                            eval_metric[taskname] = eval_task(
+                                model,
+                                dec,
+                                test_dataset_dict[taskname],
+                                args,
+                                accelerator,
+                                metric_dict[taskname],
+                            )
+                        if accelerator.is_main_process:
+                            tbtracker.log({f"test_metric/{taskname}/{metric_dict[taskname]}": eval_metric[taskname]}, step=step)
+                            print(f"test_metric/{taskname}/{metric_dict[taskname]}: {eval_metric[taskname]}", flush=True)
+                    if accelerator.is_main_process:
+                        avg_test_metric = sum(eval_metric.values()) / len(eval_metric)
+                        print(f"Average test metric: {avg_test_metric}", flush=True)
+                model.train()
 
     test_metric = {}
-    if best_checkpoint_path is not None:
-        if accelerator.is_main_process:
-            print(f"Loading best checkpoint from {best_checkpoint_path}")
-        unwrap_model = accelerator.unwrap_model(model)
-        accelerate.load_checkpoint_in_model(unwrap_model, best_checkpoint_path)
-        model = accelerator.prepare(unwrap_model)
-        # resave the best checkpoint
-        if accelerator.is_main_process:
-            print(f"Saving best checkpoint at {osp.join(args.savepath, 'best_checkpoint')}")
-            accelerator.save_model(model, osp.join(args.savepath, 'best_checkpoint'))
-    for taskname in tasknames:
-        if accelerator.is_main_process:
-            print(f"Testing {taskname}...")
-        eval_metric = eval_task(
-            model,
-            dec,
-            test_dataset_dict[taskname],
-            args,
-            accelerator,
-            metric_dict[taskname],
-        )
-        if accelerator.is_main_process:
-            tbtracker.log({f"test_metric/{taskname}": eval_metric}, step=step)
-            print(f"test_metric/{taskname}: {eval_metric}")
-            test_metric[taskname] = eval_metric
+    with nvtx_range("gfm.final_test_pass"):
+        if best_checkpoint_path is not None:
+            if accelerator.is_main_process:
+                print(f"Loading best checkpoint from {best_checkpoint_path}")
+            unwrap_model = accelerator.unwrap_model(model)
+            with nvtx_range("gfm.checkpoint_io"):
+                accelerate.load_checkpoint_in_model(unwrap_model, best_checkpoint_path)
+            model = accelerator.prepare(unwrap_model)
+            # resave the best checkpoint
+            if accelerator.is_main_process:
+                print(f"Saving best checkpoint at {osp.join(args.savepath, 'best_checkpoint')}")
+                with nvtx_range("gfm.checkpoint_io"):
+                    accelerator.save_model(model, osp.join(args.savepath, 'best_checkpoint'))
+        for taskname in tasknames:
+            if accelerator.is_main_process:
+                print(f"Testing {taskname}...")
+            with nvtx_range("gfm.eval_task"):
+                eval_metric = eval_task(
+                    model,
+                    dec,
+                    test_dataset_dict[taskname],
+                    args,
+                    accelerator,
+                    metric_dict[taskname],
+                )
+            if accelerator.is_main_process:
+                tbtracker.log({f"test_metric/{taskname}": eval_metric}, step=step)
+                print(f"test_metric/{taskname}: {eval_metric}")
+                test_metric[taskname] = eval_metric
 
-    if accelerator.is_main_process:
-        avg_metric = sum(test_metric.values()) / len(test_metric)
-        print(f"Average test metric: {avg_metric}")
+        if accelerator.is_main_process:
+            avg_metric = sum(test_metric.values()) / len(test_metric)
+            print(f"Average test metric: {avg_metric}")
 
     accelerator.end_training()
 

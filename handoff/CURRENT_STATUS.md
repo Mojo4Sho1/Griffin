@@ -3,8 +3,8 @@
 ## Snapshot
 - Date: 2026-03-03 (UTC)
 - Branch: `main-public`
-- Commit: `9bf72d6aff255b14dbcd17f102a35bafcb075c58`
-- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), and Phase 6a (coarse annotation taxonomy spec) are complete across the current campaign scope; next active phase is 6b (coarse annotation insertion) before steady annotated captures.
+- Commit: `a2d97d66e086946217f5cba6413ba7d38edf9f65`
+- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), and Phase 6 (`coarse` NVTX insertion) are complete across the current campaign scope; next active phase is 7 (`steady_annotated` capture execution).
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -57,6 +57,7 @@
 - Phase 6a output is now documented in `profiling/_PROFILING_GUIDE.md` as a minimal coarse NVTX taxonomy and script-level insertion map for `hmaintask_completion.py` and `hmaintask_combine.py`.
 - NVTX documentation now includes a two-tier escalation policy: immutable coarse roots plus optional `targeted_fine` child labels gated by `RV-G1` review completion and approved hotspot shortlist.
 - NVTX policy contract is now hardened with explicit range-nesting interpretation, default `all_ranks` emission policy, and schema-change/versioning rules (`nvtx-v<major>.<minor>`).
+- Phase 6b code insertion is complete in `hmaintask_completion.py` and `hmaintask_combine.py` with minimal coarse ranges (`gfm.setup`, `gfm.mode_test_only`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`) via a reversible helper context wrapper.
 - Raw profiling artifact directories exist at:
   - `artifacts/profiles/nsys/`
   - `artifacts/profiles/ncu/`
@@ -125,7 +126,8 @@
   - Phase 5 steady-state representativeness train row `TR-SU1` is complete (`representative_pass=true`, `top3_overlap=3/3`, `timeshare_drift_pct=1.72`).
   - Phase 5 steady-state representativeness finetune row `FT-SU1` is complete (`representative_pass=true`, `top3_overlap=3/3`, `timeshare_drift_pct=1.16`).
   - Phase 5 steady-state representativeness inference row `IF-SU1` is complete (`representative_pass=true`, `top3_overlap=3/3`, `timeshare_drift_pct=0.86`).
-  - Phase 6a spec is complete; next active work item is Phase 6b coarse annotation insertion in `hmaintask_completion.py` and `hmaintask_combine.py` using the documented taxonomy.
+  - Phase 6b coarse NVTX insertion is complete and syntax sanity check passed (`python -m py_compile hmaintask_completion.py hmaintask_combine.py`).
+  - Next active work item is Phase 7 `steady_annotated` capture execution starting with campaign row `TR-SA1`.
 - Optimization/recommendation policy surface:
   - Optimization recommendations are prohibited until capture_complete and review_complete are both true.
   - `targeted_fine` label expansion is optional and allowed only post-review (`RV-G1` done with approved hotspot focus), while keeping `profile_stage=steady_annotated`.

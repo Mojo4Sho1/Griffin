@@ -442,3 +442,23 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/CURRENT_STATUS.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Continue Phase 6b coarse NVTX insertion as defined in `handoff/NEXT_TASK.md`; preserve immutable coarse roots and defer any targeted-fine insertion until `RV-G1` is done.
+
+## 2026-03-03T22:23:48Z - Phase 6b coarse NVTX insertion completed
+- task_scope: Execute Phase 6b by inserting minimal coarse NVTX ranges in `hmaintask_completion.py` and `hmaintask_combine.py`, run syntax sanity check, and sync handoff docs.
+- actions_taken:
+  - Added a minimal reversible `nvtx_range(...)` helper context in both target scripts.
+  - Inserted coarse ranges at the Phase 6a-defined boundaries only: `gfm.setup`, `gfm.mode_test_only`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, and `gfm.final_test_pass`.
+  - Preserved model/task behavior; no training logic, hyperparameters, or kernel-level tagging was changed.
+  - Ran `python -m py_compile hmaintask_completion.py hmaintask_combine.py` as a lightweight sanity check (pass).
+  - Updated handoff state/checklist and advanced next task to Phase 7 `steady_annotated` capture start (`TR-SA1`).
+- outcome: success
+- blockers:
+  - none for Phase 6b scope.
+- files_updated:
+  - `hmaintask_completion.py`
+  - `hmaintask_combine.py`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute campaign row `gfm-20260303-r01 / TR-SA1 / steady_annotated` on GPU3 (preflight + occupancy checks, then `nsys` run) and update campaign/runs/results plus handoff state.
