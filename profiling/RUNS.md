@@ -611,3 +611,59 @@ Example:
   - Phase 4b finetune baseline validation gate is now satisfied (`2/2`).
 - status: success
 - blocker_if_any: none
+
+### Run: 20260303-1953-inference-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: inference
+- slice_id: IF-B1
+- profile_stage: baseline_validation
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T19:53:17Z
+- mode: inference
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke 20260303-1953-inference-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof inference-baseline-smoke -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `0992053a13a97488c7a4a3cf27f812114b27ccec`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Bounded combine test-mode inference smoke prerequisite for IF-B1 baseline `nsys`.
+- profiler: none
+- outputs:
+  - `logs/prof/inference-baseline-smoke/`
+- findings_notes:
+  - Smoke run completed end-to-end on GPU3 in `--mode test`.
+  - Test metric was emitted (`test_metric/toy_rmse=-2.278367519378662`).
+  - No runtime blockers were observed for inference command path under smoke wrapper.
+- status: success
+- blocker_if_any: none
+
+### Run: 20260303-1954-inference-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: inference
+- slice_id: IF-B1
+- profile_stage: baseline_validation
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - smoke prerequisite: `20260303-1953-inference-combine-01` success
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T19:54:00Z
+- mode: inference
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260303-1954-inference-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof inference-baseline-nsys -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `0992053a13a97488c7a4a3cf27f812114b27ccec`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: First bounded baseline validation inference profiling slice for campaign row IF-B1.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260303-1954-inference-combine-01.nsys-rep`
+  - `logs/prof/inference-baseline-nsys/`
+- findings_notes:
+  - `nsys` run completed end-to-end in `--mode test` and emitted the expected `.nsys-rep` artifact.
+  - Test metric matched smoke prerequisite (`test=-2.278367519378662`).
+  - Phase 4c inference baseline validation progress is now `1/2` (`IF-B1` complete).
+- status: success
+- blocker_if_any: none

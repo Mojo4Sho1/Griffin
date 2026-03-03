@@ -286,3 +286,29 @@ It is for conclusions and interpretation, not raw logs.
 - caveats:
   - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
 - next_action: Execute `gfm-20260303-r01 / IF-B1 / baseline_validation` (smoke then `nsys`) on GPU3.
+
+## Result: gfm-20260303-r01-inference-baseline-validation-01
+- campaign_id: gfm-20260303-r01
+- scenario: inference
+- profile_stage: baseline_validation
+- date_time_utc: 2026-03-03T20:15:47Z
+- related_runs:
+  - 20260303-1953-inference-combine-01
+  - 20260303-1954-inference-combine-01
+- question: Can the first bounded inference baseline-validation slice (`IF-B1`) complete under smoke and `nsys` wrappers on GPU3?
+- summary: Yes. Both smoke and `nsys` IF-B1 runs completed end-to-end in combine test mode with matching test metric output and no runtime blockers. This confirms inference command-path health for baseline validation and advances Phase 4c progress to `1/2`.
+- runtime_overview:
+  - wall_time_sec: unknown
+  - gpu_busy_fraction: unknown
+- key_observations:
+  - `nsys` artifact was generated at `artifacts/profiles/nsys/20260303-1954-inference-combine-01.nsys-rep`.
+  - Smoke and `nsys` both reported `test_metric/toy_rmse=-2.278367519378662`.
+  - GPU3 occupancy checks passed immediately before execution; active compute was present only on GPU0.
+- comparison:
+  - baseline: 20260303-1953-inference-combine-01
+  - variant: 20260303-1954-inference-combine-01
+  - delta: no observed behavior change between smoke and profiler-wrapped bounded inference slice
+- confidence: medium
+- caveats:
+  - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
+- next_action: Execute `gfm-20260303-r01 / IF-B2 / baseline_validation` (smoke then `nsys`) to close the Phase 4c inference baseline-validation `2/2` gate.

@@ -3,8 +3,8 @@
 ## Snapshot
 - Date: 2026-03-03 (UTC)
 - Branch: `main-public`
-- Commit: `a73d00436591eadd9634af5fa5c067f78a4cdb65`
-- Profiling effort phase: Phases 4a (`train` baseline validation) and 4b (`finetune` baseline validation) are complete; Phase 4c (`inference` baseline validation) is active with next row `gfm-20260303-r01 / IF-B1`.
+- Commit: `0992053a13a97488c7a4a3cf27f812114b27ccec`
+- Profiling effort phase: Phases 4a (`train` baseline validation) and 4b (`finetune` baseline validation) are complete; Phase 4c (`inference` baseline validation) is active with `IF-B1` complete and next row `gfm-20260303-r01 / IF-B2`.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -16,7 +16,7 @@
 - baseline_nsys_success:
   - train: 2
   - finetune: 2
-  - inference: 0
+  - inference: 1
 - annotated_nsys_success:
   - train: 0
   - finetune: 0
@@ -101,7 +101,7 @@
   - Nsight Systems: `artifacts/profiles/nsys/<run_id>` (`scripts/profile_baseline.sh:70`)
   - Nsight Compute: `artifacts/profiles/ncu/<run_id>` (`scripts/profile_baseline.sh:79`)
 - Generated artifact from latest attempt:
-  - `artifacts/profiles/nsys/20260303-1945-finetune-combine-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260303-1954-inference-combine-01.nsys-rep`
 - Transfer script stdout/stderr logs: `output/transfer/.../*.log`.
 
 ## Blockers, Uncertainties, Assumptions
@@ -114,9 +114,9 @@
 - Current campaign blocker surface:
   - no active runtime blocker in `train`/`finetune` baseline-validation paths.
   - Phase 4b finetune baseline-validation gate is complete (`FT-B1` + `FT-B2`).
-  - next gate is Phase 4c inference baseline-validation row `IF-B1`.
+  - Phase 4c inference baseline-validation first slice is complete (`IF-B1`); next row is `IF-B2`.
 - Optimization/recommendation policy surface:
   - Optimization recommendations are prohibited until capture_complete and review_complete are both true.
   - `ncu` runs are prohibited until `ncu_allowed: true` (post-review gate).
-- Canonical smoke and `nsys` commands are executable end-to-end for bounded `train` and `finetune` baseline-validation slices, and `nsys` emits `.nsys-rep`.
+- Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
 - Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads.

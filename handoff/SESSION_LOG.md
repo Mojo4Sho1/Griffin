@@ -279,3 +279,23 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `gfm-20260303-r01 / IF-B1 / baseline_validation` (smoke then `nsys`) on GPU3 using `hmaintask_combine.py --mode test --loadpath checkpoints/single-sft/best_checkpoint`.
+
+## 2026-03-03T20:15:47Z - IF-B1 inference baseline-validation slice completed
+- task_scope: Execute `gfm-20260303-r01 / IF-B1 / baseline_validation` (smoke + `nsys`) and synchronize campaign/results/handoff state.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); confirmed GPU3 had no active compute process attached.
+  - Executed IF-B1 smoke run `20260303-1953-inference-combine-01` on GPU3; completed end-to-end in combine `--mode test`.
+  - Executed IF-B1 `nsys` run `20260303-1954-inference-combine-01` on GPU3; completed end-to-end and generated `artifacts/profiles/nsys/20260303-1954-inference-combine-01.nsys-rep`.
+  - Updated campaign row `IF-B1`, appended run records, added inference baseline-validation summary, and advanced handoff to `IF-B2`.
+- outcome: success
+- blockers:
+  - none for IF-B1 execution.
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260303-r01 / IF-B2 / baseline_validation` (smoke then `nsys`) to close the Phase 4c inference baseline-validation `2/2` gate.
