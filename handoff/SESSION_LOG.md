@@ -299,3 +299,24 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `gfm-20260303-r01 / IF-B2 / baseline_validation` (smoke then `nsys`) to close the Phase 4c inference baseline-validation `2/2` gate.
+
+## 2026-03-03T20:32:54Z - IF-B2 inference baseline-validation gate completed
+- task_scope: Execute `gfm-20260303-r01 / IF-B2 / baseline_validation` (smoke + `nsys`) and synchronize campaign/results/handoff state.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); confirmed GPU3 had no active compute process attached.
+  - Attempted IF-B2 smoke run `20260303-2030-inference-combine-01` in sandbox; captured expected sandbox CUDA/multiprocessing restriction failure and reran outside sandbox.
+  - Executed IF-B2 smoke rerun `20260303-2030-inference-combine-01` on GPU3; completed end-to-end in combine `--mode test`.
+  - Executed IF-B2 `nsys` run `20260303-2031-inference-combine-01` on GPU3; completed end-to-end and generated `artifacts/profiles/nsys/20260303-2031-inference-combine-01.nsys-rep`.
+  - Updated campaign row `IF-B2`, appended run records, added inference baseline-validation reproducibility summary (`IF-B1` vs `IF-B2`), and advanced handoff to `TR-SU1`.
+- outcome: success
+- blockers:
+  - none for IF-B2 execution after required out-of-sandbox rerun.
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260303-r01 / TR-SU1 / steady_unannotated` with paired train windows and representativeness metrics.

@@ -312,3 +312,29 @@ It is for conclusions and interpretation, not raw logs.
 - caveats:
   - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
 - next_action: Execute `gfm-20260303-r01 / IF-B2 / baseline_validation` (smoke then `nsys`) to close the Phase 4c inference baseline-validation `2/2` gate.
+
+## Result: gfm-20260303-r01-inference-baseline-validation-02
+- campaign_id: gfm-20260303-r01
+- scenario: inference
+- profile_stage: baseline_validation
+- date_time_utc: 2026-03-03T20:32:54Z
+- related_runs:
+  - 20260303-1954-inference-combine-01
+  - 20260303-2031-inference-combine-01
+- question: Is the bounded inference baseline-validation trace reproducible across IF-B1 and IF-B2?
+- summary: Yes. Both IF-B1 and IF-B2 `nsys` inference baseline-validation slices completed end-to-end on GPU3 with matching test metrics and no runtime blockers. IF-B2 reproduces IF-B1 behavior under the same command/config surface, closing the Phase 4c inference baseline-validation `2/2` gate. With this run, baseline validation gates for train, finetune, and inference are all complete.
+- runtime_overview:
+  - wall_time_sec: unknown
+  - gpu_busy_fraction: unknown
+- key_observations:
+  - IF-B1 (`20260303-1954-inference-combine-01`) and IF-B2 (`20260303-2031-inference-combine-01`) both produced `.nsys-rep` artifacts.
+  - Metrics were stable across both slices (`test=-2.278367519378662`).
+  - IF-B2 smoke prerequisite required an out-of-sandbox rerun due expected sandbox CUDA/multiprocessing restrictions.
+- comparison:
+  - baseline: 20260303-1954-inference-combine-01
+  - variant: 20260303-2031-inference-combine-01
+  - delta: no observed behavior change in bounded inference baseline-validation completion or reported metrics
+- confidence: medium
+- caveats:
+  - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
+- next_action: Start Phase 5 by executing `gfm-20260303-r01 / TR-SU1 / steady_unannotated` with paired train windows for representativeness checks.
