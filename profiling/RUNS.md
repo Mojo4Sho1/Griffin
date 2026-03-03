@@ -803,3 +803,82 @@ Example:
 - actual_runtime_minutes: 0.50
 - overrun_reason_if_any: none
 - review_gate_state_at_run: not_done
+
+### Run: 20260303-2058-finetune-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- slice_id: FT-SU1
+- profile_stage: steady_unannotated
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T20:58:01Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260303-2058-finetune-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-steady-unannot-nsys-a -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `ddb8878c47111ae9bfb82a558ffd3b7023ad2d7a`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: FT-SU1 steady-state unannotated finetune window A under stable bounded settings (policy window metadata recorded below).
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260303-2058-finetune-combine-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260303-2058-finetune-combine-01.sqlite`
+  - `logs/prof/finetune-steady-unannot-nsys-a/`
+- findings_notes:
+  - Initial in-sandbox launch attempt failed with `nsys ... open: Operation not permitted`; rerun outside sandbox succeeded.
+  - Run completed end-to-end on GPU3 and emitted expected `nsys` artifact.
+  - Top-3 GPU kernel set (from `cuda_gpu_kern_sum`) matched paired run B exactly: `gemv2T_kernel_val` plus two `multi_tensor_apply_kernel` variants.
+  - Metrics matched prior bounded finetune slices (`valid=-1.7689979076385498`, `test=-2.278367519378662`).
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: 5
+- window_profile_iterations: 25
+- stability_pair_run_id: 20260303-2059-finetune-combine-01
+- top3_overlap: 3/3
+- timeshare_drift_pct: 1.16
+- representative_pass: true
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: 0.50
+- overrun_reason_if_any: none
+- review_gate_state_at_run: not_done
+
+### Run: 20260303-2059-finetune-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- slice_id: FT-SU1
+- profile_stage: steady_unannotated
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T20:58:53Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260303-2059-finetune-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-steady-unannot-nsys-b -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `ddb8878c47111ae9bfb82a558ffd3b7023ad2d7a`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: FT-SU1 steady-state unannotated finetune window B under same settings as paired window A.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260303-2059-finetune-combine-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260303-2059-finetune-combine-01.sqlite`
+  - `logs/prof/finetune-steady-unannot-nsys-b/`
+- findings_notes:
+  - Run completed end-to-end on GPU3 and emitted expected `nsys` artifact.
+  - Top-3 GPU kernel set matched paired run A exactly (`top3_overlap=3/3`).
+  - Max per-hotspot relative time-share drift across shared top-3 kernels was `1.16%` (pass threshold `<=20%`).
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: 5
+- window_profile_iterations: 25
+- stability_pair_run_id: 20260303-2058-finetune-combine-01
+- top3_overlap: 3/3
+- timeshare_drift_pct: 1.16
+- representative_pass: true
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: 0.50
+- overrun_reason_if_any: none
+- review_gate_state_at_run: not_done

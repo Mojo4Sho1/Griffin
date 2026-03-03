@@ -14,7 +14,7 @@ Policy gate: no optimization recommendations are permitted before Phase 8 (`Huma
 | Phase 4a: Baseline validation `nsys` capture (`train`) | done | Gate met: `2/2` successful short validation slices. |
 | Phase 4b: Baseline validation `nsys` capture (`finetune`) | done | Gate met: `2/2` successful short validation slices (`FT-B1`, `FT-B2`). |
 | Phase 4c: Baseline validation `nsys` capture (`inference`) | done | Gate met: `2/2` successful short validation slices (`IF-B1`, `IF-B2`). |
-| Phase 5: Steady-state unannotated representativeness gate | in progress | `TR-SU1` train pair is complete with `representative_pass=true`; next active row is `FT-SU1` steady-state finetune window pair. |
+| Phase 5: Steady-state unannotated representativeness gate | in progress | `TR-SU1` train and `FT-SU1` finetune pairs are complete with `representative_pass=true`; next active row is `IF-SU1` steady-state inference window pair. |
 | Phase 6a: Coarse annotation spec (minimal NVTX taxonomy) | not started | Define human-readable labels and insertion points before code edits. |
 | Phase 6b: Coarse annotation insertion (`hmaintask_completion.py`, `hmaintask_combine.py`) | not started | Minimal, reversible NVTX ranges at high-level boundaries only; no model semantic changes. |
 | Phase 7: Steady-state annotated profiling capture (final capture set) | not started | Capture complete only after baseline + steady-state (unannotated + annotated) rows are finished or documented as non-actionable blockers. |
