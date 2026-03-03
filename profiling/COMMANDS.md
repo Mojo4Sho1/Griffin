@@ -30,11 +30,15 @@ CUDA_VISIBLE_DEVICES=3 <command>
 2. Steady-state unannotated profiling (representativeness gate)
 3. Minimal coarse NVTX/labels insertion
 4. Steady-state annotated profiling (final capture set)
-5. Human analysis/review
-6. Targeted `ncu` (only after review gate)
-7. Optimization strategy discussion (post-review only)
+5. Human analysis/review (`RV-G1`) and hotspot shortlist approval
+6. Optional targeted-fine relabel + annotated `nsys` rerun (post-review only, hotspot-scoped)
+7. Targeted `ncu` (only after review gate)
+8. Optimization strategy discussion (post-review only)
 
 Policy: no optimization recommendations before capture + review gates complete.
+Policy: `targeted_fine` relabeling is optional and only allowed after `RV-G1` is `done` with approved hotspot focus; see `profiling/_PROFILING_GUIDE.md` section `NVTX Granularity Escalation Policy (Two-Tier)`.
+Policy: default rank emission is `all_ranks`; any single-rank/subset filtering must be documented in run metadata.
+Cross-reference: follow `profiling/_PROFILING_GUIDE.md` sections `Range Nesting And Overlap Policy`, `Distributed / Rank Emission Policy`, and `Schema Change Rule`.
 
 ## Campaign Conventions
 
@@ -122,6 +126,9 @@ Execute only after minimal coarse NVTX ranges are inserted.
 Policy:
 - Same iteration-window and stability policy as steady-state unannotated.
 - Reuse scenario command templates with annotated log names and `profile_stage=steady_annotated`.
+- Tiering rule:
+  - Coarse annotated captures are the default.
+  - Post-review targeted-fine reruns keep `profile_stage=steady_annotated` and must record `label_tier`, `label_schema_version`, `hotspot_focus_id`, and `parent_label_anchor` metadata in `RUNS.md`/`RESULTS.md`.
 
 Annotated `nsys` examples:
 

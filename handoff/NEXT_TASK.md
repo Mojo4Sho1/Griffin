@@ -1,37 +1,44 @@
 # Next Task
 
 ## Single Bounded Task
-Execute Phase 6a: draft the minimal coarse NVTX taxonomy spec and insertion map for `hmaintask_completion.py` and `hmaintask_combine.py`, without inserting code yet.
+Execute Phase 6b: insert the minimal coarse NVTX ranges in `hmaintask_completion.py` and `hmaintask_combine.py` using the Phase 6a taxonomy spec, with no model semantic changes.
 
 ## Why This Is Immediate Priority
-- Phase 5 (`steady_unannotated`) is now complete across all scenarios (`TR-SU1`, `FT-SU1`, `IF-SU1`) with `representative_pass=true`.
-- Workflow order requires a human-readable annotation spec before Phase 6b code edits and Phase 7 steady-state annotated captures.
-- Captures are complete enough to define stable high-level label boundaries without touching model semantics.
+- Phase 6a taxonomy/insertion-map spec is now documented in `profiling/_PROFILING_GUIDE.md`.
+- Workflow order requires Phase 6b code insertion before Phase 7 steady-state annotated captures.
+- Existing steady-state unannotated representativeness evidence is complete, so annotation can proceed without changing workload semantics.
 
 ## Exact Outputs Expected
-- Create/update one profiling doc section with a minimal NVTX taxonomy proposal containing:
-  - label names
-  - start/end boundary definitions
-  - per-script insertion points (`hmaintask_completion.py`, `hmaintask_combine.py`)
-  - explicit non-goals (no detailed per-kernel tagging)
-- Confirm taxonomy is reversible/minimal and aligned with existing policy gates.
+- Insert minimal NVTX range wrappers at the documented high-level boundaries only:
+  - `gfm.setup`
+  - `gfm.mode_test_only`
+  - `gfm.train_epoch`
+  - `gfm.train_step`
+  - `gfm.eval_task`
+  - `gfm.checkpoint_io`
+  - `gfm.final_test_pass`
+- Keep insertion symmetric across `hmaintask_completion.py` and `hmaintask_combine.py` where paths are equivalent.
+- Keep instrumentation reversible and isolated (single-purpose helper/context usage; no broad refactor).
+- Run a lightweight syntax/import sanity check after edits (no profiling capture in this task).
 - Update documentation/state:
-  - `profiling/_PROFILING_GUIDE.md` (or a dedicated annotation spec doc referenced from it)
   - `handoff/CURRENT_STATUS.md` snapshot and active phase note
-  - `handoff/CHECKLIST.md` Phase 6a status/note
+  - `handoff/CHECKLIST.md` Phase 6b status/note
   - append `handoff/SESSION_LOG.md`
 
 ## Must Not Change
 - No model semantic changes.
 - No kernel optimization.
-- No NVTX code insertion yet (that is Phase 6b).
+- No expansion into detailed per-kernel/per-op tagging.
+- No steady-state annotated run execution in this task.
 - No optimization recommendations before review gate completion (`review_complete: true`).
 
 ## Stopping Criteria
-- A concrete, minimal, reversible Phase 6a NVTX taxonomy spec exists with script-level insertion mapping.
-- Handoff and profiling docs are synchronized so Phase 6b can begin immediately in a fresh session.
+- NVTX instrumentation is inserted in both target scripts at the documented coarse boundaries only.
+- Instrumentation remains minimal and reversible.
+- Handoff docs are synchronized so Phase 7 annotated capture work can begin immediately in a fresh session.
 
 ## Definition Of Done (Template Style)
-- [ ] Phase 6a taxonomy labels and boundaries are documented.
-- [ ] `hmaintask_completion.py` and `hmaintask_combine.py` insertion points are mapped in docs.
+- [ ] Phase 6a label set is implemented as coarse NVTX ranges in `hmaintask_completion.py`.
+- [ ] Phase 6a label set is implemented as coarse NVTX ranges in `hmaintask_combine.py`.
+- [ ] Basic syntax/import sanity check passes after insertion edits.
 - [ ] `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md`, and `handoff/SESSION_LOG.md` updated.

@@ -3,8 +3,8 @@
 ## Snapshot
 - Date: 2026-03-03 (UTC)
 - Branch: `main-public`
-- Commit: `0aff6d7afdbbf466f9f73119f50439edaa2f3266`
-- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c) and Phase 5 (`steady_unannotated` representativeness) are complete across `train`/`finetune`/`inference`; next active phase is 6a (coarse annotation spec) before steady annotated captures.
+- Commit: `9bf72d6aff255b14dbcd17f102a35bafcb075c58`
+- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), and Phase 6a (coarse annotation taxonomy spec) are complete across the current campaign scope; next active phase is 6b (coarse annotation insertion) before steady annotated captures.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -54,6 +54,9 @@
 - Finetune combine-script compatibility fix applied at `hmaintask_combine.py:238` to use `accelerator.device` for validation metric gather tensor allocation (non-semantic runtime compatibility fix).
 - Baseline validation slices are now explicitly treated as pipeline-validation evidence only; optimization evidence requires steady-state gates.
 - Workflow sequencing is now explicit in docs: baseline validation -> steady-state unannotated -> minimal NVTX annotation -> steady-state annotated final capture -> human review -> post-review targeted `ncu` -> post-review optimization discussion.
+- Phase 6a output is now documented in `profiling/_PROFILING_GUIDE.md` as a minimal coarse NVTX taxonomy and script-level insertion map for `hmaintask_completion.py` and `hmaintask_combine.py`.
+- NVTX documentation now includes a two-tier escalation policy: immutable coarse roots plus optional `targeted_fine` child labels gated by `RV-G1` review completion and approved hotspot shortlist.
+- NVTX policy contract is now hardened with explicit range-nesting interpretation, default `all_ranks` emission policy, and schema-change/versioning rules (`nvtx-v<major>.<minor>`).
 - Raw profiling artifact directories exist at:
   - `artifacts/profiles/nsys/`
   - `artifacts/profiles/ncu/`
@@ -122,9 +125,10 @@
   - Phase 5 steady-state representativeness train row `TR-SU1` is complete (`representative_pass=true`, `top3_overlap=3/3`, `timeshare_drift_pct=1.72`).
   - Phase 5 steady-state representativeness finetune row `FT-SU1` is complete (`representative_pass=true`, `top3_overlap=3/3`, `timeshare_drift_pct=1.16`).
   - Phase 5 steady-state representativeness inference row `IF-SU1` is complete (`representative_pass=true`, `top3_overlap=3/3`, `timeshare_drift_pct=0.86`).
-  - Next active work item is Phase 6a coarse annotation spec for minimal NVTX taxonomy and insertion mapping.
+  - Phase 6a spec is complete; next active work item is Phase 6b coarse annotation insertion in `hmaintask_completion.py` and `hmaintask_combine.py` using the documented taxonomy.
 - Optimization/recommendation policy surface:
   - Optimization recommendations are prohibited until capture_complete and review_complete are both true.
+  - `targeted_fine` label expansion is optional and allowed only post-review (`RV-G1` done with approved hotspot focus), while keeping `profile_stage=steady_annotated`.
   - `ncu` runs are prohibited until `ncu_allowed: true` (post-review gate).
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
 - Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads.

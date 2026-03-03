@@ -384,3 +384,61 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Draft Phase 6a minimal coarse NVTX taxonomy and insertion map for `hmaintask_completion.py` and `hmaintask_combine.py` before any annotation code edits.
+
+## 2026-03-03T21:44:36Z - Phase 6a NVTX taxonomy spec documented
+- task_scope: Execute Phase 6a by drafting a minimal coarse NVTX taxonomy and insertion map for `hmaintask_completion.py` and `hmaintask_combine.py` without code insertion.
+- actions_taken:
+  - Added a dedicated Phase 6a section to `profiling/_PROFILING_GUIDE.md` with label names, boundary definitions, script-level insertion points, non-goals, and reversibility constraints.
+  - Verified insertion anchors against current line locations in `hmaintask_completion.py` and `hmaintask_combine.py` to keep the spec implementation-ready.
+  - Updated handoff snapshot/checklist to mark Phase 6a complete and advance active work to Phase 6b.
+  - Updated `handoff/NEXT_TASK.md` to a single bounded Phase 6b instrumentation task.
+- outcome: success
+- blockers:
+  - none for Phase 6a documentation scope.
+- files_updated:
+  - `profiling/_PROFILING_GUIDE.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Implement Phase 6b by adding only the documented coarse NVTX ranges in `hmaintask_completion.py` and `hmaintask_combine.py`, then run a lightweight syntax/import sanity check.
+
+## 2026-03-03T22:03:23Z - Two-tier NVTX granularity policy documentation implemented
+- task_scope: Implement documentation-only future-proofing plan for coarse-to-targeted-fine NVTX policy, metadata schema, and workflow guardrails.
+- actions_taken:
+  - Added `NVTX Granularity Escalation Policy (Two-Tier)` to `profiling/_PROFILING_GUIDE.md` with immutable coarse roots, child-label naming contract, post-review gate conditions, comparability rule, and example progression.
+  - Updated `profiling/COMMANDS.md` workflow order to include optional post-review targeted-fine annotated reruns and cross-referenced the new guide section.
+  - Extended `profiling/RESULTS.md` templates and comparison rules with `label_tier`, `label_schema_version`, `hotspot_focus_id`, and `parent_label_anchor` semantics.
+  - Extended `profiling/RUNS.md` required fields/template/conventions with the same annotation metadata and targeted-fine validity rules.
+  - Updated `handoff/CURRENT_STATUS.md` to reflect two-tier policy availability and post-review gating constraints.
+- outcome: success
+- blockers:
+  - none for this documentation scope.
+- files_updated:
+  - `profiling/_PROFILING_GUIDE.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/RESULTS.md`
+  - `profiling/RUNS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Proceed with Phase 6b coarse NVTX insertion as bounded in `handoff/NEXT_TASK.md`; keep Tier 1 labels unchanged and defer any targeted-fine passes until `RV-G1` is done.
+
+## 2026-03-03T22:13:32Z - NVTX policy hardening with nesting/rank/schema rules
+- task_scope: Implement the finalized Phase 6a + two-tier documentation hardening plan (nesting interpretation, rank-emission defaults, schema governance).
+- actions_taken:
+  - Updated `profiling/_PROFILING_GUIDE.md` with loader-wait clarification, explicit nesting/overlap policy, line-drift disclaimer, distributed rank-emission policy, schema change governance, and `nvtx-v1.0` example normalization.
+  - Updated `profiling/RUNS.md` required fields/template/conventions to add `rank_emission_mode` and `rank_filter_if_any`, enforce `label_schema_version` format `nvtx-v<major>.<minor>`, and lock `all_ranks` as default.
+  - Updated `profiling/RESULTS.md` annotated/review templates with schema/rank approval fields and tightened comparison wording for non-matching annotated traces.
+  - Updated `profiling/COMMANDS.md` with rank-emission default policy and explicit cross-references to the new guide policy sections.
+  - Added a concise handoff status note in `handoff/CURRENT_STATUS.md` stating nesting/rank/schema hardening is now part of the NVTX policy contract.
+- outcome: success
+- blockers:
+  - none for this documentation scope.
+- files_updated:
+  - `profiling/_PROFILING_GUIDE.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `profiling/COMMANDS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Continue Phase 6b coarse NVTX insertion as defined in `handoff/NEXT_TASK.md`; preserve immutable coarse roots and defer any targeted-fine insertion until `RV-G1` is done.

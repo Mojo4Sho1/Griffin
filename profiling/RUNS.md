@@ -42,6 +42,13 @@ Example:
   - `planned_soft_cap_minutes`
   - `actual_runtime_minutes`
   - `overrun_reason_if_any`
+- Annotated label metadata when `profile_stage=steady_annotated`:
+  - `label_tier` (`coarse` | `targeted_fine`)
+  - `label_schema_version` (`nvtx-v<major>.<minor>`)
+  - `hotspot_focus_id` (`na` for `coarse`; required review-approved ID for `targeted_fine`)
+  - `parent_label_anchor` (`na` for `coarse`; required coarse root for `targeted_fine`)
+  - `rank_emission_mode` (`all_ranks` | `single_rank` | `subset`)
+  - `rank_filter_if_any` (`none` or filter detail)
 - Post-review deep-dive metadata when applicable:
   - `review_gate_state_at_run` (must be `done` for `ncu_post_review`)
 
@@ -53,6 +60,12 @@ Example:
 - scenario: <train|finetune|inference>
 - slice_id: <slice_id_from_campaign_plan>
 - profile_stage: <baseline_validation|steady_unannotated|steady_annotated|ncu_post_review>
+- label_tier: <coarse|targeted_fine|na>
+- label_schema_version: <nvtx-v<major>.<minor>_or_na>
+- hotspot_focus_id: <focus_id_or_na>
+- parent_label_anchor: <coarse_root_or_na>
+- rank_emission_mode: <all_ranks|single_rank|subset|na>
+- rank_filter_if_any: <none|detail|na>
 - date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
 - mode: <train|fine-tune|inference>
 - dataset: <dataset_id_or_path>
@@ -84,6 +97,11 @@ Example:
 - For reruns of the same slice, keep separate records and reference prior `run_id`.
 - Do not paste raw profiler dumps; link paths only.
 - Every run record must map to exactly one row in `profiling/CAMPAIGN_PLAN.md` (`campaign_id + slice_id`).
+- Default rank-emission mode is `all_ranks`.
+- Runs using `single_rank` or `subset` must explicitly declare `rank_emission_mode` and `rank_filter_if_any` with reason in notes.
+- `label_schema_version` must match `nvtx-v<major>.<minor>`.
+- `targeted_fine` runs must reference a review-approved hotspot focus ID and parent coarse anchor.
+- `targeted_fine` runs are invalid unless `review_gate_state_at_run: done`.
 
 ## Campaign/Stage Counting Rules
 

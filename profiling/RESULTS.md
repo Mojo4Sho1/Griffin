@@ -67,6 +67,10 @@ It is for conclusions and interpretation, not raw logs.
 - campaign_id: <campaign_id>
 - scenario: <train|finetune|inference>
 - profile_stage: steady_annotated
+- label_tier: <coarse|targeted_fine>
+- label_schema_version: <nvtx-v1.0_or_other>
+- hotspot_focus_id: <focus_id_or_na>
+- parent_label_anchor: <coarse_root_or_na>
 - date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
 - related_runs:
   - <annotated_nsys_run_id>
@@ -141,9 +145,12 @@ It is for conclusions and interpretation, not raw logs.
 - review_outcome:
   - review_complete: <true|false>
   - ncu_allowed: <true|false>
+  - targeted_fine_allowed: <true|false>
   - optimization_discussion_allowed: <true|false>
 - summary: <2-5 sentences>
-- approved_hotspots_or_focus: <list_or_none>
+- approved_hotspots_or_focus: <required_non_empty_if_targeted_fine_allowed_else_none>
+- approved_label_schema_version: <nvtx-v<major>.<minor>>
+- approved_rank_scope: <all_ranks|single_rank|subset>
 - next_action: <single bounded follow-up action>
 ```
 
@@ -174,6 +181,7 @@ It is for conclusions and interpretation, not raw logs.
 - Report both absolute and relative changes when available.
 - If a result is uncertain, mark confidence low and capture the blocker.
 - Cross-scenario comparisons are valid only after required scenario gates are complete for the selected stage.
+- Direct like-for-like comparisons between annotated traces require matching `label_tier` and `label_schema_version`; otherwise mark as non-comparable unless explicitly normalized and caveated.
 - `ncu` hotspot results must reference hotspot candidates from annotated `nsys` analysis.
 - `ncu` results are valid only after human review gate marks `ncu_allowed: true`.
 
