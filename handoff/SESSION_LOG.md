@@ -172,3 +172,24 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `profiling/RESULTS.md`
   - `profiling/_PROFILING_GUIDE.md`
 - next_hint: Execute `gfm-20260303-r01 / TR-S2 / baseline_unannotated` (smoke + `nsys`) and update campaign/run/results counters for Phase 4a progress.
+
+## 2026-03-03T17:29:40Z - TR-S2 baseline train gate completed
+- task_scope: Execute `gfm-20260303-r01 / TR-S2 / baseline_unannotated` (smoke + nsys) and sync campaign/results/handoff state.
+- actions_taken:
+  - Ran required preconditions: `conda activate griffin-profiling`, `make profiling-preflight`, `nvidia-smi`, and `nvidia-smi --query-compute-apps=...`; confirmed GPU3 had no active compute process.
+  - Executed smoke run `20260303-1726-train-completion-02` on GPU3 and verified full completion.
+  - Executed `nsys` run `20260303-1727-train-completion-01` on GPU3; artifact generated at `artifacts/profiles/nsys/20260303-1727-train-completion-01.nsys-rep`.
+  - Updated campaign row `TR-S2`, appended run records, and added train baseline reproducibility summary.
+  - Advanced handoff state to next gate (`FT-S1`, Phase 4b).
+- outcome: success
+- blockers:
+  - none for TR-S2 execution.
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Run `gfm-20260303-r01 / FT-S1 / baseline_unannotated` (smoke then `nsys`) using `hmaintask_combine.py --mode train --loadpath checkpoints/single-completion/best_checkpoint`.

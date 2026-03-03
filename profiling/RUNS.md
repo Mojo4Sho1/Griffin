@@ -295,3 +295,87 @@ Example:
   - Runtime metrics match smoke run for the staged dataset (`valid=-1.7689979076385498`, `test=-2.278367757797241`).
 - status: success
 - blocker_if_any: none
+
+### Run: 20260303-1726-train-completion-01
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- slice_id: TR-S2
+- profile_stage: baseline_unannotated
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed (warned in sandbox but exited `ok`)
+  - `nvidia-smi`: passed outside sandbox; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed outside sandbox
+- date_time_utc: 2026-03-03T17:26:16Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke 20260303-1726-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof train-baseline-smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `687ebb129c4a2882f03d511e3ea3108014acc240`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Bounded 1-epoch completion train smoke prerequisite for TR-S2 baseline nsys.
+- profiler: none
+- outputs:
+  - `logs/prof/train-baseline-smoke/` (partial)
+- findings_notes:
+  - Sandbox execution path could not access CUDA/NVML.
+  - Run failed in dataloader multiprocessing init with `PermissionError: [Errno 13] Permission denied` (`SemLock`).
+  - Retried outside sandbox in the next run ID.
+- status: failed
+- blocker_if_any: Sandbox restrictions prevented valid GPU-backed smoke execution.
+
+### Run: 20260303-1726-train-completion-02
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- slice_id: TR-S2
+- profile_stage: baseline_unannotated
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T17:26:56Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke 20260303-1726-train-completion-02 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof train-baseline-smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `687ebb129c4a2882f03d511e3ea3108014acc240`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Bounded 1-epoch completion train smoke prerequisite for TR-S2 baseline nsys.
+- profiler: none
+- outputs:
+  - `logs/prof/train-baseline-smoke/`
+  - `checkpoints/single-completion/best_checkpoint/`
+- findings_notes:
+  - Smoke run completed end-to-end with train/valid/test flow.
+  - Reported metrics matched prior validated slice (`valid=-1.7689979076385498`, `test=-2.278367757797241`).
+- status: success
+- blocker_if_any: none
+
+### Run: 20260303-1727-train-completion-01
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- slice_id: TR-S2
+- profile_stage: baseline_unannotated
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - smoke prerequisite: `20260303-1726-train-completion-02` success
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T17:27:33Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260303-1727-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof train-baseline-nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `687ebb129c4a2882f03d511e3ea3108014acc240`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Bounded baseline unannotated train profiling slice for campaign row TR-S2.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260303-1727-train-completion-01.nsys-rep`
+  - `logs/prof/train-baseline-nsys/`
+  - `checkpoints/single-completion/best_checkpoint/`
+- findings_notes:
+  - Workload completed end-to-end under `nsys`.
+  - Profiler artifact generated successfully for TR-S2.
+  - Runtime metrics matched TR-S1 and smoke prerequisite (`valid=-1.7689979076385498`, `test=-2.278367757797241`).
+- status: success
+- blocker_if_any: none

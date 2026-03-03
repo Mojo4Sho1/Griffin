@@ -3,8 +3,8 @@
 ## Snapshot
 - Date: 2026-03-03 (UTC)
 - Branch: `main-public`
-- Commit: `682e683816ae5a0fafc3b08955abca08a4961800`
-- Profiling effort phase: Multi-scenario campaign framework is established; active execution gate is Phase 4a (`train` baseline unannotated) row `gfm-20260303-r01 / TR-S2`.
+- Commit: `687ebb129c4a2882f03d511e3ea3108014acc240`
+- Profiling effort phase: Phase 4a (`train` baseline unannotated) is complete; active execution gate is Phase 4b (`finetune` baseline unannotated) row `gfm-20260303-r01 / FT-S1`.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -14,7 +14,7 @@
 
 ## Campaign Counters (`gfm-20260303-r01`)
 - baseline_nsys_success:
-  - train: 1
+  - train: 2
   - finetune: 0
   - inference: 0
 - annotated_nsys_success:
@@ -93,7 +93,7 @@
   - Nsight Systems: `artifacts/profiles/nsys/<run_id>` (`scripts/profile_baseline.sh:70`)
   - Nsight Compute: `artifacts/profiles/ncu/<run_id>` (`scripts/profile_baseline.sh:79`)
 - Generated artifact from latest attempt:
-  - `artifacts/profiles/nsys/20260302-1637-train-completion-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260303-1727-train-completion-01.nsys-rep`
 - Transfer script stdout/stderr logs: `output/transfer/.../*.log`.
 
 ## Blockers, Uncertainties, Assumptions
@@ -104,7 +104,7 @@
   - `checkpoints/single-sft`: missing
   - `checkpoints/transfer`: missing
 - Current campaign blocker surface:
-  - `finetune` and `inference` rows depend on `checkpoints/single-sft/best_checkpoint`, which is not yet available.
-  - `train` Phase 4a gate still needs one additional successful baseline unannotated `nsys` slice (`TR-S2`).
+  - `inference` rows depend on `checkpoints/single-sft/best_checkpoint`, which is not yet available.
+  - `finetune` baseline rows are not blocked by missing assets and are pending execution.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train` completion slices, and `nsys` emits `.nsys-rep`.
 - Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads.

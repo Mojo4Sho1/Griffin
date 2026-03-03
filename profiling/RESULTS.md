@@ -114,3 +114,29 @@ It is for conclusions and interpretation, not raw logs.
 - No raw trace text dumps.
 - No large metric tables copied from profiler outputs.
 - No unbounded backlog items.
+
+## Result: gfm-20260303-r01-train-baseline-unannotated-01
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- profile_stage: baseline_unannotated
+- date_time_utc: 2026-03-03T17:28:30Z
+- related_runs:
+  - 20260302-1637-train-completion-01
+  - 20260303-1727-train-completion-01
+- question: Is the bounded unannotated train baseline trace reproducible across two independent slices?
+- summary: Both baseline unannotated `nsys` train slices completed end-to-end with matching validation and test metrics on the staged dataset. No new runtime blockers appeared in TR-S2 after enforcing GPU3 occupancy checks. This satisfies the Phase 4a reproducibility gate for the train scenario.
+- runtime_overview:
+  - wall_time_sec: unknown
+  - gpu_busy_fraction: unknown
+- key_observations:
+  - TR-S1 and TR-S2 completed full train/valid/test flow under `nsys`.
+  - Metric outputs were stable across slices (`valid=-1.7689979076385498`, `test=-2.278367757797241`).
+  - Artifact paths are present for both runs in `artifacts/profiles/nsys/`.
+- comparison:
+  - baseline: 20260302-1637-train-completion-01
+  - variant: 20260303-1727-train-completion-01
+  - delta: no observed behavior change in bounded slice completion or reported metrics
+- confidence: medium
+- caveats:
+  - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
+- next_action: Start Phase 4b by executing campaign row `gfm-20260303-r01 / FT-S1 / baseline_unannotated`.

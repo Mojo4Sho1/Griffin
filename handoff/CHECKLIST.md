@@ -9,8 +9,8 @@ Status values: `not started` | `in progress` | `done`
 | Phase 2b: Environment and preflight readiness scaffolding | done | `environment.yml` and `profiling/PREFLIGHT.md` added. |
 | Phase 2c: Session continuity and asset-status scaffolding | done | `handoff/SESSION_LOG.md` and `profiling/ASSETS_STATUS.md` added. |
 | Phase 3: Baseline profiling slice command verification | done | `datasets/single-pretrain-v3` staged for command-path verification; smoke and nsys runs both progress beyond `Graph(args.dataset)` initialization. |
-| Phase 4a: Baseline `nsys` run capture (`train`) | in progress | Gate: `>=2` successful `baseline_unannotated` `nsys` slices. Current: `1/2` (`20260302-1637-train-completion-01`). |
-| Phase 4b: Baseline `nsys` run capture (`finetune`) | not started | Gate: `>=2` successful `baseline_unannotated` `nsys` slices for finetune path. |
+| Phase 4a: Baseline `nsys` run capture (`train`) | done | Gate met: `2/2` successful `baseline_unannotated` train `nsys` slices (`20260302-1637-train-completion-01`, `20260303-1727-train-completion-01`). |
+| Phase 4b: Baseline `nsys` run capture (`finetune`) | in progress | Gate: `>=2` successful `baseline_unannotated` `nsys` slices for finetune path. Next row: `gfm-20260303-r01 / FT-S1`. |
 | Phase 4c: Baseline `nsys` run capture (`inference`) | not started | Gate: `>=2` successful `baseline_unannotated` `nsys` slices; canonical path is `hmaintask_combine.py --mode test --loadpath checkpoints/single-sft/best_checkpoint`. |
 | Phase 4d: Cross-scenario baseline comparison (`train` vs `finetune` vs `inference`) | not started | Starts only after 4a/4b/4c are done; summarize in `profiling/RESULTS.md`. |
 | Phase 5a: Coarse annotation spec (minimal NVTX taxonomy) | not started | Define human-interpretable label taxonomy and insertion points before any annotation code changes. |
