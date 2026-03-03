@@ -379,3 +379,119 @@ Example:
   - Runtime metrics matched TR-S1 and smoke prerequisite (`valid=-1.7689979076385498`, `test=-2.278367757797241`).
 - status: success
 - blocker_if_any: none
+
+### Run: 20260303-1738-finetune-combine-02
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- slice_id: FT-S1
+- profile_stage: baseline_unannotated
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+  - note: prior sandbox attempt `20260303-1738-finetune-combine-01` was invalid due sandbox CUDA/multiprocessing restrictions and was retried outside sandbox
+- date_time_utc: 2026-03-03T17:38:58Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke 20260303-1738-finetune-combine-02 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-baseline-smoke -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `b7a35f60ccba494e2e533ab38fec2c8ffaa26952`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Bounded 1-epoch finetune combine-train smoke prerequisite for FT-S1 baseline nsys.
+- profiler: none
+- outputs:
+  - `logs/prof/finetune-baseline-smoke/`
+- findings_notes:
+  - Workload progressed through train and validation metric computation (`valid_metric/toy_rmse/rmse=-1.7689979076385498`).
+  - Failure boundary is in post-validation gather: `AttributeError: 'GriffinMod' object has no attribute 'device'` at `hmaintask_combine.py:238`.
+  - This mirrors the earlier completion-script issue and indicates a non-semantic device-allocation bug in combine path.
+- status: failed
+- blocker_if_any: `hmaintask_combine.py` uses `model.device` during `accelerator.gather(...)`; `GriffinMod` has no `device` attribute.
+
+### Run: 20260303-1741-finetune-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- slice_id: FT-S1
+- profile_stage: baseline_unannotated
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - smoke prerequisite: `20260303-1738-finetune-combine-02` failed at known combine gather-device boundary
+  - `nvidia-smi`/query check: passed in same FT-S1 execution window before smoke; no GPU3 compute process detected
+- date_time_utc: 2026-03-03T17:39:33Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260303-1741-finetune-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-baseline-nsys -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `b7a35f60ccba494e2e533ab38fec2c8ffaa26952`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Bounded baseline unannotated finetune profiling slice for campaign row FT-S1.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260303-1741-finetune-combine-01.nsys-rep`
+  - `logs/prof/finetune-baseline-nsys/`
+- findings_notes:
+  - `nsys` emitted the expected `.nsys-rep` artifact.
+  - Runtime failed at the same boundary as smoke (`hmaintask_combine.py:238`, `model.device` AttributeError) after validation metric output.
+  - FT-S1 remains blocked until combine gather-device allocation is fixed.
+- status: failed
+- blocker_if_any: `hmaintask_combine.py` uses `model.device` during `accelerator.gather(...)`; `GriffinMod` has no `device` attribute.
+
+### Run: 20260303-1744-finetune-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- slice_id: FT-S1
+- profile_stage: baseline_unannotated
+- readiness_checklist:
+  - code patch check: `hmaintask_combine.py` gather device now uses `accelerator.device`
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T17:46:25Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke 20260303-1744-finetune-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-baseline-smoke -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `b7a35f60ccba494e2e533ab38fec2c8ffaa26952`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Bounded 1-epoch finetune combine-train smoke rerun after gather-device compatibility fix.
+- profiler: none
+- outputs:
+  - `logs/prof/finetune-baseline-smoke/`
+  - `checkpoints/single-sft/best_checkpoint/`
+- findings_notes:
+  - Smoke rerun completed end-to-end after the `accelerator.device` fix.
+  - Validation/test metrics were produced (`valid=-1.7689979076385498`, `test=-2.278367519378662`).
+  - Best checkpoint persisted to `checkpoints/single-sft/best_checkpoint`.
+- status: success
+- blocker_if_any: none
+
+### Run: 20260303-1745-finetune-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- slice_id: FT-S1
+- profile_stage: baseline_unannotated
+- readiness_checklist:
+  - code patch check: `hmaintask_combine.py` gather device now uses `accelerator.device`
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - smoke prerequisite: `20260303-1744-finetune-combine-01` success
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T17:47:07Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260303-1745-finetune-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-baseline-nsys -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `b7a35f60ccba494e2e533ab38fec2c8ffaa26952`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Bounded baseline unannotated finetune profiling rerun for campaign row FT-S1 after gather-device fix.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260303-1745-finetune-combine-01.nsys-rep`
+  - `logs/prof/finetune-baseline-nsys/`
+  - `checkpoints/single-sft/best_checkpoint/`
+- findings_notes:
+  - `nsys` run completed end-to-end and generated the profiler artifact.
+  - FT-S1 blocker is resolved; no `model.device` AttributeError observed.
+  - Runtime metrics matched smoke rerun (`valid=-1.7689979076385498`, `test=-2.278367519378662`).
+- status: success
+- blocker_if_any: none

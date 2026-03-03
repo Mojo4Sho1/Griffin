@@ -140,3 +140,55 @@ It is for conclusions and interpretation, not raw logs.
 - caveats:
   - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
 - next_action: Start Phase 4b by executing campaign row `gfm-20260303-r01 / FT-S1 / baseline_unannotated`.
+
+## Result: gfm-20260303-r01-finetune-baseline-unannotated-01
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- profile_stage: baseline_unannotated
+- date_time_utc: 2026-03-03T17:40:13Z
+- related_runs:
+  - 20260303-1738-finetune-combine-02
+  - 20260303-1741-finetune-combine-01
+- question: Can FT-S1 complete a bounded unannotated finetune slice under smoke and `nsys` wrappers?
+- summary: FT-S1 did not complete because both smoke and `nsys` hit the same post-validation runtime error in `hmaintask_combine.py`. The run path is otherwise healthy through training and validation metric production, and `nsys` artifact generation is confirmed. Finetune baseline gate progress remains blocked by a script-level device-allocation bug, not by environment, dataset, or GPU occupancy.
+- runtime_overview:
+  - wall_time_sec: unknown
+  - gpu_busy_fraction: unknown
+- key_observations:
+  - Smoke and `nsys` both reach `valid_metric/toy_rmse/rmse=-1.7689979076385498` before failure.
+  - Failure is deterministic at `hmaintask_combine.py:238` (`model.device` AttributeError).
+  - `artifacts/profiles/nsys/20260303-1741-finetune-combine-01.nsys-rep` was generated.
+- comparison:
+  - baseline: 20260303-1738-finetune-combine-02
+  - variant: 20260303-1741-finetune-combine-01
+  - delta: no behavior change; both fail at identical gather-device boundary
+- confidence: high
+- caveats:
+  - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
+- next_action: Apply the same non-semantic gather-device fix pattern used in `hmaintask_completion.py` to `hmaintask_combine.py`, then rerun FT-S1 smoke and `nsys`.
+
+## Result: gfm-20260303-r01-finetune-baseline-unannotated-02
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- profile_stage: baseline_unannotated
+- date_time_utc: 2026-03-03T17:48:04Z
+- related_runs:
+  - 20260303-1744-finetune-combine-01
+  - 20260303-1745-finetune-combine-01
+- question: Did the minimal gather-device compatibility fix unblock FT-S1 baseline finetune smoke and `nsys` runs?
+- summary: Yes. After replacing `model.device` with `accelerator.device` at the validation gather site in `hmaintask_combine.py`, both smoke and `nsys` FT-S1 reruns completed end-to-end on GPU3. The finetune baseline path is now unblocked, and a fresh baseline `nsys` artifact has been captured.
+- runtime_overview:
+  - wall_time_sec: unknown
+  - gpu_busy_fraction: unknown
+- key_observations:
+  - Smoke and `nsys` both completed train/valid/test plus best-checkpoint save flow.
+  - Metrics were stable across both reruns (`valid=-1.7689979076385498`, `test=-2.278367519378662`).
+  - `checkpoints/single-sft/best_checkpoint` now exists, removing the prior inference-checkpoint prerequisite blocker.
+- comparison:
+  - baseline: 20260303-1741-finetune-combine-01
+  - variant: 20260303-1745-finetune-combine-01
+  - delta: blocker resolved; run now completes and emits artifact
+- confidence: high
+- caveats:
+  - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
+- next_action: Execute `gfm-20260303-r01 / FT-S2 / baseline_unannotated` (smoke then `nsys`) to advance Phase 4b toward the `2/2` finetune gate.

@@ -3,8 +3,8 @@
 ## Snapshot
 - Date: 2026-03-03 (UTC)
 - Branch: `main-public`
-- Commit: `687ebb129c4a2882f03d511e3ea3108014acc240`
-- Profiling effort phase: Phase 4a (`train` baseline unannotated) is complete; active execution gate is Phase 4b (`finetune` baseline unannotated) row `gfm-20260303-r01 / FT-S1`.
+- Commit: `b7a35f60ccba494e2e533ab38fec2c8ffaa26952`
+- Profiling effort phase: Phase 4a (`train` baseline unannotated) is complete; Phase 4b (`finetune` baseline unannotated) is active with row `gfm-20260303-r01 / FT-S1` complete and next row `gfm-20260303-r01 / FT-S2`.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -15,7 +15,7 @@
 ## Campaign Counters (`gfm-20260303-r01`)
 - baseline_nsys_success:
   - train: 2
-  - finetune: 0
+  - finetune: 1
   - inference: 0
 - annotated_nsys_success:
   - train: 0
@@ -41,6 +41,7 @@
 - Profiling asset-availability tracker now exists at `profiling/ASSETS_STATUS.md`.
 - Dataset path `datasets/single-pretrain-v3` is now staged with minimal required metadata/embeddings/HF dataset tree so `Graph(args.dataset)` and `Task(args.dataset)` initialize successfully for command-path verification.
 - Completion-script fix applied at `hmaintask_completion.py:246` to use `accelerator.device` in the metric gather tensor allocation (non-semantic runtime compatibility fix).
+- Finetune combine-script compatibility fix applied at `hmaintask_combine.py:238` to use `accelerator.device` for validation metric gather tensor allocation (non-semantic runtime compatibility fix).
 - Workflow sequencing is now explicit in docs: baseline `nsys` -> minimal NVTX annotation -> annotated `nsys` validation -> hotspot shortlist -> targeted `ncu`.
 - Raw profiling artifact directories exist at:
   - `artifacts/profiles/nsys/`
@@ -93,18 +94,18 @@
   - Nsight Systems: `artifacts/profiles/nsys/<run_id>` (`scripts/profile_baseline.sh:70`)
   - Nsight Compute: `artifacts/profiles/ncu/<run_id>` (`scripts/profile_baseline.sh:79`)
 - Generated artifact from latest attempt:
-  - `artifacts/profiles/nsys/20260303-1727-train-completion-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260303-1745-finetune-combine-01.nsys-rep`
 - Transfer script stdout/stderr logs: `output/transfer/.../*.log`.
 
 ## Blockers, Uncertainties, Assumptions
 - Baseline slice asset status now:
   - `datasets/single-pretrain-v3`: present (minimal synthetic staging for command-path verification)
   - `checkpoints/single-completion/best_checkpoint`: present (generated in successful reruns)
+  - `checkpoints/single-sft/best_checkpoint`: present (generated in FT-S1 rerun)
   - `datasets/joint-v65`: missing
-  - `checkpoints/single-sft`: missing
   - `checkpoints/transfer`: missing
 - Current campaign blocker surface:
-  - `inference` rows depend on `checkpoints/single-sft/best_checkpoint`, which is not yet available.
-  - `finetune` baseline rows are not blocked by missing assets and are pending execution.
+  - no active runtime blocker in `train`/`finetune` baseline-unannotated paths.
+  - `finetune` baseline gate still requires one additional successful `nsys` slice (`FT-S2`) to reach the `2/2` Phase 4b threshold.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train` completion slices, and `nsys` emits `.nsys-rep`.
 - Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads.

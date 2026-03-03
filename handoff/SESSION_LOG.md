@@ -193,3 +193,46 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Run `gfm-20260303-r01 / FT-S1 / baseline_unannotated` (smoke then `nsys`) using `hmaintask_combine.py --mode train --loadpath checkpoints/single-completion/best_checkpoint`.
+
+## 2026-03-03T17:40:13Z - FT-S1 finetune baseline attempt captured with actionable blocker
+- task_scope: Execute `gfm-20260303-r01 / FT-S1 / baseline_unannotated` (smoke + `nsys`) and synchronize campaign/results/handoff state.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); GPU3 had no attached compute process.
+  - Executed FT-S1 smoke run `20260303-1738-finetune-combine-02` on GPU3; run failed at `hmaintask_combine.py:238` with `AttributeError: 'GriffinMod' object has no attribute 'device'` after validation metric computation.
+  - Executed FT-S1 `nsys` run `20260303-1741-finetune-combine-01` on GPU3; hit the same failure boundary and generated profiler artifact `artifacts/profiles/nsys/20260303-1741-finetune-combine-01.nsys-rep`.
+  - Updated campaign matrix, appended run records, and added a finetune baseline blocker result summary.
+  - Updated handoff state and queued a single bounded next task to apply the minimal combine gather-device fix and rerun FT-S1.
+- outcome: partial
+- blockers:
+  - `hmaintask_combine.py` uses `model.device` during `accelerator.gather(...)` at line 238, but `GriffinMod` has no `device` attribute.
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Apply the same non-semantic `accelerator.device` gather fix pattern used in `hmaintask_completion.py` to `hmaintask_combine.py`, then rerun FT-S1 smoke and `nsys` with new run IDs.
+
+## 2026-03-03T17:48:04Z - FT-S1 blocker fixed and finetune baseline unblocked
+- task_scope: Apply minimal `hmaintask_combine.py` gather-device compatibility fix, rerun `gfm-20260303-r01 / FT-S1 / baseline_unannotated`, and sync campaign/results/handoff state.
+- actions_taken:
+  - Patched `hmaintask_combine.py` at the FT-S1 failure site to use `accelerator.device` instead of `model.device` for validation gather tensor allocation.
+  - Re-ran required preconditions (`make profiling-preflight`, `nvidia-smi`, compute-app occupancy query); GPU3 was clear.
+  - Executed FT-S1 smoke rerun `20260303-1744-finetune-combine-01` on GPU3; completed end-to-end and produced `checkpoints/single-sft/best_checkpoint`.
+  - Executed FT-S1 `nsys` rerun `20260303-1745-finetune-combine-01` on GPU3; completed end-to-end and generated `artifacts/profiles/nsys/20260303-1745-finetune-combine-01.nsys-rep`.
+  - Updated campaign row `FT-S1`, appended run records, added finetune success result summary, and advanced handoff to `FT-S2`.
+- outcome: success
+- blockers:
+  - none for FT-S1 after fix.
+- files_updated:
+  - `hmaintask_combine.py`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260303-r01 / FT-S2 / baseline_unannotated` (smoke then `nsys`) to close the Phase 4b finetune `2/2` gate.
