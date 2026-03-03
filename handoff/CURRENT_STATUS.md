@@ -3,8 +3,8 @@
 ## Snapshot
 - Date: 2026-03-03 (UTC)
 - Branch: `main-public`
-- Commit: `368f64680163be81bc58425354124b2d98f903f9`
-- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c) are complete across `train`/`finetune`/`inference`; Phase 5 (`steady_unannotated` representativeness) is now active with next row `gfm-20260303-r01 / TR-SU1`.
+- Commit: `aeb66de46eb77eb5b8551ac78dfacb0f058d1c33`
+- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c) are complete across `train`/`finetune`/`inference`; Phase 5 (`steady_unannotated` representativeness) is active with `TR-SU1` complete and next row `gfm-20260303-r01 / FT-SU1`.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -17,6 +17,10 @@
   - train: 2
   - finetune: 2
   - inference: 2
+- steady_unannotated_representative_pairs:
+  - train: 1
+  - finetune: 0
+  - inference: 0
 - annotated_nsys_success:
   - train: 0
   - finetune: 0
@@ -101,7 +105,7 @@
   - Nsight Systems: `artifacts/profiles/nsys/<run_id>` (`scripts/profile_baseline.sh:70`)
   - Nsight Compute: `artifacts/profiles/ncu/<run_id>` (`scripts/profile_baseline.sh:79`)
 - Generated artifact from latest attempt:
-  - `artifacts/profiles/nsys/20260303-2031-inference-combine-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260303-2050-train-completion-01.nsys-rep`
 - Transfer script stdout/stderr logs: `output/transfer/.../*.log`.
 
 ## Blockers, Uncertainties, Assumptions
@@ -115,7 +119,8 @@
   - no active runtime blocker in `train`/`finetune` baseline-validation paths.
   - Phase 4b finetune baseline-validation gate is complete (`FT-B1` + `FT-B2`).
   - Phase 4c inference baseline-validation gate is complete (`IF-B1` + `IF-B2`).
-  - Phase 5 steady-state representativeness rows are pending execution; next row is `TR-SU1`.
+  - Phase 5 steady-state representativeness train row `TR-SU1` is complete (`representative_pass=true`, `top3_overlap=3/3`, `timeshare_drift_pct=1.72`).
+  - Next active Phase 5 row is `FT-SU1`.
 - Optimization/recommendation policy surface:
   - Optimization recommendations are prohibited until capture_complete and review_complete are both true.
   - `ncu` runs are prohibited until `ncu_allowed: true` (post-review gate).

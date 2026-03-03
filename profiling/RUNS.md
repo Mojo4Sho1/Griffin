@@ -724,3 +724,82 @@ Example:
   - Phase 4c inference baseline validation gate is now satisfied (`2/2`, IF-B1 + IF-B2).
 - status: success
 - blocker_if_any: none
+
+### Run: 20260303-2049-train-completion-01
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- slice_id: TR-SU1
+- profile_stage: steady_unannotated
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T20:49:23Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260303-2049-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof train-steady-unannot-nsys-a -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `aeb66de46eb77eb5b8551ac78dfacb0f058d1c33`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: TR-SU1 steady-state unannotated train window A under stable bounded settings (policy target window metadata recorded below).
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260303-2049-train-completion-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260303-2049-train-completion-01.sqlite`
+  - `logs/prof/train-steady-unannot-nsys-a/`
+- findings_notes:
+  - Initial in-sandbox launch attempt failed with `nsys ... open: Operation not permitted`; rerun outside sandbox succeeded.
+  - Run completed end-to-end on GPU3 and emitted expected `nsys` artifact.
+  - Top-3 GPU kernel time-share set (from `cuda_gpu_kern_sum`) is dominated by three `multi_tensor_apply_kernel` variants.
+  - Metrics matched prior bounded train slices (`valid=-1.7689979076385498`, `test=-2.278367757797241`).
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: 5
+- window_profile_iterations: 25
+- stability_pair_run_id: 20260303-2050-train-completion-01
+- top3_overlap: 3/3
+- timeshare_drift_pct: 1.72
+- representative_pass: true
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: 0.50
+- overrun_reason_if_any: none
+- review_gate_state_at_run: not_done
+
+### Run: 20260303-2050-train-completion-01
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- slice_id: TR-SU1
+- profile_stage: steady_unannotated
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-03T20:50:09Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260303-2050-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof train-steady-unannot-nsys-b -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `aeb66de46eb77eb5b8551ac78dfacb0f058d1c33`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: TR-SU1 steady-state unannotated train window B under same settings as paired window A.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260303-2050-train-completion-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260303-2050-train-completion-01.sqlite`
+  - `logs/prof/train-steady-unannot-nsys-b/`
+- findings_notes:
+  - Run completed end-to-end on GPU3 and emitted expected `nsys` artifact.
+  - Top-3 GPU kernel set matched paired run A exactly (`top3_overlap=3/3`).
+  - Max per-hotspot relative time-share drift across shared top-3 kernels was `1.72%` (pass threshold `<=20%`).
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: 5
+- window_profile_iterations: 25
+- stability_pair_run_id: 20260303-2049-train-completion-01
+- top3_overlap: 3/3
+- timeshare_drift_pct: 1.72
+- representative_pass: true
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: 0.50
+- overrun_reason_if_any: none
+- review_gate_state_at_run: not_done

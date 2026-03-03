@@ -338,3 +338,28 @@ It is for conclusions and interpretation, not raw logs.
 - caveats:
   - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
 - next_action: Start Phase 5 by executing `gfm-20260303-r01 / TR-SU1 / steady_unannotated` with paired train windows for representativeness checks.
+
+## Result: gfm-20260303-r01-train-steady-unannotated-01
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- profile_stage: steady_unannotated
+- date_time_utc: 2026-03-03T20:50:44Z
+- related_runs:
+  - 20260303-2049-train-completion-01
+  - 20260303-2050-train-completion-01
+- question: Is the train scenario representative/stable enough for downstream analysis?
+- summary: Yes for the first steady-state unannotated pair. Both TR-SU1 runs completed end-to-end on GPU3 with identical top-3 hotspot membership and low time-share drift. Representativeness thresholds are met (`top3_overlap >= 2/3`, `timeshare_drift_pct <= 20%`), so the train steady-state unannotated gate contribution is valid.
+- stability_checks:
+  - top3_overlap: 3/3
+  - timeshare_drift_pct: 1.72
+  - thresholds: overlap>=2/3, drift<=20%
+  - representative_pass: true
+- runtime_policy:
+  - planned_soft_cap_minutes: 45
+  - actual_runtime_minutes: 0.50
+  - overrun_reason_if_any: none
+- confidence: medium
+- caveats:
+  - Current task CLI does not expose explicit warmup/profile iteration controls; policy window metadata is tracked in run records for consistency.
+  - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
+- next_action: Execute `gfm-20260303-r01 / FT-SU1 / steady_unannotated` paired finetune windows.

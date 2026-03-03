@@ -320,3 +320,24 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `gfm-20260303-r01 / TR-SU1 / steady_unannotated` with paired train windows and representativeness metrics.
+
+## 2026-03-03T20:50:44Z - TR-SU1 train steady-unannotated representativeness gate passed
+- task_scope: Execute `gfm-20260303-r01 / TR-SU1 / steady_unannotated` paired `nsys` train windows and synchronize campaign/results/handoff state.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); confirmed GPU3 had no active compute process attached.
+  - Executed TR-SU1 run A `20260303-2049-train-completion-01` on GPU3; completed end-to-end and generated `artifacts/profiles/nsys/20260303-2049-train-completion-01.nsys-rep`.
+  - Executed TR-SU1 run B `20260303-2050-train-completion-01` on GPU3; completed end-to-end and generated `artifacts/profiles/nsys/20260303-2050-train-completion-01.nsys-rep`.
+  - Extracted paired `cuda_gpu_kern_sum` summaries and computed representativeness metrics (`top3_overlap=3/3`, `timeshare_drift_pct=1.72`, `representative_pass=true`).
+  - Updated campaign row `TR-SU1`, appended run records and results summary, and advanced handoff to `FT-SU1`.
+- outcome: success
+- blockers:
+  - none for TR-SU1 execution.
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260303-r01 / FT-SU1 / steady_unannotated` paired finetune windows under `nsys` and record representativeness metrics.
