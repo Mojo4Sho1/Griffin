@@ -462,3 +462,24 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute campaign row `gfm-20260303-r01 / TR-SA1 / steady_annotated` on GPU3 (preflight + occupancy checks, then `nsys` run) and update campaign/runs/results plus handoff state.
+
+## 2026-03-04T15:41:55Z - TR-SA1 steady_annotated train capture completed
+- task_scope: Execute `gfm-20260303-r01 / TR-SA1 / steady_annotated` with one annotated `nsys` train run and synchronize profiling/handoff state.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); confirmed GPU3 had no active compute process attached.
+  - Attempted TR-SA1 launch in sandbox; captured expected `nsys` restriction (`open: Operation not permitted`) and reran outside sandbox.
+  - Executed annotated `nsys` run `20260304-1541-train-annotated-completion-01` on GPU3; completed end-to-end and generated `artifacts/profiles/nsys/20260304-1541-train-annotated-completion-01.nsys-rep`.
+  - Extracted `nvtxsum` for the new trace and confirmed expected coarse labels are present (`gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`).
+  - Updated campaign row `TR-SA1`, appended run/result records, advanced Phase 7 to in-progress, and set `FT-SA1` as the next bounded task.
+- outcome: success
+- blockers:
+  - none for TR-SA1 execution after required out-of-sandbox rerun.
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260303-r01 / FT-SA1 / steady_annotated` (preflight + GPU3 occupancy checks, then annotated `nsys` finetune run) and record NVTX label coverage in `profiling/RESULTS.md`.

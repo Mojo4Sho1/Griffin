@@ -421,3 +421,31 @@ It is for conclusions and interpretation, not raw logs.
   - Current task CLI does not expose explicit warmup/profile iteration controls; policy window metadata is tracked in run records for consistency.
   - Dataset/checkpoint setup is minimal synthetic staging for command-path verification, not production-scale workload fidelity.
 - next_action: Draft Phase 6a minimal coarse NVTX taxonomy spec and insertion map for `hmaintask_completion.py` and `hmaintask_combine.py`.
+
+## Result: gfm-20260303-r01-train-steady-annotated-01
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- profile_stage: steady_annotated
+- label_tier: coarse
+- label_schema_version: nvtx-v1.0
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- date_time_utc: 2026-03-04T15:41:55Z
+- related_runs:
+  - 20260304-1541-train-annotated-completion-01
+  - 20260303-2049-train-completion-01
+- question: Does the first coarse-labeled annotated train capture complete and expose the expected NVTX taxonomy for analysis?
+- summary: Yes. The TR-SA1 annotated `nsys` run completed end-to-end on GPU3 and produced a new `.nsys-rep` artifact. NVTX summary output confirms the coarse label set is present and interpretable in trace-level timing reports, with no missing required labels among those expected for the train path. This establishes Phase 7 train-row progress and keeps review/post-review gates unchanged.
+- nvtx_label_coverage:
+  - labels_expected: [`gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`]
+  - labels_seen: [`gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`]
+  - missing_labels: none
+- key_observations:
+  - Highest-share NVTX range was `gfm.train_epoch` at `38.8%` of NVTX-tracked time.
+  - `gfm.eval_task` appeared 3 times (25.4% combined share), aligning with validation + test boundaries in this bounded slice.
+  - Checkpoint-related work is captured separately as `gfm.checkpoint_io` (3 instances, 8.4% share).
+- confidence: medium
+- caveats:
+  - Current dataset/checkpoint setup is synthetic/minimal for command-path verification, so NVTX distribution may differ from production-scale workloads.
+  - This result is a single annotated capture row; cross-scenario annotated comparisons remain pending.
+- next_action: Execute `gfm-20260303-r01 / FT-SA1 / steady_annotated` on GPU3 and record the same NVTX coverage fields.

@@ -979,3 +979,49 @@ Example:
 - actual_runtime_minutes: 0.38
 - overrun_reason_if_any: none
 - review_gate_state_at_run: not_done
+
+### Run: 20260304-1541-train-annotated-completion-01
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- slice_id: TR-SA1
+- profile_stage: steady_annotated
+- label_tier: coarse
+- label_schema_version: nvtx-v1.0
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: all_ranks
+- rank_filter_if_any: none
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+  - note: initial in-sandbox launch attempt hit expected `nsys` sandbox restriction (`open: Operation not permitted`); rerun outside sandbox succeeded
+- date_time_utc: 2026-03-04T15:41:55Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260304-1541-train-annotated-completion-01 hmaintask_completion.py datasets/single-pretrain-v3 logs/prof train-annot-nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `0599647648f9ee43991277bfc3d9a52044455f44`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: TR-SA1 steady-state annotated train capture after Phase 6b coarse NVTX insertion.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260304-1541-train-annotated-completion-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260304-1541-train-annotated-completion-01.sqlite`
+  - `logs/prof/train-annot-nsys/`
+- findings_notes:
+  - Run completed end-to-end on GPU3 and emitted expected annotated `nsys` artifact.
+  - `nvtxsum` confirms coarse range visibility with expected labels: `gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`.
+  - Top NVTX time-share labels were `gfm.train_epoch` (38.8%), `gfm.eval_task` (25.4%), and `gfm.final_test_pass` (14.9%).
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: 5
+- window_profile_iterations: 25
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: true
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: na
+- overrun_reason_if_any: none
+- review_gate_state_at_run: not_done
