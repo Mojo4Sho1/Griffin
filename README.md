@@ -10,6 +10,10 @@ This is the official implementation of the paper "[Griffin: Towards a Graph-Cent
   - [Table of Contents](#table-of-contents)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
+  - [Profiling Analysis](#profiling-analysis)
+    - [Manual Workflow](#manual-workflow)
+    - [Automated Analysis Bundle](#automated-analysis-bundle)
+    - [Profiling References](#profiling-references)
   - [Dataset Preparation](#dataset-preparation)
     - [Using Provided Processed Datasets](#using-provided-processed-datasets)
     - [Processing Raw Data](#processing-raw-data)
@@ -37,6 +41,38 @@ Then install the following dependencies:
 ```bash
 pip install datasets pqdm accelerate evaluate sentence_transformers einops torchmetrics seaborn
 ```
+
+---
+
+## Profiling Analysis
+
+### Manual Workflow
+
+For a manual deep-dive workflow (triage, timeline inspection, and SQL analysis), see:
+
+- `profiling/MANUAL_ANALYSIS.md`
+
+### Automated Analysis Bundle
+
+For each successful `nsys` run, generate a human-readable + machine-readable analysis bundle:
+
+```bash
+scripts/analyze_nsys_run.sh --run-id <run_id>
+```
+
+Default output path:
+
+```bash
+artifacts/profiles/analysis/<run_id>/
+```
+
+### Profiling References
+
+- `profiling/MANUAL_ANALYSIS.md`
+- `profiling/sql/manual_queries.sql`
+- `profiling/COMMANDS.md`
+- `profiling/_PROFILING_GUIDE.md`
+- `profiling/RUNS.md`
 
 ---
 
@@ -163,4 +199,3 @@ bash transfer.sh 0,1 commerce-1 others-1 rel-f1-driver-dnf 1 42 43
 
 3. **Evaluation Sample Ratio:**
    Evaluation sample ratio is set to 1 by default. This only applies to the validation phase and does not affect the final testing result. It is okay to set it to 1 for most tasks. If you want to evaluate on a smaller subset of the data to speed up the evaluation, you can set the evaluation sample ratio to a value less than 1 like 0.2. 
-

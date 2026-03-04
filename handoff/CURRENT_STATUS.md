@@ -4,10 +4,11 @@
 - Date: 2026-03-04 (UTC)
 - Branch: `main-public`
 - Commit: `235b7970ca75a77ab0f1043e6b5df5c1d330d9b9`
-- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), and Phase 7 (`steady_annotated` capture execution) are complete across the current campaign scope; Phase 8 (`review_gate`) is next.
+- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), and Phase 7 (`steady_annotated` capture execution) are complete across the current campaign scope; Phase 8 (`review_gate`) is in progress with capture evidence recorded and pending explicit human outcome.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
+  - `sqlite3`: available (version `3.45.3`)
   - `conda`: `/home/jxc02713/miniconda3/bin/conda` (version `25.3.1`; `griffin-profiling` activation now works)
   - `accelerate`: available in `griffin-profiling`
   - `torch_geometric`: available in `griffin-profiling` (import verified)
@@ -32,7 +33,9 @@
 
 ## Workflow Gate State
 - capture_complete: true
+- capture_evidence_result_id: gfm-20260303-r01-capture-gate-01
 - review_complete: false
+- review_outcome_pending: true
 - ncu_allowed: false
 - optimization_discussion_allowed: false
 
@@ -63,6 +66,24 @@
   - `artifacts/profiles/ncu/`
 - Raw profiling artifact paths above are excluded from Git; lightweight summaries remain tracked in docs.
 - Wrapper compatibility fix applied: `scripts/profile_baseline.sh` now uses `nsys profile ... accelerate launch ...` (without extra `--` before application).
+- Hybrid analysis workflow now exists:
+  - Human playbook: `profiling/MANUAL_ANALYSIS.md`
+  - SQL deep-dive query library: `profiling/sql/manual_queries.sql`
+  - Automated post-`nsys` analyzer: `scripts/analyze_nsys_run.sh`
+- Analysis bundle schema is now standardized at `artifacts/profiles/analysis/<run_id>/` (`summary.md`, `metrics.json`, `nvtx_sum.txt`, `cuda_gpu_kern_sum.txt`, `cuda_api_sum.txt`, `meta.txt`).
+- Gate-critical analysis artifact backfill is complete for:
+  - `20260303-1727-train-completion-01`
+  - `20260303-1945-finetune-combine-01`
+  - `20260303-2031-inference-combine-01`
+  - `20260303-2049-train-completion-01`
+  - `20260303-2050-train-completion-01`
+  - `20260303-2058-finetune-combine-01`
+  - `20260303-2059-finetune-combine-01`
+  - `20260303-2134-inference-combine-01`
+  - `20260303-2138-inference-combine-01`
+  - `20260304-1541-train-annotated-completion-01`
+  - `20260304-1622-finetune-annotated-combine-01`
+  - `20260304-1652-inference-annotated-combine-01`
 
 ## Repo Entry-Point Reconnaissance
 - Main completion pretraining entry point:
@@ -135,5 +156,6 @@
   - Optimization recommendations are prohibited until capture_complete and review_complete are both true.
   - `targeted_fine` label expansion is optional and allowed only post-review (`RV-G1` done with approved hotspot focus), while keeping `profile_stage=steady_annotated`.
   - `ncu` runs are prohibited until `ncu_allowed: true` (post-review gate).
+  - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
 - Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads.

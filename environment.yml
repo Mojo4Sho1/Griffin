@@ -9,6 +9,7 @@ dependencies:
   - pandas
   - seaborn
   - matplotlib
+  - sqlite
   - libstdcxx-ng
   - libgcc-ng
   - pytorch

@@ -15,7 +15,10 @@ It does not store raw profiler binaries or large traces.
 - `CAMPAIGN_PLAN.md`: scenario/slice matrix with stage gates and per-slice status.
 - `RUNS.md`: structured run records (one entry per run attempt).
 - `RESULTS.md`: compact findings, comparisons, and conclusions.
+- `MANUAL_ANALYSIS.md`: human-focused deep-dive workflow and interpretation checklist.
+- `sql/manual_queries.sql`: reusable query library for SQLite deep dives.
 - `scripts/profile_baseline.sh`: lightweight wrapper for smoke/`nsys`/`ncu` baseline commands.
+- `scripts/analyze_nsys_run.sh`: post-run summary generator for `nsys` traces.
 
 ## What Does Not Belong Here
 - Raw `nsys` / `ncu` output files.
@@ -35,17 +38,31 @@ Raw profiling outputs belong under `artifacts/profiles/` and remain out of Git.
 3. Run bounded smoke + profiler commands for that row and write raw outputs to `artifacts/profiles/...`.
 4. Record run metadata in `RUNS.md` (including `campaign_id`, `scenario`, `slice_id`, `profile_stage`).
 5. Update row status and run IDs in `CAMPAIGN_PLAN.md`.
-6. Summarize findings in `RESULTS.md`:
+6. Generate analysis bundle for each successful `nsys` run (`scripts/analyze_nsys_run.sh --run-id <run_id>`).
+7. Summarize findings in `RESULTS.md`:
    - baseline unannotated summaries first (`nsys`)
    - then coarse NVTX-annotated summaries (`nsys`)
    - then targeted hotspot deep dives (`ncu`)
-7. Do not run `ncu` until baseline + annotation gates are met for the scenario.
-8. Update `handoff/` files before ending the session.
+8. Do not run `ncu` until baseline + annotation gates are met for the scenario.
+9. Update `handoff/` files before ending the session.
 
 ## Config Conventions For Profiling
 - Default training config remains `hconfig.yaml` (repo baseline).
 - Profiling baseline slices should prefer `hconfig_profiling_single_gpu.yaml` to reduce multi-process noise and improve reproducibility for first-pass traces.
 - Workflow order is strict: baseline `nsys` -> minimal NVTX annotation -> annotated `nsys` validation -> hotspot shortlist -> targeted `ncu`.
+
+## Trace and Analysis Artifact Roles
+
+- `*.nsys-rep` is the canonical source trace artifact for profiling analysis.
+- `artifacts/profiles/analysis/<run_id>/` is the standard per-run analysis bundle for routine review.
+- `summary.md` and `metrics.json` are the default first-pass review inputs.
+- For deeper manual inspection, use:
+  - `profiling/MANUAL_ANALYSIS.md`
+  - `profiling/sql/manual_queries.sql`
+
+Historical migration policy:
+- Backfill analysis bundles for gate-critical historical runs only.
+- For new successful `nsys` runs, analysis bundle generation is mandatory.
 
 ## Phase 6a Coarse NVTX Taxonomy (Spec Only)
 This Phase 6a output defines the minimal NVTX label set for Phase 6b insertion. It is intentionally coarse, reversible, and limited to high-level workload boundaries.

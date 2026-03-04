@@ -547,3 +547,51 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `gfm-20260303-r01 / RV-G1 / review_gate` by recording capture-complete evidence and preparing the human review decision package.
+
+## 2026-03-04T17:01:06Z - RV-G1 capture gate evidence recorded and review package prepared
+- task_scope: Execute `gfm-20260303-r01 / RV-G1 / review_gate` documentation task to record capture-complete evidence and prepare human review decision handoff (no profiler runs).
+- actions_taken:
+  - Added capture-gate result `gfm-20260303-r01-capture-gate-01` to `profiling/RESULTS.md` with all required capture-complete fields set to `true`.
+  - Updated `profiling/CAMPAIGN_PLAN.md` row `RV-G1` blocker text to cite recorded capture evidence and current waiting state.
+  - Updated `handoff/CURRENT_STATUS.md` review snapshot fields (`capture_evidence_result_id`, `review_outcome_pending`) for clearer gate state.
+  - Rotated `handoff/NEXT_TASK.md` to the next single bounded action: record explicit human review outcome and gate permissions.
+- outcome: success
+- blockers:
+  - none for the documentation-only RV-G1 preparation scope; progression now depends on explicit human review decision.
+- files_updated:
+  - `profiling/RESULTS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Capture evidence is complete; next agent should record the explicit human review outcome for `RV-G1` and update review-gate flags accordingly.
+
+## 2026-03-04T17:40:58Z - Hybrid manual+agent analysis workflow implemented with targeted backfill
+- task_scope: Implement hybrid profiling analysis system (manual workflow + automated `nsys` analyzer), update governance/docs, and backfill gate-critical analysis bundles.
+- actions_taken:
+  - Added `scripts/analyze_nsys_run.sh` with standardized outputs (`summary.md`, `metrics.json`, raw stats reports, and metadata) from `.nsys-rep` inputs.
+  - Added human-facing workflow guide `profiling/MANUAL_ANALYSIS.md` and reusable SQL library `profiling/sql/manual_queries.sql`.
+  - Updated governance/user docs (`AGENTS.md`, `README.md`, `profiling/COMMANDS.md`, `profiling/_PROFILING_GUIDE.md`, `profiling/RUNS.md`) to require post-`nsys` analysis bundles and document manual deep-dive process.
+  - Updated `environment.yml` to include `sqlite` for CLI query support in `griffin-profiling`.
+  - Updated `.gitignore` to treat `artifacts/profiles/analysis/` as generated artifact output while keeping `.gitkeep` tracked.
+  - Generated targeted backfill analysis bundles for 12 gate-critical run IDs and added `analysis_artifacts_path` / `analysis_status` metadata to corresponding `profiling/RUNS.md` entries.
+  - Ran validation checks for analyzer behavior: annotated run success, unannotated run success, missing-run failure path, and rerun idempotency.
+- outcome: success
+- blockers:
+  - none for this implementation scope.
+- files_updated:
+  - `.gitignore`
+  - `scripts/analyze_nsys_run.sh`
+  - `profiling/MANUAL_ANALYSIS.md`
+  - `profiling/sql/manual_queries.sql`
+  - `AGENTS.md`
+  - `README.md`
+  - `environment.yml`
+  - `profiling/COMMANDS.md`
+  - `profiling/_PROFILING_GUIDE.md`
+  - `profiling/RUNS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `RV-G1` human review decision using the prepared analysis bundles, then record gate outcome and permission flags.

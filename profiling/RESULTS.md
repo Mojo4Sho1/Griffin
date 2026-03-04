@@ -522,3 +522,18 @@ It is for conclusions and interpretation, not raw logs.
   - Dataset/checkpoint setup remains synthetic/minimal for command-path verification and may not reflect production-scale runtime behavior.
   - This result confirms capture health and label visibility, not production-scale hotspot representativeness.
 - next_action: Evaluate and record capture-complete gate status, then advance campaign row `RV-G1` through human review workflow.
+
+## Result: gfm-20260303-r01-capture-gate-01
+- campaign_id: gfm-20260303-r01
+- profile_stage: capture_gate
+- date_time_utc: 2026-03-04T17:01:06Z
+- question: Are all baseline + steady-state captures complete (or non-actionably blocked)?
+- capture_gate:
+  - baseline_validation_complete: true
+  - steady_unannotated_complete: true
+  - steady_annotated_complete: true
+  - non_actionable_blockers_documented: true
+  - capture_complete: true
+- summary: Capture requirements are satisfied for the in-scope scenarios (`train`, `finetune`, `inference`). All baseline-validation, steady-unannotated, and steady-annotated rows are complete, with no unresolved actionable blockers preventing capture closure. The campaign is now at the human review gate and cannot proceed to `ncu_post_review` or optimization discussion until explicit review approval is recorded.
+- confidence: high
+- next_action: Record human review outcome for `RV-G1` and update review-gate flags (`review_complete`, `ncu_allowed`, `optimization_discussion_allowed`).

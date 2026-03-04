@@ -28,6 +28,10 @@ This fork exists to profile and analyze Griffin GPU execution behavior to identi
 - Keep raw profiling artifacts out of Git.
 - Store raw profiler outputs under `artifacts/profiles/`.
 - Track only lightweight summaries, manifests, and findings docs in version control.
+- For every successful `nsys` run, generate an analysis bundle with `scripts/analyze_nsys_run.sh --run-id <run_id>`.
+- Analysis bundles are written under `artifacts/profiles/analysis/<run_id>/` and should be referenced in `profiling/RUNS.md`.
+- Human manual analysis workflow is documented in `profiling/MANUAL_ANALYSIS.md`.
+- Reusable deep-dive SQL queries are documented in `profiling/sql/manual_queries.sql`.
 
 ## Execution Environment
 - Before any run or profiling task, activate the project environment, then execute `make profiling-preflight`.

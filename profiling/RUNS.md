@@ -31,6 +31,8 @@ Example:
 - Slice definition
 - Profiler used
 - Output file paths
+- Analysis artifacts path
+- Analysis status
 - Short notes on findings
 - Steady-state metadata when applicable:
   - `window_warmup_iterations`
@@ -86,6 +88,9 @@ Example:
   - <artifacts/profiles/...>
   - <logs/...> (if relevant)
 - findings_notes: <1-5 concise bullets or sentences>
+- analysis_artifacts_path: <artifacts/profiles/analysis/<run_id>/ or na>
+- analysis_status: <success|failed|not_run>
+- analysis_warnings: <none or short warning list>
 - status: <success|failed|partial>
 - blocker_if_any: <none or short blocker statement>
 - window_warmup_iterations: <int_or_na>
@@ -111,6 +116,8 @@ Example:
 - `targeted_fine` runs must reference a review-approved hotspot focus ID and parent coarse anchor.
 - `targeted_fine` runs are invalid unless `review_gate_state_at_run: done`.
 - Never conclude NVTX is absent for an annotated run until `nsys stats --force-export=true --report nvtx_sum <run>.nsys-rep` has been executed at least once for that run ID.
+- Every new successful `nsys` run must include post-run analysis artifacts at `artifacts/profiles/analysis/<run_id>/`.
+- Historical analysis artifact backfill is required for gate-critical runs only.
 
 ## Campaign/Stage Counting Rules
 
@@ -437,6 +444,9 @@ Example:
   - Workload completed end-to-end under `nsys`.
   - Profiler artifact generated successfully for TR-S2.
   - Runtime metrics matched TR-S1 and smoke prerequisite (`valid=-1.7689979076385498`, `test=-2.278367757797241`).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260303-1727-train-completion-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 
@@ -636,6 +646,9 @@ Example:
   - `nsys` run completed end-to-end and emitted the expected FT-B2 artifact.
   - Metrics matched FT-B1 and FT-B2 smoke (`valid=-1.7689979076385498`, `test=-2.278367519378662`).
   - Phase 4b finetune baseline validation gate is now satisfied (`2/2`).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260303-1945-finetune-combine-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 
@@ -749,6 +762,9 @@ Example:
   - `nsys` run completed end-to-end in `--mode test` and emitted the expected `.nsys-rep` artifact.
   - Test metric matched IF-B2 smoke prerequisite (`test=-2.278367519378662`).
   - Phase 4c inference baseline validation gate is now satisfied (`2/2`, IF-B1 + IF-B2).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260303-2031-inference-combine-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 
@@ -779,6 +795,9 @@ Example:
   - Run completed end-to-end on GPU3 and emitted expected `nsys` artifact.
   - Top-3 GPU kernel time-share set (from `cuda_gpu_kern_sum`) is dominated by three `multi_tensor_apply_kernel` variants.
   - Metrics matched prior bounded train slices (`valid=-1.7689979076385498`, `test=-2.278367757797241`).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260303-2049-train-completion-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 - window_warmup_iterations: 5
@@ -818,6 +837,9 @@ Example:
   - Run completed end-to-end on GPU3 and emitted expected `nsys` artifact.
   - Top-3 GPU kernel set matched paired run A exactly (`top3_overlap=3/3`).
   - Max per-hotspot relative time-share drift across shared top-3 kernels was `1.72%` (pass threshold `<=20%`).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260303-2050-train-completion-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 - window_warmup_iterations: 5
@@ -858,6 +880,9 @@ Example:
   - Run completed end-to-end on GPU3 and emitted expected `nsys` artifact.
   - Top-3 GPU kernel set (from `cuda_gpu_kern_sum`) matched paired run B exactly: `gemv2T_kernel_val` plus two `multi_tensor_apply_kernel` variants.
   - Metrics matched prior bounded finetune slices (`valid=-1.7689979076385498`, `test=-2.278367519378662`).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260303-2058-finetune-combine-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 - window_warmup_iterations: 5
@@ -897,6 +922,9 @@ Example:
   - Run completed end-to-end on GPU3 and emitted expected `nsys` artifact.
   - Top-3 GPU kernel set matched paired run A exactly (`top3_overlap=3/3`).
   - Max per-hotspot relative time-share drift across shared top-3 kernels was `1.16%` (pass threshold `<=20%`).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260303-2059-finetune-combine-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 - window_warmup_iterations: 5
@@ -937,6 +965,9 @@ Example:
   - Run completed end-to-end on GPU3 in combine `--mode test` and emitted expected `nsys` artifact.
   - Top-3 GPU kernel set (from `cuda_gpu_kern_sum`) is `gemv2T_kernel_val`, `gemmSN_TN_kernel`, and `fmha_cutlassF_f32_aligned_64x64_rf_sm80`.
   - Test metric matched prior inference slices (`test=-2.278367519378662`).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260303-2134-inference-combine-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 - window_warmup_iterations: 5
@@ -976,6 +1007,9 @@ Example:
   - Run completed end-to-end on GPU3 in combine `--mode test` and emitted expected `nsys` artifact.
   - Top-3 GPU kernel set matched paired run A exactly (`top3_overlap=3/3`).
   - Max per-hotspot relative time-share drift across shared top-3 kernels was `0.86%` (pass threshold `<=20%`).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260303-2138-inference-combine-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 - window_warmup_iterations: 5
@@ -1026,6 +1060,9 @@ Example:
   - Run completed end-to-end on GPU3 and emitted expected annotated `nsys` artifact.
   - `nvtxsum` confirms coarse range visibility with expected labels: `gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`.
   - Top NVTX time-share labels were `gfm.train_epoch` (38.8%), `gfm.eval_task` (25.4%), and `gfm.final_test_pass` (14.9%).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260304-1541-train-annotated-completion-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 - window_warmup_iterations: 5
@@ -1073,6 +1110,9 @@ Example:
   - Initial historical check with deprecated `nvtxsum` reported no NVTX rows (`SKIPPED ... does not contain NV Tools Extension (NVTX) data`).
   - Correction check with `nsys stats --force-export=true --report nvtx_sum` confirms expected coarse labels are present (`gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`).
   - `cuda_gpu_kern_sum` is present and parseable; top kernel shares are `gemv2T_kernel_val` (9.7%), `multi_tensor_apply_kernel` variant (8.6%), and `multi_tensor_apply_kernel` variant (7.4%).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260304-1622-finetune-annotated-combine-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 - window_warmup_iterations: 5
@@ -1123,6 +1163,9 @@ Example:
   - Run completed end-to-end on GPU3 in combine `--mode test` and emitted expected annotated `nsys` artifact.
   - Forced-export `nvtx_sum` confirms expected inference-path coarse labels are present: `gfm.setup`, `gfm.mode_test_only`, `gfm.eval_task`, `gfm.checkpoint_io`.
   - Test metric is stable with prior inference slices (`test=-2.278367519378662`).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260304-1652-inference-annotated-combine-01/`
+- analysis_status: success
+- analysis_warnings: none
 - status: success
 - blocker_if_any: none
 - window_warmup_iterations: 5

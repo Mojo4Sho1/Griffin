@@ -34,6 +34,7 @@ CUDA_VISIBLE_DEVICES=3 <command>
 6. Optional targeted-fine relabel + annotated `nsys` rerun (post-review only, hotspot-scoped)
 7. Targeted `ncu` (only after review gate)
 8. Optimization strategy discussion (post-review only)
+9. Post-run analysis bundle generation for each successful `nsys` run
 
 Policy: no optimization recommendations before capture + review gates complete.
 Policy: `targeted_fine` relabeling is optional and only allowed after `RV-G1` is `done` with approved hotspot focus; see `profiling/_PROFILING_GUIDE.md` section `NVTX Granularity Escalation Policy (Two-Tier)`.
@@ -41,6 +42,12 @@ Policy: default rank emission is `all_ranks`; any single-rank/subset filtering m
 Policy: for annotated-stage NVTX verification, use `nvtx_sum` with forced export (`nsys stats --force-export=true --report nvtx_sum <run>.nsys-rep`); do not use deprecated `nvtxsum` as canonical evidence.
 Policy: false-negative guardrail for annotated runs: if an initial NVTX report is empty, rerun once with `--force-export=true` before documenting any NVTX anomaly/blocker.
 Cross-reference: follow `profiling/_PROFILING_GUIDE.md` sections `Range Nesting And Overlap Policy`, `Distributed / Rank Emission Policy`, and `Schema Change Rule`.
+
+Post-`nsys` analysis policy:
+- After each successful `nsys` run, generate:
+  - `scripts/analyze_nsys_run.sh --run-id <run_id>`
+- The generated bundle at `artifacts/profiles/analysis/<run_id>/` is the default human-review input.
+- For historical data migration, backfill analysis bundles for gate-critical runs only; all new successful `nsys` runs are mandatory.
 
 ## Campaign Conventions
 
@@ -59,6 +66,20 @@ Cross-reference: follow `profiling/_PROFILING_GUIDE.md` sections `Range Nesting 
 ```bash
 scripts/profile_baseline.sh <smoke|nsys|ncu> <run_id> <task_script.py> <dataset> <log_dir> <log_name> -- <extra_task_args...>
 ```
+
+## Post-Run Analysis Bundle Command
+
+```bash
+scripts/analyze_nsys_run.sh --run-id <run_id>
+```
+
+Expected outputs:
+- `artifacts/profiles/analysis/<run_id>/summary.md`
+- `artifacts/profiles/analysis/<run_id>/metrics.json`
+- `artifacts/profiles/analysis/<run_id>/nvtx_sum.txt`
+- `artifacts/profiles/analysis/<run_id>/cuda_gpu_kern_sum.txt`
+- `artifacts/profiles/analysis/<run_id>/cuda_api_sum.txt`
+- `artifacts/profiles/analysis/<run_id>/meta.txt`
 
 ## 1) Baseline Validation Commands (Short Slices)
 

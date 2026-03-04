@@ -5,3 +5,5 @@ artifacts/profiles/nsys/*
 !artifacts/profiles/nsys/.gitkeep
 artifacts/profiles/ncu/*
 !artifacts/profiles/ncu/.gitkeep
+artifacts/profiles/analysis/*
+!artifacts/profiles/analysis/.gitkeep
