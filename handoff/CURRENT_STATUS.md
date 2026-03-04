@@ -3,8 +3,8 @@
 ## Snapshot
 - Date: 2026-03-04 (UTC)
 - Branch: `main-public`
-- Commit: `0599647648f9ee43991277bfc3d9a52044455f44`
-- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), and Phase 6 (`coarse` NVTX insertion) are complete across the current campaign scope; Phase 7 (`steady_annotated` capture execution) is in progress after `TR-SA1`, with `FT-SA1` next.
+- Commit: `0d8e3e70abdc718103792d5b8a5ec50ed830ed9e`
+- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), and Phase 6 (`coarse` NVTX insertion) are complete across the current campaign scope; Phase 7 (`steady_annotated` capture execution) is in progress after `TR-SA1` and `FT-SA1`, with `IF-SA1` next.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -23,7 +23,7 @@
   - inference: 1
 - annotated_nsys_success:
   - train: 1
-  - finetune: 0
+  - finetune: 1
   - inference: 0
 - ncu_success:
   - train: 0
@@ -109,7 +109,7 @@
   - Nsight Systems: `artifacts/profiles/nsys/<run_id>` (`scripts/profile_baseline.sh:70`)
   - Nsight Compute: `artifacts/profiles/ncu/<run_id>` (`scripts/profile_baseline.sh:79`)
 - Generated artifact from latest attempt:
-  - `artifacts/profiles/nsys/20260304-1541-train-annotated-completion-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260304-1622-finetune-annotated-combine-01.nsys-rep`
 - Transfer script stdout/stderr logs: `output/transfer/.../*.log`.
 
 ## Blockers, Uncertainties, Assumptions
@@ -128,7 +128,8 @@
   - Phase 5 steady-state representativeness inference row `IF-SU1` is complete (`representative_pass=true`, `top3_overlap=3/3`, `timeshare_drift_pct=0.86`).
   - Phase 6b coarse NVTX insertion is complete and syntax sanity check passed (`python -m py_compile hmaintask_completion.py hmaintask_combine.py`).
   - Phase 7 `steady_annotated` row `TR-SA1` is complete with coarse labels observed in `nvtxsum` (`gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`).
-  - Next active work item is Phase 7 `steady_annotated` capture execution for campaign row `FT-SA1`.
+  - Phase 7 `steady_annotated` row `FT-SA1` is complete with verified coarse NVTX labels after forced-export `nvtx_sum` recheck (`20260304-1622-finetune-annotated-combine-01`); the earlier empty `nvtxsum` output is treated as an export/reporting-path false negative.
+  - Next active work item is Phase 7 `steady_annotated` capture execution for campaign row `IF-SA1`.
 - Optimization/recommendation policy surface:
   - Optimization recommendations are prohibited until capture_complete and review_complete are both true.
   - `targeted_fine` label expansion is optional and allowed only post-review (`RV-G1` done with approved hotspot focus), while keeping `profile_stage=steady_annotated`.

@@ -483,3 +483,46 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `gfm-20260303-r01 / FT-SA1 / steady_annotated` (preflight + GPU3 occupancy checks, then annotated `nsys` finetune run) and record NVTX label coverage in `profiling/RESULTS.md`.
+
+## 2026-03-04T16:23:40Z - FT-SA1 steady_annotated finetune capture completed with NVTX anomaly
+- task_scope: Execute `gfm-20260303-r01 / FT-SA1 / steady_annotated` with one annotated `nsys` finetune run and synchronize profiling/handoff state.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); confirmed GPU3 had no active compute process attached.
+  - Attempted FT-SA1 launch in sandbox; captured expected `nsys` restriction (`open: Operation not permitted`) and reran outside sandbox.
+  - Executed annotated `nsys` run `20260304-1622-finetune-annotated-combine-01` on GPU3; completed end-to-end and generated `artifacts/profiles/nsys/20260304-1622-finetune-annotated-combine-01.nsys-rep`.
+  - Extracted `nvtxsum` and observed `SKIPPED ... does not contain NV Tools Extension (NVTX) data`; extracted `cuda_gpu_kern_sum` successfully for kernel-level summary continuity.
+  - Updated campaign row `FT-SA1`, appended run/result records, kept Phase 7 in-progress, and set `IF-SA1` as the next bounded task.
+- outcome: success
+- blockers:
+  - none for FT-SA1 capture execution; note NVTX visibility anomaly in the resulting finetune annotated artifact.
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260303-r01 / IF-SA1 / steady_annotated` (preflight + GPU3 occupancy checks, then annotated `nsys` inference run) and record NVTX label coverage; compare with FT-SA1 NVTX anomaly.
+
+## 2026-03-04T16:42:14Z - FT-SA1 NVTX anomaly corrected and reporting policy hardened
+- task_scope: Correct FT-SA1 NVTX false-negative interpretation and harden documentation workflow to prevent future false negatives.
+- actions_taken:
+  - Revalidated FT-SA1 with forced export using `nsys stats --force-export=true --report nvtx_sum artifacts/profiles/nsys/20260304-1622-finetune-annotated-combine-01.nsys-rep`.
+  - Confirmed expected coarse labels are present in FT-SA1 (`gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`).
+  - Updated `profiling/COMMANDS.md` with required annotated-stage NVTX verification policy (`nvtx_sum` + forced export + retry-on-empty guardrail).
+  - Updated `profiling/RUNS.md` and `profiling/RESULTS.md` templates with explicit NVTX verification metadata fields and strict absent-NVTX evidence rule.
+  - Corrected FT-SA1 campaign/run/result/current-status interpretations while preserving the original anomaly entry as historical context.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `profiling/COMMANDS.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260303-r01 / IF-SA1 / steady_annotated` and apply the new forced-export `nvtx_sum` verification policy before recording NVTX coverage conclusions.

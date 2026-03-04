@@ -81,6 +81,11 @@ It is for conclusions and interpretation, not raw logs.
   - labels_expected: <list>
   - labels_seen: <list>
   - missing_labels: <list_or_none>
+- nvtx_verification:
+  - report: <nvtx_sum>
+  - force_export: <true|false>
+  - retry_required: <true|false>
+  - final_status: <present|absent|inconclusive>
 - key_observations:
   - <observation_1>
   - <observation_2>
@@ -182,6 +187,7 @@ It is for conclusions and interpretation, not raw logs.
 - If a result is uncertain, mark confidence low and capture the blocker.
 - Cross-scenario comparisons are valid only after required scenario gates are complete for the selected stage.
 - Direct like-for-like comparisons between annotated traces require matching `label_tier` and `label_schema_version`; otherwise mark as non-comparable unless explicitly normalized and caveated.
+- Any `absent` NVTX conclusion is invalid unless forced-export verification evidence is recorded (`nsys stats --force-export=true --report nvtx_sum ...`).
 - `ncu` hotspot results must reference hotspot candidates from annotated `nsys` analysis.
 - `ncu` results are valid only after human review gate marks `ncu_allowed: true`.
 
@@ -449,3 +455,37 @@ It is for conclusions and interpretation, not raw logs.
   - Current dataset/checkpoint setup is synthetic/minimal for command-path verification, so NVTX distribution may differ from production-scale workloads.
   - This result is a single annotated capture row; cross-scenario annotated comparisons remain pending.
 - next_action: Execute `gfm-20260303-r01 / FT-SA1 / steady_annotated` on GPU3 and record the same NVTX coverage fields.
+
+## Result: gfm-20260303-r01-finetune-steady-annotated-01
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- profile_stage: steady_annotated
+- label_tier: coarse
+- label_schema_version: nvtx-v1.0
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- date_time_utc: 2026-03-04T16:22:00Z
+- related_runs:
+  - 20260304-1622-finetune-annotated-combine-01
+  - 20260303-2058-finetune-combine-01
+- question: Does the first coarse-labeled annotated finetune capture complete and expose the expected NVTX taxonomy for analysis?
+- summary: Yes after verification hardening. The FT-SA1 annotated `nsys` run completed end-to-end on GPU3 and produced a valid `.nsys-rep` artifact. A forced-export recheck with `nvtx_sum` confirms the expected coarse NVTX taxonomy is present; the earlier empty `nvtxsum` output is treated as a reporting/export-path false negative rather than missing instrumentation.
+- nvtx_label_coverage:
+  - labels_expected: [`gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`]
+  - labels_seen: [`gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`]
+  - missing_labels: none
+- nvtx_verification:
+  - report: nvtx_sum
+  - force_export: true
+  - retry_required: true
+  - final_status: present
+- key_observations:
+  - `nsys` emitted both `.nsys-rep` and `.sqlite` outputs for FT-SA1 under the expected command/config surface.
+  - Forced-export command evidence: `nsys stats --force-export=true --report nvtx_sum artifacts/profiles/nsys/20260304-1622-finetune-annotated-combine-01.nsys-rep`.
+  - Recheck shows expected coarse labels with top shares led by `gfm.train_epoch` (35.5%) and `gfm.eval_task` (24.9%).
+  - `cuda_gpu_kern_sum` remained available, with top-share kernels led by `gemv2T_kernel_val` and `multi_tensor_apply_kernel` variants.
+- confidence: medium
+- caveats:
+  - The initial non-forced/deprecated `nvtxsum` check produced a false-negative signal before forced-export verification.
+  - Dataset/checkpoint setup remains synthetic/minimal for command-path verification and may not reflect production-scale runtime behavior.
+- next_action: Execute `gfm-20260303-r01 / IF-SA1 / steady_annotated` on GPU3 and record NVTX label coverage using forced-export `nvtx_sum` verification policy.

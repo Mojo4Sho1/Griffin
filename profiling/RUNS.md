@@ -49,6 +49,10 @@ Example:
   - `parent_label_anchor` (`na` for `coarse`; required coarse root for `targeted_fine`)
   - `rank_emission_mode` (`all_ranks` | `single_rank` | `subset`)
   - `rank_filter_if_any` (`none` or filter detail)
+  - `nvtx_report_used` (`nvtx_sum`)
+  - `nvtx_force_export` (`true` | `false`)
+  - `nvtx_retry_on_empty` (`performed` | `not_needed` | `not_performed`)
+  - `nvtx_coverage_status` (`present` | `absent` | `inconclusive`)
 - Post-review deep-dive metadata when applicable:
   - `review_gate_state_at_run` (must be `done` for `ncu_post_review`)
 
@@ -66,6 +70,10 @@ Example:
 - parent_label_anchor: <coarse_root_or_na>
 - rank_emission_mode: <all_ranks|single_rank|subset|na>
 - rank_filter_if_any: <none|detail|na>
+- nvtx_report_used: <nvtx_sum|na>
+- nvtx_force_export: <true|false|na>
+- nvtx_retry_on_empty: <performed|not_needed|not_performed|na>
+- nvtx_coverage_status: <present|absent|inconclusive|na>
 - date_time_utc: <YYYY-MM-DDTHH:MM:SSZ>
 - mode: <train|fine-tune|inference>
 - dataset: <dataset_id_or_path>
@@ -102,6 +110,7 @@ Example:
 - `label_schema_version` must match `nvtx-v<major>.<minor>`.
 - `targeted_fine` runs must reference a review-approved hotspot focus ID and parent coarse anchor.
 - `targeted_fine` runs are invalid unless `review_gate_state_at_run: done`.
+- Never conclude NVTX is absent for an annotated run until `nsys stats --force-export=true --report nvtx_sum <run>.nsys-rep` has been executed at least once for that run ID.
 
 ## Campaign/Stage Counting Rules
 
@@ -991,6 +1000,10 @@ Example:
 - parent_label_anchor: na
 - rank_emission_mode: all_ranks
 - rank_filter_if_any: none
+- nvtx_report_used: nvtx_sum
+- nvtx_force_export: true
+- nvtx_retry_on_empty: performed
+- nvtx_coverage_status: present
 - readiness_checklist:
   - `conda activate griffin-profiling`: passed
   - `make profiling-preflight`: passed
@@ -1013,6 +1026,53 @@ Example:
   - Run completed end-to-end on GPU3 and emitted expected annotated `nsys` artifact.
   - `nvtxsum` confirms coarse range visibility with expected labels: `gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`.
   - Top NVTX time-share labels were `gfm.train_epoch` (38.8%), `gfm.eval_task` (25.4%), and `gfm.final_test_pass` (14.9%).
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: 5
+- window_profile_iterations: 25
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: true
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: na
+- overrun_reason_if_any: none
+- review_gate_state_at_run: not_done
+
+### Run: 20260304-1622-finetune-annotated-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: finetune
+- slice_id: FT-SA1
+- profile_stage: steady_annotated
+- label_tier: coarse
+- label_schema_version: nvtx-v1.0
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: all_ranks
+- rank_filter_if_any: none
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+  - note: initial in-sandbox launch attempt hit expected `nsys` sandbox restriction (`open: Operation not permitted`); rerun outside sandbox succeeded
+- date_time_utc: 2026-03-04T16:22:00Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260304-1622-finetune-annotated-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-annot-nsys -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `0d8e3e70abdc718103792d5b8a5ec50ed830ed9e`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: FT-SA1 steady-state annotated finetune capture after Phase 6b coarse NVTX insertion.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260304-1622-finetune-annotated-combine-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260304-1622-finetune-annotated-combine-01.sqlite`
+  - `logs/prof/finetune-annot-nsys/`
+- findings_notes:
+  - Run completed end-to-end on GPU3 and emitted expected annotated `nsys` artifact.
+  - Initial historical check with deprecated `nvtxsum` reported no NVTX rows (`SKIPPED ... does not contain NV Tools Extension (NVTX) data`).
+  - Correction check with `nsys stats --force-export=true --report nvtx_sum` confirms expected coarse labels are present (`gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`).
+  - `cuda_gpu_kern_sum` is present and parseable; top kernel shares are `gemv2T_kernel_val` (9.7%), `multi_tensor_apply_kernel` variant (8.6%), and `multi_tensor_apply_kernel` variant (7.4%).
 - status: success
 - blocker_if_any: none
 - window_warmup_iterations: 5

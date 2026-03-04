@@ -38,6 +38,8 @@ CUDA_VISIBLE_DEVICES=3 <command>
 Policy: no optimization recommendations before capture + review gates complete.
 Policy: `targeted_fine` relabeling is optional and only allowed after `RV-G1` is `done` with approved hotspot focus; see `profiling/_PROFILING_GUIDE.md` section `NVTX Granularity Escalation Policy (Two-Tier)`.
 Policy: default rank emission is `all_ranks`; any single-rank/subset filtering must be documented in run metadata.
+Policy: for annotated-stage NVTX verification, use `nvtx_sum` with forced export (`nsys stats --force-export=true --report nvtx_sum <run>.nsys-rep`); do not use deprecated `nvtxsum` as canonical evidence.
+Policy: false-negative guardrail for annotated runs: if an initial NVTX report is empty, rerun once with `--force-export=true` before documenting any NVTX anomaly/blocker.
 Cross-reference: follow `profiling/_PROFILING_GUIDE.md` sections `Range Nesting And Overlap Policy`, `Distributed / Rank Emission Policy`, and `Schema Change Rule`.
 
 ## Campaign Conventions
@@ -129,6 +131,10 @@ Policy:
 - Tiering rule:
   - Coarse annotated captures are the default.
   - Post-review targeted-fine reruns keep `profile_stage=steady_annotated` and must record `label_tier`, `label_schema_version`, `hotspot_focus_id`, and `parent_label_anchor` metadata in `RUNS.md`/`RESULTS.md`.
+- NVTX verification reliability rule:
+  - Primary report command: `nsys stats --force-export=true --report nvtx_sum <run>.nsys-rep`
+  - Optional secondary cross-check: `nsys stats --force-export=true --report cuda_gpu_kern_sum <run>.nsys-rep`
+  - If the first NVTX report appears empty, retry with forced export before writing anomaly/blocker conclusions.
 
 Annotated `nsys` examples:
 
