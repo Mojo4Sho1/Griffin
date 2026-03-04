@@ -1,46 +1,35 @@
 # Next Task
 
 ## Single Bounded Task
-Execute campaign row `gfm-20260303-r01 / IF-SA1 / steady_annotated`: run one steady-state annotated `nsys` inference capture on `hmaintask_combine.py` using the current coarse NVTX ranges.
+Execute campaign row `gfm-20260303-r01 / RV-G1 / review_gate`: record capture-complete gate evidence and prepare the human review decision package (no new profiler runs).
 
 ## Why This Is Immediate Priority
-- `TR-SA1` and `FT-SA1` capture rows are complete and Phase 7 is still in progress.
-- `IF-SA1` is the remaining required `steady_annotated` scenario row before capture-complete evaluation.
-- Workflow order requires completing annotated capture rows before review gate and any post-review deep-dive work.
+- Baseline validation, steady-state unannotated, and steady-state annotated rows are now complete for all in-scope scenarios (`train`, `finetune`, `inference`).
+- Workflow policy requires human review gate completion before any `ncu_post_review` run or optimization discussion.
 
 ## Exact Outputs Expected
-- Required preconditions in `griffin-profiling` environment:
-  - `make profiling-preflight`
-  - `nvidia-smi`
-  - `nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv`
-- If GPU3 has active compute processes, do not run profiling; document blocker in `profiling/RUNS.md`, `handoff/CURRENT_STATUS.md`, and `handoff/SESSION_LOG.md`.
-- If GPU3 is clear, execute one annotated `nsys` run on GPU3 with:
-  - `CUDA_VISIBLE_DEVICES=3`
-  - `hconfig_profiling_single_gpu.yaml`
-  - combine inference test path (`hmaintask_combine.py --mode test`)
-  - load path `checkpoints/single-sft/best_checkpoint`
-  - run ID format `YYYYMMDD-HHMM-inference-annotated-...`
-- Record/update:
-  - `profiling/CAMPAIGN_PLAN.md` row `IF-SA1` (`status`, `nsys_run_id`, blocker field)
-  - append run record in `profiling/RUNS.md`
-  - append summary in `profiling/RESULTS.md` with NVTX coverage fields
-  - for NVTX verification evidence, use `nsys stats --force-export=true --report nvtx_sum <run>.nsys-rep`; if initial NVTX output is empty, retry forced-export before documenting anomaly/blocker
-  - update `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md` (if phase status changes), and append `handoff/SESSION_LOG.md`
+- Confirm and document capture completeness in `profiling/RESULTS.md` using the `Capture Completion Gate Template` with:
+  - `baseline_validation_complete: true`
+  - `steady_unannotated_complete: true`
+  - `steady_annotated_complete: true`
+  - `non_actionable_blockers_documented: true`
+  - `capture_complete: true`
+- Update `profiling/CAMPAIGN_PLAN.md` row `RV-G1` blocker text to explicitly state that capture is complete and row is awaiting human review outcome.
+- Update `handoff/CURRENT_STATUS.md` gate/review snapshot fields if needed for clarity.
+- Append `handoff/SESSION_LOG.md` with a concise review-gate preparation entry.
 
 ## Must Not Change
 - No model semantic changes.
-- No expansion into targeted-fine NVTX labels.
-- No `ncu` execution.
-- No optimization recommendations before review gate completion.
+- No NVTX instrumentation changes.
+- No `nsys` or `ncu` execution in this task.
+- No optimization recommendations before human review gate completion.
 
 ## Stopping Criteria
-- `IF-SA1` has either:
-  - a completed annotated `nsys` capture with artifact path recorded, or
-  - a documented non-actionable blocker captured consistently across profiling and handoff docs.
-- Documentation/handoff files are synchronized for fresh-session continuity.
+- Capture-gate result is explicitly recorded in `profiling/RESULTS.md`.
+- `RV-G1` row state/context is synchronized in campaign + handoff docs.
+- `handoff/NEXT_TASK.md` remains a single bounded next action for the subsequent agent.
 
 ## Definition Of Done (Template Style)
-- [ ] Preconditions executed and GPU3 occupancy checked.
-- [ ] `IF-SA1` annotated `nsys` capture attempted/executed per policy.
-- [ ] `profiling/CAMPAIGN_PLAN.md`, `profiling/RUNS.md`, and `profiling/RESULTS.md` updated.
-- [ ] `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md` (if needed), and `handoff/SESSION_LOG.md` updated.
+- [ ] Capture-complete result recorded in `profiling/RESULTS.md`.
+- [ ] `profiling/CAMPAIGN_PLAN.md` `RV-G1` context updated for human review handoff.
+- [ ] `handoff/CURRENT_STATUS.md` and `handoff/SESSION_LOG.md` updated.

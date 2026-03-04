@@ -489,3 +489,36 @@ It is for conclusions and interpretation, not raw logs.
   - The initial non-forced/deprecated `nvtxsum` check produced a false-negative signal before forced-export verification.
   - Dataset/checkpoint setup remains synthetic/minimal for command-path verification and may not reflect production-scale runtime behavior.
 - next_action: Execute `gfm-20260303-r01 / IF-SA1 / steady_annotated` on GPU3 and record NVTX label coverage using forced-export `nvtx_sum` verification policy.
+
+## Result: gfm-20260303-r01-inference-steady-annotated-01
+- campaign_id: gfm-20260303-r01
+- scenario: inference
+- profile_stage: steady_annotated
+- label_tier: coarse
+- label_schema_version: nvtx-v1.0
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- date_time_utc: 2026-03-04T16:52:30Z
+- related_runs:
+  - 20260304-1652-inference-annotated-combine-01
+  - 20260303-2134-inference-combine-01
+- question: Does the first coarse-labeled annotated inference capture complete and expose the expected NVTX taxonomy for analysis?
+- summary: Yes. The IF-SA1 annotated `nsys` run completed end-to-end on GPU3 and produced a valid `.nsys-rep` artifact. Forced-export `nvtx_sum` verification confirms expected inference-path coarse labels are present with no missing required labels for test-mode execution. This closes Phase 7 `steady_annotated` capture rows across train, finetune, and inference.
+- nvtx_label_coverage:
+  - labels_expected: [`gfm.setup`, `gfm.mode_test_only`, `gfm.eval_task`, `gfm.checkpoint_io`]
+  - labels_seen: [`gfm.setup`, `gfm.mode_test_only`, `gfm.eval_task`, `gfm.checkpoint_io`]
+  - missing_labels: none
+- nvtx_verification:
+  - report: nvtx_sum
+  - force_export: true
+  - retry_required: false
+  - final_status: present
+- key_observations:
+  - `gfm.mode_test_only` and nested `gfm.eval_task` account for most NVTX-attributed time in this bounded inference path.
+  - Coarse setup and checkpoint labels are visible (`gfm.setup`, `gfm.checkpoint_io`) with non-zero time shares.
+  - Test metric output remains stable at `test=-2.278367519378662`.
+- confidence: medium
+- caveats:
+  - Dataset/checkpoint setup remains synthetic/minimal for command-path verification and may not reflect production-scale runtime behavior.
+  - This result confirms capture health and label visibility, not production-scale hotspot representativeness.
+- next_action: Evaluate and record capture-complete gate status, then advance campaign row `RV-G1` through human review workflow.

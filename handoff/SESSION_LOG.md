@@ -526,3 +526,24 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `gfm-20260303-r01 / IF-SA1 / steady_annotated` and apply the new forced-export `nvtx_sum` verification policy before recording NVTX coverage conclusions.
+
+## 2026-03-04T16:54:30Z - IF-SA1 steady_annotated inference capture completed
+- task_scope: Execute `gfm-20260303-r01 / IF-SA1 / steady_annotated` with one annotated `nsys` inference run and synchronize profiling/handoff state.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); confirmed GPU3 had no active compute process attached.
+  - Attempted IF-SA1 launch in sandbox; captured expected `nsys` restriction (`open: Operation not permitted`) and reran outside sandbox.
+  - Executed annotated `nsys` run `20260304-1652-inference-annotated-combine-01` on GPU3; completed end-to-end and generated `artifacts/profiles/nsys/20260304-1652-inference-annotated-combine-01.nsys-rep`.
+  - Verified NVTX coverage using forced export (`nsys stats --force-export=true --report nvtx_sum ...`) and confirmed expected inference-path coarse labels are present (`gfm.setup`, `gfm.mode_test_only`, `gfm.eval_task`, `gfm.checkpoint_io`).
+  - Updated campaign/run/result records and handoff state; marked Phase 7 complete and advanced next task to review-gate preparation (`RV-G1`).
+- outcome: success
+- blockers:
+  - none for IF-SA1 execution after required out-of-sandbox rerun.
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260303-r01 / RV-G1 / review_gate` by recording capture-complete evidence and preparing the human review decision package.

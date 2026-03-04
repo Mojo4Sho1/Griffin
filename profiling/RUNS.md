@@ -1085,3 +1085,53 @@ Example:
 - actual_runtime_minutes: na
 - overrun_reason_if_any: none
 - review_gate_state_at_run: not_done
+
+### Run: 20260304-1652-inference-annotated-combine-01
+- campaign_id: gfm-20260303-r01
+- scenario: inference
+- slice_id: IF-SA1
+- profile_stage: steady_annotated
+- label_tier: coarse
+- label_schema_version: nvtx-v1.0
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: all_ranks
+- rank_filter_if_any: none
+- nvtx_report_used: nvtx_sum
+- nvtx_force_export: true
+- nvtx_retry_on_empty: not_needed
+- nvtx_coverage_status: present
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+  - note: initial in-sandbox launch attempt hit expected `nsys` sandbox restriction (`open: Operation not permitted`); rerun outside sandbox succeeded
+- date_time_utc: 2026-03-04T16:52:30Z
+- mode: inference
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys 20260304-1652-inference-annotated-combine-01 hmaintask_combine.py datasets/single-pretrain-v3 logs/prof inference-annot-nsys -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `235b7970ca75a77ab0f1043e6b5df5c1d330d9b9`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: IF-SA1 steady-state annotated inference capture after Phase 6b coarse NVTX insertion.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260304-1652-inference-annotated-combine-01.nsys-rep`
+  - `artifacts/profiles/nsys/20260304-1652-inference-annotated-combine-01.sqlite`
+  - `logs/prof/inference-annot-nsys/`
+- findings_notes:
+  - Run completed end-to-end on GPU3 in combine `--mode test` and emitted expected annotated `nsys` artifact.
+  - Forced-export `nvtx_sum` confirms expected inference-path coarse labels are present: `gfm.setup`, `gfm.mode_test_only`, `gfm.eval_task`, `gfm.checkpoint_io`.
+  - Test metric is stable with prior inference slices (`test=-2.278367519378662`).
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: 5
+- window_profile_iterations: 25
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: true
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: 0.40
+- overrun_reason_if_any: none
+- review_gate_state_at_run: not_done
