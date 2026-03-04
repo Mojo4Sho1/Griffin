@@ -42,6 +42,7 @@ Policy: default rank emission is `all_ranks`; any single-rank/subset filtering m
 Policy: for annotated-stage NVTX verification, use `nvtx_sum` with forced export (`nsys stats --force-export=true --report nvtx_sum <run>.nsys-rep`); do not use deprecated `nvtxsum` as canonical evidence.
 Policy: false-negative guardrail for annotated runs: if an initial NVTX report is empty, rerun once with `--force-export=true` before documenting any NVTX anomaly/blocker.
 Cross-reference: follow `profiling/_PROFILING_GUIDE.md` sections `Range Nesting And Overlap Policy`, `Distributed / Rank Emission Policy`, and `Schema Change Rule`.
+Run-scale reference: see `profiling/SCALE_PROFILES.md` for strict staged-vs-realistic criteria.
 
 Post-`nsys` analysis policy:
 - After each successful `nsys` run, generate:

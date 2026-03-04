@@ -12,6 +12,8 @@ It complements `profiling/RUNS.md` (append-only run records) by tracking require
 - Shared host guardrail applies to every row: check GPU3 occupancy first and run with `CUDA_VISIBLE_DEVICES=3`.
 - Baseline validation slices are pipeline-validation evidence only and are not sufficient for optimization recommendations.
 - Optimization recommendations are prohibited until capture + review gates are complete.
+- Until a dedicated table column is introduced, campaign rows should declare run class (`minimal_staged` or `realistic_scale`) in objective/blocker notes where ambiguity could affect interpretation.
+- Canonical run-scale definitions and criteria are documented in `profiling/SCALE_PROFILES.md`.
 
 Status values in this file:
 - `not started`

@@ -21,6 +21,7 @@ Example:
 - Campaign ID (`campaign_id`)
 - Scenario (`train` | `finetune` | `inference`)
 - Slice ID (from `profiling/CAMPAIGN_PLAN.md`)
+- Run class (`minimal_staged` | `realistic_scale`)
 - Profile stage (`baseline_validation` | `steady_unannotated` | `steady_annotated` | `ncu_post_review`)
 - Date/time (UTC)
 - Mode (`train` / `fine-tune` / `inference`)
@@ -65,6 +66,7 @@ Example:
 - campaign_id: <campaign_id>
 - scenario: <train|finetune|inference>
 - slice_id: <slice_id_from_campaign_plan>
+- run_class: <minimal_staged|realistic_scale>
 - profile_stage: <baseline_validation|steady_unannotated|steady_annotated|ncu_post_review>
 - label_tier: <coarse|targeted_fine|na>
 - label_schema_version: <nvtx-v<major>.<minor>_or_na>
@@ -118,6 +120,7 @@ Example:
 - Never conclude NVTX is absent for an annotated run until `nsys stats --force-export=true --report nvtx_sum <run>.nsys-rep` has been executed at least once for that run ID.
 - Every new successful `nsys` run must include post-run analysis artifacts at `artifacts/profiles/analysis/<run_id>/`.
 - Historical analysis artifact backfill is required for gate-critical runs only.
+- New run records must explicitly set `run_class` as `minimal_staged` or `realistic_scale`; use `profiling/SCALE_PROFILES.md` as the canonical interpretation contract.
 
 ## Campaign/Stage Counting Rules
 

@@ -18,6 +18,7 @@ Execute campaign row `gfm-20260303-r01 / RV-G1 / review_gate`: perform human rev
 - Update `handoff/CURRENT_STATUS.md` workflow gate state fields to reflect the recorded review outcome.
 - Append `handoff/SESSION_LOG.md` with a concise review-decision entry.
 - Include references to the reviewed analysis bundle paths (at least one per scenario) in review notes.
+- Explicitly classify reviewed evidence as `minimal_staged` and reference `profiling/SCALE_PROFILES.md` in review notes.
 
 ## Must Not Change
 - No model semantic changes.

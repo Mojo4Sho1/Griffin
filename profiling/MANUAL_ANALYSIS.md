@@ -24,6 +24,9 @@ Primary inputs:
 Optional deep-dive input:
 - `artifacts/profiles/nsys/<run_id>.sqlite`
 
+Before interpreting hotspots, confirm run class and evidence semantics in:
+- `profiling/SCALE_PROFILES.md`
+
 ## Three-Layer Workflow
 
 ### Layer 1: Quick Triage

@@ -13,6 +13,7 @@ This is the official implementation of the paper "[Griffin: Towards a Graph-Cent
   - [Profiling Analysis](#profiling-analysis)
     - [Manual Workflow](#manual-workflow)
     - [Automated Analysis Bundle](#automated-analysis-bundle)
+    - [Run Scale Definitions](#run-scale-definitions)
     - [Profiling References](#profiling-references)
   - [Dataset Preparation](#dataset-preparation)
     - [Using Provided Processed Datasets](#using-provided-processed-datasets)
@@ -66,9 +67,17 @@ Default output path:
 artifacts/profiles/analysis/<run_id>/
 ```
 
+### Run Scale Definitions
+
+Staged examples in this repo are intended for command-path and instrumentation validation.
+Strict criteria for realistic-scale evidence are defined in:
+
+- `profiling/SCALE_PROFILES.md`
+
 ### Profiling References
 
 - `profiling/MANUAL_ANALYSIS.md`
+- `profiling/SCALE_PROFILES.md`
 - `profiling/sql/manual_queries.sql`
 - `profiling/COMMANDS.md`
 - `profiling/_PROFILING_GUIDE.md`

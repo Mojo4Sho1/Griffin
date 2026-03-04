@@ -595,3 +595,39 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `RV-G1` human review decision using the prepared analysis bundles, then record gate outcome and permission flags.
+
+## 2026-03-04T18:04:27Z - Canonical run-scale definitions and pointers added
+- task_scope: Add a single canonical human reference for staged vs realistic run-scale semantics and wire cross-references from user-facing docs.
+- actions_taken:
+  - Added `profiling/SCALE_PROFILES.md` with explicit staged setup details, strict realistic-scale criteria, evidence-class table, transition workflow, and worked examples.
+  - Updated `README.md` profiling section to include a `Run Scale Definitions` subsection and direct pointer to `profiling/SCALE_PROFILES.md`.
+  - Updated `profiling/COMMANDS.md` policy section with a run-scale reference pointer.
+  - Updated `profiling/MANUAL_ANALYSIS.md` to require checking run class via `profiling/SCALE_PROFILES.md` before hotspot interpretation.
+  - Updated `profiling/CAMPAIGN_PLAN.md` campaign rules to declare run class in row notes until a dedicated column is introduced.
+  - Updated `profiling/RUNS.md` schema/template/conventions to require `run_class: minimal_staged|realistic_scale`.
+  - Updated `handoff/CURRENT_STATUS.md` uncertainty note to include canonical run-scale interpretation pointer.
+- outcome: success
+- blockers:
+  - none for this documentation scope.
+- files_updated:
+  - `profiling/SCALE_PROFILES.md`
+  - `README.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/MANUAL_ANALYSIS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: During RV-G1 review notes, explicitly classify evidence class as `minimal_staged` and reference `profiling/SCALE_PROFILES.md` before deciding realistic-scale campaign launch.
+
+## 2026-03-04T18:06:02Z - RV-G1 task wording synced with run-class policy
+- task_scope: Align immediate next-task wording with newly added canonical run-scale definitions.
+- actions_taken:
+  - Updated `handoff/NEXT_TASK.md` expected outputs to require explicit `minimal_staged` evidence classification and a pointer to `profiling/SCALE_PROFILES.md` in review notes.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute RV-G1 review using analysis bundles and include run-class classification in the recorded review summary.

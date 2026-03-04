@@ -158,4 +158,4 @@
   - `ncu` runs are prohibited until `ncu_allowed: true` (post-review gate).
   - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
-- Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads.
+- Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads; canonical run-scale interpretation rules are documented in `profiling/SCALE_PROFILES.md`.
