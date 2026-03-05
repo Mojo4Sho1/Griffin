@@ -12,6 +12,8 @@ It complements `profiling/RUNS.md` (append-only run records) by tracking require
 - Shared host guardrail applies to every row: check GPU3 occupancy first and run with `CUDA_VISIBLE_DEVICES=3`.
 - Baseline validation slices are pipeline-validation evidence only and are not sufficient for optimization recommendations.
 - Optimization recommendations are prohibited until capture + review gates are complete.
+- Staged `ncu` row execution is optional and non-gating; use it only as tooling smoke validation when needed.
+- Realistic-scale `ncu` rows are the default source for optimization-oriented deep-dive evidence.
 - Until a dedicated table column is introduced, campaign rows should declare run class (`minimal_staged` or `realistic_scale`) in objective/blocker notes where ambiguity could affect interpretation.
 - Canonical run-scale definitions and criteria are documented in `profiling/SCALE_PROFILES.md`.
 
@@ -70,9 +72,9 @@ Status values in this file:
 | gfm-20260303-r01 | finetune | FT-SA1 | steady_annotated | Steady-state annotated finetune capture after minimal NVTX insertion. | `hmaintask_combine.py` | `train` | `datasets/single-pretrain-v3` | `checkpoints/single-completion/best_checkpoint` | `checkpoints/single-sft` | `-` | `20260304-1622-finetune-annotated-combine-01` | `-` | done | `nsys` capture completed; forced-export `nvtx_sum` verification confirms expected coarse NVTX labels (initial `nvtxsum` empty output treated as false negative) |
 | gfm-20260303-r01 | inference | IF-SA1 | steady_annotated | Steady-state annotated inference capture after minimal NVTX insertion. | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3` | `checkpoints/single-sft/best_checkpoint` | `-` | `-` | `20260304-1652-inference-annotated-combine-01` | `-` | done | none |
 | gfm-20260303-r01 | campaign | RV-G1 | review_gate | Capture-complete + human-review approval gate. | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | waiting_human_review | capture gate evidence recorded (`gfm-20260303-r01-capture-gate-01`, `capture_complete=true`); awaiting explicit human review outcome to set `done` |
-| gfm-20260303-r01 | train | TR-N1 | ncu_post_review | One targeted train hotspot deep-dive run. | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3` | `-` | `checkpoints/single-completion` | `-` | `-` | `-` | not started | blocked until `RV-G1` is done |
-| gfm-20260303-r01 | finetune | FT-N1 | ncu_post_review | One targeted finetune hotspot deep-dive run. | `hmaintask_combine.py` | `train` | `datasets/single-pretrain-v3` | `checkpoints/single-completion/best_checkpoint` | `checkpoints/single-sft` | `-` | `-` | `-` | not started | blocked until `RV-G1` is done |
-| gfm-20260303-r01 | inference | IF-N1 | ncu_post_review | One targeted inference hotspot deep-dive run. | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3` | `checkpoints/single-sft/best_checkpoint` | `-` | `-` | `-` | `-` | not started | blocked until `RV-G1` is done |
+| gfm-20260303-r01 | train | TR-N1 | ncu_post_review | One staged train `ncu` tooling-smoke run (optional, non-gating). | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3` | `-` | `checkpoints/single-completion` | `-` | `-` | `-` | not started | optional; if used, record `ncu_intent: tooling_smoke` |
+| gfm-20260303-r01 | finetune | FT-N1 | ncu_post_review | One staged finetune `ncu` tooling-smoke run (optional, non-gating). | `hmaintask_combine.py` | `train` | `datasets/single-pretrain-v3` | `checkpoints/single-completion/best_checkpoint` | `checkpoints/single-sft` | `-` | `-` | `-` | not started | optional; if used, record `ncu_intent: tooling_smoke` |
+| gfm-20260303-r01 | inference | IF-N1 | ncu_post_review | One staged inference `ncu` tooling-smoke run (optional, non-gating). | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3` | `checkpoints/single-sft/best_checkpoint` | `-` | `-` | `-` | `-` | not started | optional; if used, record `ncu_intent: tooling_smoke` |
 
 ## Update Rule
 
@@ -81,6 +83,7 @@ Status values in this file:
 - If representativeness fails, use `blocked_non_representative` and record stability metrics.
 - If a run exceeds planning budget due to healthy progress, allow completion and log overrun details; do not mark this as failure.
 - `ncu_post_review` rows are invalid unless `RV-G1` is `done`.
+- `ncu_post_review` rows marked `ncu_intent: tooling_smoke` are allowed before `RV-G1` completion when the sole intent is path validation.
 - If a required precondition is missing (asset, GPU availability, etc.), mark row `blocked` and mirror blocker details in:
   - `profiling/RUNS.md`
   - `handoff/CURRENT_STATUS.md`

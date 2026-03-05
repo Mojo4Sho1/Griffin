@@ -631,3 +631,36 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute RV-G1 review using analysis bundles and include run-class classification in the recorded review summary.
+
+## 2026-03-04T20:45:22Z - CURRENT_STATUS realistic-scale counter scaffold added
+- task_scope: Prepare handoff status tracking for upcoming realistic-scale campaign runs.
+- actions_taken:
+  - Updated `handoff/CURRENT_STATUS.md` to preserve staged campaign counters under `run_class=minimal_staged`.
+  - Added a second zero-initialized counter block for planned realistic campaign `gfm-20260304-r02` under `run_class=realistic_scale`.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Keep updating both counter blocks separately to avoid mixing staged and realistic evidence classes.
+
+## 2026-03-04T21:00:15Z - Staged NCU smoke policy codified across docs
+- task_scope: Clarify staged-vs-realistic `ncu` semantics so future agents treat staged `ncu` as optional tooling validation and realistic `ncu` as optimization deep-dive evidence.
+- actions_taken:
+  - Added canonical `NCU Transition Policy` section in `profiling/SCALE_PROFILES.md`.
+  - Updated `profiling/COMMANDS.md` to allow one-time staged `ncu` tooling smoke (`ncu_intent: tooling_smoke`) while preserving realistic post-review default targeting.
+  - Updated `profiling/RUNS.md` metadata conventions with `ncu_intent: tooling_smoke|hotspot_deep_dive` and conditional review-gate rule for hotspot deep dives.
+  - Updated `profiling/CAMPAIGN_PLAN.md` to mark staged `ncu` rows as optional/non-gating tooling smoke and preserve realistic-scale default for optimization-oriented deep dives.
+  - Updated `handoff/CURRENT_STATUS.md` counters with explicit staged/realistic `ncu_success` interpretation and pointer to canonical policy.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `profiling/SCALE_PROFILES.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/RUNS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: If desired, execute one staged train `ncu` tooling-smoke run and record it with `ncu_intent: tooling_smoke`; keep realistic review outcomes as the source of optimization-targeted `ncu`.

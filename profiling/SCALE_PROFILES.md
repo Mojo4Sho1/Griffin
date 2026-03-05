@@ -96,6 +96,14 @@ A run can be classified as `realistic_scale` only if all items below are satisfi
 
 `ncu` target selection should be based on realistic-scale review outcomes, not solely staged hotspot ordering.
 
+## NCU Transition Policy
+
+- Keep `ncu_success` counters for both `minimal_staged` and `realistic_scale` campaign classes.
+- `minimal_staged` `ncu_success` is optional and non-gating; it may remain `0` by design.
+- A one-time staged `ncu` run is allowed as tooling validation (`ncu_intent: tooling_smoke`) to de-risk command and environment pathing.
+- Default optimization workflow remains: realistic-scale `nsys` evidence -> realistic review gate -> targeted `ncu`.
+- Staged `ncu` outputs are tooling health evidence only and must not be used to prioritize optimization work.
+
 ## Worked Examples
 
 ### Staged Campaign Example (Historical)
@@ -117,4 +125,3 @@ Use this snippet in future `profiling/RUNS.md` entries:
   - rationale: Assets reflect production distribution/scale for this scenario.
 - runtime_window_target_minutes: 60-90
 ```
-

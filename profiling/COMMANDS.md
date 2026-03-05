@@ -41,6 +41,8 @@ Policy: `targeted_fine` relabeling is optional and only allowed after `RV-G1` is
 Policy: default rank emission is `all_ranks`; any single-rank/subset filtering must be documented in run metadata.
 Policy: for annotated-stage NVTX verification, use `nvtx_sum` with forced export (`nsys stats --force-export=true --report nvtx_sum <run>.nsys-rep`); do not use deprecated `nvtxsum` as canonical evidence.
 Policy: false-negative guardrail for annotated runs: if an initial NVTX report is empty, rerun once with `--force-export=true` before documenting any NVTX anomaly/blocker.
+Policy: one staged `ncu` smoke run is allowed to validate tooling before realistic-scale `ncu`; record those runs with `ncu_intent: tooling_smoke`.
+Policy: staged `ncu` smoke is non-gating and not optimization evidence.
 Cross-reference: follow `profiling/_PROFILING_GUIDE.md` sections `Range Nesting And Overlap Policy`, `Distributed / Rank Emission Policy`, and `Schema Change Rule`.
 Run-scale reference: see `profiling/SCALE_PROFILES.md` for strict staged-vs-realistic criteria.
 
@@ -180,6 +182,11 @@ CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-inference
 Run only after:
 - capture-complete gate passes
 - human review gate is marked done
+- realistic-scale review outputs provide the hotspot shortlist by default
+
+Staged exception:
+- A one-time staged `ncu` tooling smoke is allowed for path validation only.
+- Mark staged exception entries as `ncu_intent: tooling_smoke`; do not treat them as optimization-prioritization evidence.
 
 Train:
 ```bash

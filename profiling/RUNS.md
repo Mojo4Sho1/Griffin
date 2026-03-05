@@ -57,7 +57,8 @@ Example:
   - `nvtx_retry_on_empty` (`performed` | `not_needed` | `not_performed`)
   - `nvtx_coverage_status` (`present` | `absent` | `inconclusive`)
 - Post-review deep-dive metadata when applicable:
-  - `review_gate_state_at_run` (must be `done` for `ncu_post_review`)
+  - `review_gate_state_at_run` (must be `done` for `ncu_post_review` when `ncu_intent=hotspot_deep_dive`)
+  - `ncu_intent` (`tooling_smoke` | `hotspot_deep_dive`)
 
 ## Run Template
 
@@ -105,6 +106,7 @@ Example:
 - actual_runtime_minutes: <value_or_na>
 - overrun_reason_if_any: <none or reason>
 - review_gate_state_at_run: <done|not_done|na>
+- ncu_intent: <tooling_smoke|hotspot_deep_dive|na>
 ```
 
 ## Conventions
@@ -117,6 +119,8 @@ Example:
 - `label_schema_version` must match `nvtx-v<major>.<minor>`.
 - `targeted_fine` runs must reference a review-approved hotspot focus ID and parent coarse anchor.
 - `targeted_fine` runs are invalid unless `review_gate_state_at_run: done`.
+- Use `ncu_intent: hotspot_deep_dive` for decision-oriented post-review deep dives.
+- If `run_class: minimal_staged` and `profiler: ncu`, `ncu_intent` must be `tooling_smoke` and run notes must include a short tooling-validation rationale.
 - Never conclude NVTX is absent for an annotated run until `nsys stats --force-export=true --report nvtx_sum <run>.nsys-rep` has been executed at least once for that run ID.
 - Every new successful `nsys` run must include post-run analysis artifacts at `artifacts/profiles/analysis/<run_id>/`.
 - Historical analysis artifact backfill is required for gate-critical runs only.
@@ -141,7 +145,8 @@ Example:
   - `profile_stage: ncu_post_review`
   - `profiler: ncu`
   - `status: success`
-- `ncu_post_review` rows are invalid unless `review_gate_state_at_run: done`.
+- `ncu_post_review` rows with `ncu_intent: hotspot_deep_dive` are invalid unless `review_gate_state_at_run: done`.
+- Staged `ncu` runs for tooling validation are optional and may use `ncu_intent: tooling_smoke` without counting as optimization evidence.
 - Legacy records from pre-campaign sessions may omit campaign fields; new records must include them.
 - Legacy campaign records that still use `baseline_unannotated` / `baseline_annotated` remain valid historical context; new records must use the updated stage enum.
 

@@ -13,7 +13,7 @@
   - `accelerate`: available in `griffin-profiling`
   - `torch_geometric`: available in `griffin-profiling` (import verified)
 
-## Campaign Counters (`gfm-20260303-r01`)
+## Campaign Counters (`gfm-20260303-r01`, `run_class=minimal_staged`)
 - baseline_nsys_success:
   - train: 2
   - finetune: 2
@@ -30,6 +30,30 @@
   - train: 0
   - finetune: 0
   - inference: 0
+- counter_interpretation:
+  - `minimal_staged.ncu_success` is optional/non-gating and may remain `0` by design.
+  - A one-time staged train `ncu` tooling smoke is allowed to validate command/tooling pathing.
+
+## Campaign Counters (`gfm-20260304-r02`, `run_class=realistic_scale`)
+- baseline_nsys_success:
+  - train: 0
+  - finetune: 0
+  - inference: 0
+- steady_unannotated_representative_pairs:
+  - train: 0
+  - finetune: 0
+  - inference: 0
+- annotated_nsys_success:
+  - train: 0
+  - finetune: 0
+  - inference: 0
+- ncu_success:
+  - train: 0
+  - finetune: 0
+  - inference: 0
+- counter_interpretation:
+  - `realistic_scale.ncu_success` is expected to increase only after realistic review approval and hotspot shortlist selection.
+  - Realistic-scale `ncu` remains the default source of optimization-oriented deep-dive evidence.
 
 ## Workflow Gate State
 - capture_complete: true
@@ -159,3 +183,4 @@
   - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
 - Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads; canonical run-scale interpretation rules are documented in `profiling/SCALE_PROFILES.md`.
+- NCU transition interpretation (staged optional tooling smoke vs realistic default deep-dive path) is canonical in `profiling/SCALE_PROFILES.md` under `NCU Transition Policy`.
