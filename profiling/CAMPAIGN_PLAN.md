@@ -55,6 +55,12 @@ Status values in this file:
 - campaign_id: `gfm-20260303-r01`
 - canonical inference path: `hmaintask_combine.py --mode test --loadpath checkpoints/single-sft/best_checkpoint`
 
+## Next Campaign (Realistic Scale)
+
+- campaign_id: `gfm-20260304-r02`
+- run_class: `realistic_scale`
+- current gate note: asset acquisition/provenance gate satisfied; no realistic-scale profiling run executed yet (`TR-B1` next).
+
 ## Slice Matrix
 
 | campaign_id | scenario | slice_id | profile_stage | objective | entry_script | mode | dataset | loadpath | savepath | smoke_run_id | nsys_run_id | ncu_run_id | status | blocker |
@@ -75,6 +81,9 @@ Status values in this file:
 | gfm-20260303-r01 | train | TR-N1 | ncu_post_review | One staged train `ncu` tooling-smoke run (optional, non-gating). | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3` | `-` | `checkpoints/single-completion` | `-` | `-` | `-` | not started | optional; if used, record `ncu_intent: tooling_smoke` |
 | gfm-20260303-r01 | finetune | FT-N1 | ncu_post_review | One staged finetune `ncu` tooling-smoke run (optional, non-gating). | `hmaintask_combine.py` | `train` | `datasets/single-pretrain-v3` | `checkpoints/single-completion/best_checkpoint` | `checkpoints/single-sft` | `-` | `-` | `-` | not started | optional; if used, record `ncu_intent: tooling_smoke` |
 | gfm-20260303-r01 | inference | IF-N1 | ncu_post_review | One staged inference `ncu` tooling-smoke run (optional, non-gating). | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3` | `checkpoints/single-sft/best_checkpoint` | `-` | `-` | `-` | `-` | not started | optional; if used, record `ncu_intent: tooling_smoke` |
+| gfm-20260304-r02 | train | TR-B1 | baseline_validation | Realistic-scale baseline train validation slice gated on production-equivalent assets/provenance. | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `-` | `checkpoints/single-completion` | `-` | `-` | `-` | not started | asset provenance gate now satisfied; execute required preflight + GPU3 occupancy checks before run. |
+| gfm-20260304-r02 | finetune | FT-B1 | baseline_validation | Realistic-scale baseline finetune validation slice after TR-B1 and production-equivalent checkpoint confirmation. | `hmaintask_combine.py` | `train` | `datasets/single-pretrain-v3-hf` | `checkpoints/single-completion` | `checkpoints/single-sft` | `-` | `-` | `-` | not started | awaiting campaign execution order (`TR-B1` first). |
+| gfm-20260304-r02 | inference | IF-B1 | baseline_validation | Realistic-scale baseline inference validation slice after TR-B1/FT-B1 readiness. | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3-hf` | `checkpoints/single-sft` | `-` | `-` | `-` | `-` | not started | awaiting campaign execution order (`TR-B1` then `FT-B1`). |
 
 ## Update Rule
 

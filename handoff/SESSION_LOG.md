@@ -687,3 +687,56 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Start `gfm-20260304-r02 / TR-B1 / baseline_validation` by validating production-equivalent asset provenance; run on GPU3 if available, otherwise record the precise blocker.
+
+## 2026-03-05T20:00:53Z - Realistic-scale asset acquisition attempted with strict provenance tracking
+- task_scope: Implement realistic-scale asset acquisition/provenance plan and determine whether `gfm-20260304-r02 / TR-B1` can start.
+- actions_taken:
+  - Ran acquisition preflight (`huggingface-cli`, `git-lfs`, `sha256sum`, disk capacity) and verified out-of-sandbox HF connectivity.
+  - Pinned canonical HF source revisions from README-linked repos:
+    - `yamboo/Griffin_datasets_joint_v65`: `e0c54ceada75317b06f11f8dcda7aa8304fbb593`
+    - `yamboo/Griffin_datasets_single_pretrain_v3`: `dbb31254586361eaf271db0d1d9bfed6292b820d`
+    - `yamboo/Griffin_models`: `bd8c5be5130f34e7faa31099d0bd81d95d0aa995`
+  - Attempted full single-pretrain dataset staging to `datasets/single-pretrain-v3-hf`; download reached partial state (`~4.3G`, `1286` non-cache files) before failing on repeated HTTP 429 responses.
+  - Attempted targeted official checkpoint staging (`single-completion/*`, `single-sft/*`) to `checkpoints/hf-models`; failed on repeated HTTP 429 responses before checkpoint files materialized.
+  - Added strict provenance manifest `profiling/ASSET_PROVENANCE.md` with pinned SHAs, hashes, counts, and blocker evidence.
+  - Updated campaign/handoff/docs to mark realistic-scale `TR-B1` as blocked on acquisition completion and token-authenticated retry.
+- outcome: partial
+- blockers:
+  - Hugging Face rate limiting under anonymous access (`HTTP 429`) prevented completion of required realistic-scale dataset/checkpoint staging.
+- files_updated:
+  - `profiling/ASSET_PROVENANCE.md`
+  - `profiling/ASSETS_STATUS.md`
+  - `profiling/RUNS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Configure authenticated HF access (token), rerun the recorded acquisition commands with resume support, then clear `TR-B1` blocker only after full provenance verification.
+
+## 2026-03-05T21:19:32Z - Realistic-scale asset provenance gate cleared after user download completion
+- task_scope: Re-verify downloaded realistic-scale assets and synchronize profiling/handoff docs from blocked acquisition state to execution-ready `TR-B1` state.
+- actions_taken:
+  - Validated presence and readability of downloaded asset trees:
+    - `datasets/joint-v65` (`91G`, non-cache files=`1336`)
+    - `datasets/single-pretrain-v3-hf` (`6.4G`, non-cache files=`1528`)
+    - `checkpoints/single-completion/{config.json,model.safetensors}`
+    - `checkpoints/single-sft/{config.json,model.safetensors}`
+  - Verified pinned revision SHAs via Hugging Face cache metadata:
+    - joint dataset: `e0c54ceada75317b06f11f8dcda7aa8304fbb593`
+    - single-pretrain dataset: `dbb31254586361eaf271db0d1d9bfed6292b820d`
+    - checkpoints repo: `bd8c5be5130f34e7faa31099d0bd81d95d0aa995`
+  - Computed and recorded updated critical SHA256 values in `profiling/ASSET_PROVENANCE.md`.
+  - Removed redundant partial staging directory `checkpoints/hf-models` after confirming official files exist directly under `checkpoints/`.
+  - Updated campaign/handoff docs to mark asset provenance gate satisfied and rotate next task to execute realistic-scale `TR-B1` smoke + `nsys`.
+- outcome: success
+- blockers:
+  - none for asset provenance readiness; next boundary is runtime execution of `TR-B1`.
+- files_updated:
+  - `profiling/ASSET_PROVENANCE.md`
+  - `profiling/ASSETS_STATUS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260304-r02 / TR-B1 / baseline_validation` with required preflight + GPU3 occupancy checks, then record smoke + `nsys` outcomes and analysis bundle path.

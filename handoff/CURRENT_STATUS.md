@@ -78,6 +78,7 @@
 - One-command readiness check exists: `make profiling-preflight`.
 - `make profiling-preflight` now passes in `griffin-profiling` for the current environment.
 - Profiling asset-availability tracker now exists at `profiling/ASSETS_STATUS.md`.
+- Strict asset provenance manifest now exists at `profiling/ASSET_PROVENANCE.md` with pinned HF SHAs, hashes, and acquisition evidence for realistic-scale gating.
 - Dataset path `datasets/single-pretrain-v3` is now staged with minimal required metadata/embeddings/HF dataset tree so `Graph(args.dataset)` and `Task(args.dataset)` initialize successfully for command-path verification.
 - Completion-script fix applied at `hmaintask_completion.py:246` to use `accelerator.device` in the metric gather tensor allocation (non-semantic runtime compatibility fix).
 - Finetune combine-script compatibility fix applied at `hmaintask_combine.py:238` to use `accelerator.device` for validation metric gather tensor allocation (non-semantic runtime compatibility fix).
@@ -161,10 +162,13 @@
 
 ## Blockers, Uncertainties, Assumptions
 - Baseline slice asset status now:
-  - `datasets/single-pretrain-v3`: present (minimal synthetic staging for command-path verification)
+  - `datasets/single-pretrain-v3`: present (minimal synthetic staging for command-path verification; non-production)
+  - `datasets/single-pretrain-v3-hf`: present and provenance-verified (`~6.4G`, `1528` non-cache files) from `yamboo/Griffin_datasets_single_pretrain_v3` SHA `dbb31254586361eaf271db0d1d9bfed6292b820d`
+  - `datasets/joint-v65`: present and provenance-verified (`~91G`, `1336` non-cache files) from `yamboo/Griffin_datasets_joint_v65` SHA `e0c54ceada75317b06f11f8dcda7aa8304fbb593`
+  - `checkpoints/single-completion/model.safetensors`: present and provenance-verified from `yamboo/Griffin_models` SHA `bd8c5be5130f34e7faa31099d0bd81d95d0aa995`
+  - `checkpoints/single-sft/model.safetensors`: present and provenance-verified from `yamboo/Griffin_models` SHA `bd8c5be5130f34e7faa31099d0bd81d95d0aa995`
   - `checkpoints/single-completion/best_checkpoint`: present (generated in successful reruns)
   - `checkpoints/single-sft/best_checkpoint`: present (generated in FT-S1 rerun)
-  - `datasets/joint-v65`: missing
   - `checkpoints/transfer`: missing
 - Current campaign blocker surface:
   - no active runtime blocker in `train`/`finetune` baseline-validation paths.
@@ -178,11 +182,12 @@
   - Phase 7 `steady_annotated` row `FT-SA1` is complete with verified coarse NVTX labels after forced-export `nvtx_sum` recheck (`20260304-1622-finetune-annotated-combine-01`); the earlier empty `nvtxsum` output is treated as an export/reporting-path false negative.
   - Phase 7 `steady_annotated` row `IF-SA1` is complete with forced-export `nvtx_sum` coverage present for inference-path coarse labels (`20260304-1652-inference-annotated-combine-01`).
   - Capture and review gates are now complete for `gfm-20260303-r01` (`gfm-20260303-r01-review-gate-01`), with post-review permissions intentionally remaining disabled under `minimal_staged` evidence interpretation.
+  - Realistic-scale campaign row `gfm-20260304-r02 / TR-B1` is now unblocked on assets; provenance gate is satisfied in `profiling/ASSET_PROVENANCE.md` and execution can proceed with standard preflight/GPU occupancy checks.
 - Optimization/recommendation policy surface:
   - Optimization recommendations require both `review_complete=true` and explicit `optimization_discussion_allowed=true`; current state keeps discussion disabled.
   - Current review decision keeps `targeted_fine_allowed=false`; label expansion remains prohibited until a later review explicitly approves hotspot focus.
   - `ncu` deep-dive runs remain prohibited while `ncu_allowed=false`.
   - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
-- Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads; canonical run-scale interpretation rules are documented in `profiling/SCALE_PROFILES.md`.
+- Remaining uncertainty: staged campaign evidence remains synthetic/minimal by design, while newly staged realistic-scale assets still require runtime validation (`TR-B1` execution) to confirm operational compatibility and representative behavior.
 - NCU transition interpretation (staged optional tooling smoke vs realistic default deep-dive path) is canonical in `profiling/SCALE_PROFILES.md` under `NCU Transition Policy`.

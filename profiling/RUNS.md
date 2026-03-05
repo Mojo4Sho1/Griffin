@@ -1186,3 +1186,196 @@ Example:
 - actual_runtime_minutes: 0.40
 - overrun_reason_if_any: none
 - review_gate_state_at_run: not_done
+
+### Run: 20260305-1938-train-completion-01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-B1
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-05T19:38:00Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `huggingface-cli download --repo-type dataset yamboo/Griffin_datasets_joint_v65 README.md --local-dir /tmp/hf_probe --quiet`
+- git_commit: `235b7970ca75a77ab0f1043e6b5df5c1d330d9b9`
+- config: `asset_acquisition_probe`
+- slice_definition: Realistic-scale provenance preflight probe against canonical HF dataset sources.
+- profiler: none
+- outputs:
+  - `/tmp/hf_probe/README.md`
+- findings_notes:
+  - HF access works out-of-sandbox; anonymous download probe succeeded.
+  - Canonical repo SHAs pinned via HF API metadata queries:
+    - `yamboo/Griffin_datasets_joint_v65`: `e0c54ceada75317b06f11f8dcda7aa8304fbb593`
+    - `yamboo/Griffin_datasets_single_pretrain_v3`: `dbb31254586361eaf271db0d1d9bfed6292b820d`
+    - `yamboo/Griffin_models`: `bd8c5be5130f34e7faa31099d0bd81d95d0aa995`
+- analysis_artifacts_path: `profiling/ASSET_PROVENANCE.md`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: na
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260305-1946-train-completion-01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-B1
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-05T19:46:00Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `huggingface-cli download --repo-type dataset yamboo/Griffin_datasets_single_pretrain_v3 --local-dir datasets/single-pretrain-v3-hf --max-workers 4`
+- git_commit: `235b7970ca75a77ab0f1043e6b5df5c1d330d9b9`
+- config: `asset_acquisition_snapshot`
+- slice_definition: Full realistic-scale single-pretrain dataset staging attempt from pinned HF revision.
+- profiler: none
+- outputs:
+  - `datasets/single-pretrain-v3-hf/` (partial snapshot)
+- findings_notes:
+  - Download progressed substantially (`~4.3G`, `1286` non-cache files) and confirmed non-toy metadata footprint relative to staged toy dataset.
+  - Transfer terminated by repeated HTTP 429 rate-limit errors while resolving remaining files.
+  - Required file `tasknameemb.pt` was still missing at command exit, so production-equivalent verification cannot be completed.
+- analysis_artifacts_path: `profiling/ASSET_PROVENANCE.md`
+- analysis_status: failed
+- analysis_warnings:
+  - `HTTP 429 rate-limit on HF dataset file resolution`
+- status: failed
+- blocker_if_any: Anonymous HF acquisition hit repeated HTTP 429 errors; realistic-scale asset set remains incomplete.
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: na
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260305-1957-train-completion-01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-B1
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-05T19:57:00Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `huggingface-cli download --repo-type model yamboo/Griffin_models --include "single-completion/*" "single-sft/*" --local-dir checkpoints/hf-models --max-workers 2`
+- git_commit: `235b7970ca75a77ab0f1043e6b5df5c1d330d9b9`
+- config: `asset_acquisition_checkpoint_stage`
+- slice_definition: Targeted official checkpoint staging attempt (`single-completion` + `single-sft`) for realistic-scale provenance.
+- profiler: none
+- outputs:
+  - `checkpoints/hf-models/` (cache-only; no checkpoint files)
+- findings_notes:
+  - Command failed before materializing checkpoint files due repeated HTTP 429 responses on HEAD requests.
+  - Local staged campaign checkpoints remain present but are not yet provenance-matched to official HF assets.
+- analysis_artifacts_path: `profiling/ASSET_PROVENANCE.md`
+- analysis_status: failed
+- analysis_warnings:
+  - `HTTP 429 rate-limit on HF model file resolution`
+- status: failed
+- blocker_if_any: Official checkpoint download blocked by repeated HTTP 429 responses; production-equivalent checkpoint provenance unresolved.
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: na
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260305-2119-train-completion-01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-B1
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-05T21:19:32Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `local provenance verification pass (filesystem + HF cache metadata + sha256 checks)`
+- git_commit: `235b7970ca75a77ab0f1043e6b5df5c1d330d9b9`
+- config: `asset_provenance_verification`
+- slice_definition: Verify realistic-scale datasets/checkpoints are fully staged and revision-pinned before running `TR-B1` smoke/`nsys`.
+- profiler: none
+- outputs:
+  - `profiling/ASSET_PROVENANCE.md`
+  - `profiling/ASSETS_STATUS.md`
+- findings_notes:
+  - `datasets/joint-v65` present (`91G`, `1336` non-cache files), with cache metadata revision `e0c54ceada75317b06f11f8dcda7aa8304fbb593`.
+  - `datasets/single-pretrain-v3-hf` present (`6.4G`, `1528` non-cache files), including `tasknameemb.pt`, with cache metadata revision `dbb31254586361eaf271db0d1d9bfed6292b820d`.
+  - Official HF checkpoint files are present in `checkpoints/single-completion` and `checkpoints/single-sft`; cache metadata for both points to revision `bd8c5be5130f34e7faa31099d0bd81d95d0aa995`.
+  - Redundant partial staging directory `checkpoints/hf-models` was removed after full checkpoint download to `checkpoints/`.
+- analysis_artifacts_path: `profiling/ASSET_PROVENANCE.md`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: na
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
