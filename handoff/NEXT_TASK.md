@@ -1,37 +1,30 @@
 # Next Task
 
 ## Single Bounded Task
-Execute campaign row `gfm-20260303-r01 / RV-G1 / review_gate`: perform human review sign-off using the standardized analysis bundles, then record explicit review outcome and update review-gate permissions (`review_complete`, `ncu_allowed`, `optimization_discussion_allowed`) in campaign/results/handoff docs (no new profiler runs).
+Execute campaign row `gfm-20260304-r02 / TR-B1 / baseline_validation` for `run_class=realistic_scale`: verify production-equivalent asset provenance for the train scenario and either run the bounded baseline-validation smoke+`nsys` slice on GPU3 or record a concrete asset blocker if provenance requirements are not met.
 
 ## Why This Is Immediate Priority
-- Capture completion evidence is now documented (`gfm-20260303-r01-capture-gate-01`) and `RV-G1` is waiting on a review decision only.
-- Gate-critical run analysis bundles are now available in `artifacts/profiles/analysis/<run_id>/` for review-package inspection.
-- Workflow policy requires human review gate completion before any `ncu_post_review` run or optimization discussion.
+- `RV-G1` is now complete and documented (`gfm-20260303-r01-review-gate-01`), but review outcome keeps escalation permissions disabled for `minimal_staged` evidence.
+- The next forward path is to start realistic-scale evidence collection (`gfm-20260304-r02`) per `profiling/SCALE_PROFILES.md`.
+- Campaign counters for `gfm-20260304-r02` are currently all zero, so `TR-B1` is the first executable row.
 
 ## Exact Outputs Expected
-- Append a `Human Review Summary` result in `profiling/RESULTS.md` for `RV-G1` with explicit review decision fields:
-  - `review_complete: <true|false>`
-  - `ncu_allowed: <true|false>`
-  - `targeted_fine_allowed: <true|false>`
-  - `optimization_discussion_allowed: <true|false>`
-- Update `profiling/CAMPAIGN_PLAN.md` row `RV-G1` status/blocker to match the human decision outcome.
-- Update `handoff/CURRENT_STATUS.md` workflow gate state fields to reflect the recorded review outcome.
-- Append `handoff/SESSION_LOG.md` with a concise review-decision entry.
-- Include references to the reviewed analysis bundle paths (at least one per scenario) in review notes.
-- Explicitly classify reviewed evidence as `minimal_staged` and reference `profiling/SCALE_PROFILES.md` in review notes.
+- If assets are available, append `TR-B1` run records in `profiling/RUNS.md` (smoke + `nsys`) with `run_class: realistic_scale`, asset provenance fields, and analysis bundle path for successful `nsys`.
+- If assets are unavailable, record a blocker entry in `profiling/RUNS.md` and mark `TR-B1` as `blocked` in `profiling/CAMPAIGN_PLAN.md` with precise missing asset paths.
+- Update `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md` (if phase state changes), and `handoff/SESSION_LOG.md` to reflect either execution or blocker outcome.
+- Keep `handoff/NEXT_TASK.md` rotated to exactly one bounded follow-up action.
 
 ## Must Not Change
 - No model semantic changes.
-- No NVTX instrumentation changes.
-- No `nsys` or `ncu` execution in this task.
-- No optimization recommendations unless human review explicitly allows them.
+- No NVTX instrumentation expansion beyond current coarse schema.
+- No optimization recommendations; this task is only realistic-scale baseline evidence capture/blocker documentation.
 
 ## Stopping Criteria
-- Human review outcome is explicitly recorded in `profiling/RESULTS.md`.
-- `RV-G1` row state/context is synchronized in campaign + handoff docs.
+- `TR-B1` is either executed with run artifacts/records or explicitly marked blocked with non-actionable provenance details.
+- Campaign + handoff docs are synchronized to the chosen outcome.
 - `handoff/NEXT_TASK.md` remains a single bounded next action for the subsequent agent.
 
 ## Definition Of Done (Template Style)
-- [ ] Human review result recorded in `profiling/RESULTS.md`.
-- [ ] `profiling/CAMPAIGN_PLAN.md` `RV-G1` status/blocker updated to the decision outcome.
-- [ ] `handoff/CURRENT_STATUS.md` and `handoff/SESSION_LOG.md` updated.
+- [ ] `TR-B1` realistic-scale outcome (run success or blocked) is recorded in `profiling/RUNS.md` and `profiling/CAMPAIGN_PLAN.md`.
+- [ ] Relevant handoff docs are updated (`CURRENT_STATUS`, `SESSION_LOG`, and `CHECKLIST` if needed).
+- [ ] `handoff/NEXT_TASK.md` contains one bounded follow-up action.

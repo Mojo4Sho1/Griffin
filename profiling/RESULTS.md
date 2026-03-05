@@ -537,3 +537,24 @@ It is for conclusions and interpretation, not raw logs.
 - summary: Capture requirements are satisfied for the in-scope scenarios (`train`, `finetune`, `inference`). All baseline-validation, steady-unannotated, and steady-annotated rows are complete, with no unresolved actionable blockers preventing capture closure. The campaign is now at the human review gate and cannot proceed to `ncu_post_review` or optimization discussion until explicit review approval is recorded.
 - confidence: high
 - next_action: Record human review outcome for `RV-G1` and update review-gate flags (`review_complete`, `ncu_allowed`, `optimization_discussion_allowed`).
+
+## Result: gfm-20260303-r01-review-gate-01
+- campaign_id: gfm-20260303-r01
+- profile_stage: review_gate
+- date_time_utc: 2026-03-05T18:40:47Z
+- related_runs:
+  - gfm-20260303-r01-capture-gate-01
+  - 20260304-1541-train-annotated-completion-01
+  - 20260304-1622-finetune-annotated-combine-01
+  - 20260304-1652-inference-annotated-combine-01
+- question: Has human review approved progression to post-review deep dives?
+- review_outcome:
+  - review_complete: true
+  - ncu_allowed: false
+  - targeted_fine_allowed: false
+  - optimization_discussion_allowed: false
+- summary: Human review was completed using the standardized analysis bundles for one annotated run per scenario: `artifacts/profiles/analysis/20260304-1541-train-annotated-completion-01/`, `artifacts/profiles/analysis/20260304-1622-finetune-annotated-combine-01/`, and `artifacts/profiles/analysis/20260304-1652-inference-annotated-combine-01/`. Reviewed evidence is explicitly classified as `minimal_staged` and interpreted under `profiling/SCALE_PROFILES.md`, so it is accepted for workflow/capture confidence but not for optimization-targeted escalation. Review therefore closes `RV-G1` while keeping `ncu_allowed`, `targeted_fine_allowed`, and `optimization_discussion_allowed` set to `false` pending realistic-scale evidence.
+- approved_hotspots_or_focus: none
+- approved_label_schema_version: nvtx-v1.0
+- approved_rank_scope: all_ranks
+- next_action: Start realistic-scale campaign row `gfm-20260304-r02 / TR-B1 / baseline_validation` or document concrete production-asset blocker if provenance requirements are not yet met.

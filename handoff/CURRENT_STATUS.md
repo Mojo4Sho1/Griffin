@@ -1,10 +1,10 @@
 # Current Status
 
 ## Snapshot
-- Date: 2026-03-04 (UTC)
+- Date: 2026-03-05 (UTC)
 - Branch: `main-public`
 - Commit: `235b7970ca75a77ab0f1043e6b5df5c1d330d9b9`
-- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), and Phase 7 (`steady_annotated` capture execution) are complete across the current campaign scope; Phase 8 (`review_gate`) is in progress with capture evidence recorded and pending explicit human outcome.
+- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), Phase 7 (`steady_annotated` capture execution), and Phase 8 (`review_gate`) are complete for campaign `gfm-20260303-r01`; review outcome explicitly keeps post-review escalation permissions disabled pending realistic-scale evidence.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -58,9 +58,11 @@
 ## Workflow Gate State
 - capture_complete: true
 - capture_evidence_result_id: gfm-20260303-r01-capture-gate-01
-- review_complete: false
-- review_outcome_pending: true
+- review_complete: true
+- review_result_id: gfm-20260303-r01-review-gate-01
+- review_outcome_pending: false
 - ncu_allowed: false
+- targeted_fine_allowed: false
 - optimization_discussion_allowed: false
 
 ## What Is Established
@@ -175,11 +177,11 @@
   - Phase 7 `steady_annotated` row `TR-SA1` is complete with coarse labels observed in `nvtxsum` (`gfm.setup`, `gfm.train_epoch`, `gfm.train_step`, `gfm.eval_task`, `gfm.checkpoint_io`, `gfm.final_test_pass`).
   - Phase 7 `steady_annotated` row `FT-SA1` is complete with verified coarse NVTX labels after forced-export `nvtx_sum` recheck (`20260304-1622-finetune-annotated-combine-01`); the earlier empty `nvtxsum` output is treated as an export/reporting-path false negative.
   - Phase 7 `steady_annotated` row `IF-SA1` is complete with forced-export `nvtx_sum` coverage present for inference-path coarse labels (`20260304-1652-inference-annotated-combine-01`).
-  - Capture gate status is now `capture_complete=true`; next active workflow boundary is Phase 8 human review gate (`RV-G1`).
+  - Capture and review gates are now complete for `gfm-20260303-r01` (`gfm-20260303-r01-review-gate-01`), with post-review permissions intentionally remaining disabled under `minimal_staged` evidence interpretation.
 - Optimization/recommendation policy surface:
-  - Optimization recommendations are prohibited until capture_complete and review_complete are both true.
-  - `targeted_fine` label expansion is optional and allowed only post-review (`RV-G1` done with approved hotspot focus), while keeping `profile_stage=steady_annotated`.
-  - `ncu` runs are prohibited until `ncu_allowed: true` (post-review gate).
+  - Optimization recommendations require both `review_complete=true` and explicit `optimization_discussion_allowed=true`; current state keeps discussion disabled.
+  - Current review decision keeps `targeted_fine_allowed=false`; label expansion remains prohibited until a later review explicitly approves hotspot focus.
+  - `ncu` deep-dive runs remain prohibited while `ncu_allowed=false`.
   - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
 - Remaining uncertainty: current dataset/checkpoint setup is synthetic/minimal for command-path verification, so kernel/runtime distribution may not match production-scale workloads; canonical run-scale interpretation rules are documented in `profiling/SCALE_PROFILES.md`.

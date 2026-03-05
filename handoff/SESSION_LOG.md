@@ -664,3 +664,26 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/CURRENT_STATUS.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: If desired, execute one staged train `ncu` tooling-smoke run and record it with `ncu_intent: tooling_smoke`; keep realistic review outcomes as the source of optimization-targeted `ncu`.
+
+## 2026-03-05T18:40:47Z - RV-G1 human review decision recorded (minimal_staged hold)
+- task_scope: Execute `gfm-20260303-r01 / RV-G1 / review_gate` by recording explicit human review outcome and synchronizing campaign/handoff gate state (no profiler runs).
+- actions_taken:
+  - Added human review result `gfm-20260303-r01-review-gate-01` in `profiling/RESULTS.md` with explicit decision flags.
+  - Recorded reviewed bundle references for one annotated run per scenario:
+    - `artifacts/profiles/analysis/20260304-1541-train-annotated-completion-01/`
+    - `artifacts/profiles/analysis/20260304-1622-finetune-annotated-combine-01/`
+    - `artifacts/profiles/analysis/20260304-1652-inference-annotated-combine-01/`
+  - Explicitly classified reviewed evidence as `minimal_staged` and referenced `profiling/SCALE_PROFILES.md` in the review summary.
+  - Updated `profiling/CAMPAIGN_PLAN.md` row `RV-G1` to `done` with outcome-aligned permission state.
+  - Updated `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md`, and rotated `handoff/NEXT_TASK.md` to realistic-scale campaign row `gfm-20260304-r02 / TR-B1 / baseline_validation`.
+- outcome: success
+- blockers:
+  - none for RV-G1 documentation scope; review decision intentionally keeps `ncu_allowed=false`, `targeted_fine_allowed=false`, and `optimization_discussion_allowed=false` pending realistic-scale evidence.
+- files_updated:
+  - `profiling/RESULTS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Start `gfm-20260304-r02 / TR-B1 / baseline_validation` by validating production-equivalent asset provenance; run on GPU3 if available, otherwise record the precise blocker.
