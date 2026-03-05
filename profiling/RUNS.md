@@ -1379,3 +1379,351 @@ Example:
 - overrun_reason_if_any: none
 - review_gate_state_at_run: done
 - ncu_intent: na
+
+### Run: 20260305-2131-train-completion-01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-B1
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-05T22:17:35Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke 20260305-2131-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-baseline-smoke-r02 -- --savepath checkpoints/single-completion --maxepoch 1 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `bfc5546e6ae2bfa46a1d169a30300a95673c3f22`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Realistic-scale `TR-B1` smoke attempt using production-equivalent assets before paired `nsys`.
+- profiler: smoke
+- outputs:
+  - `logs/prof/train-baseline-smoke-r02/events.out.tfevents.1772746264.cse-139634.1964516.0`
+- findings_notes:
+  - Run launched successfully and entered epoch 0, but did not complete within bounded baseline-validation expectations.
+  - Process remained active for approximately 46.5 minutes and was terminated with `SIGTERM` (`subprocess.CalledProcessError ... died with <Signals.SIGTERM: 15>`).
+  - Because smoke did not complete, paired `nsys` and analysis-bundle steps were not executed for this attempt.
+- analysis_artifacts_path: na
+- analysis_status: not_run
+- analysis_warnings:
+  - `nsys` not attempted; smoke termination blocker
+- status: failed
+- blocker_if_any: Realistic-scale train smoke is not currently bounded at these args (`--batchsize 64`); runtime exceeded baseline-validation short-slice intent and ended with `SIGTERM`.
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 46.5
+- overrun_reason_if_any: baseline-validation short-slice boundary exceeded before epoch completion
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260305-2250-toychain-model-20260305-s01
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- slice_id: TR-AUTO-SMOKE-01
+- run_class: minimal_staged
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- readiness_checklist:
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-05T22:50:42Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/run_slice_chain.sh --chain-id toychain-model-20260305 ... --dataset datasets/single-pretrain-v3 --num-slices 3 --max-train-steps 8 --max-eval-steps 4 --resume-mode model --mode smoke -- --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `bfc5546e6ae2bfa46a1d169a30300a95673c3f22`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Autonomous toy slice-chain validation (model resume), slice 1/3.
+- profiler: smoke
+- outputs:
+  - `profiling/CHAIN_SUMMARY_toychain-model-20260305.md`
+- findings_notes:
+  - Slice failed before training start because `datasets/single-pretrain-v3/metanode.yaml` was missing in current workspace state.
+  - Failure was used as failure-path validation for chain-stop behavior.
+- analysis_artifacts_path: na
+- analysis_status: not_run
+- analysis_warnings:
+  - missing toy dataset path
+- status: failed
+- blocker_if_any: Toy dataset alias `datasets/single-pretrain-v3` not present; rerun required with available path `datasets/single-pretrain-v3-hf`.
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 0.1
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260305-2252-toychain-model-20260305b-s01
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- slice_id: TR-AUTO-SMOKE-01
+- run_class: minimal_staged
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- readiness_checklist:
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-05T22:52:15Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/run_slice_chain.sh --chain-id toychain-model-20260305b ... --dataset datasets/single-pretrain-v3-hf --num-slices 3 --max-train-steps 8 --max-eval-steps 4 --resume-mode model --mode smoke -- --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `bfc5546e6ae2bfa46a1d169a30300a95673c3f22`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Autonomous toy slice-chain validation (model resume), slice 1/3 with explicit step caps.
+- profiler: smoke
+- outputs:
+  - `checkpoints/slice-chain-toy-model/checkpoint-0-8`
+  - `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+  - `logs/prof/train-chain-toy-model-s01/`
+- findings_notes:
+  - Slice completed successfully with `max_train_steps=8` and `max_eval_steps=4`.
+  - Chain summary recorded checkpoint handoff for next slice (`checkpoint-0-8`).
+- analysis_artifacts_path: `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 1.7
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260305-2253-toychain-model-20260305b-s02
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- slice_id: TR-AUTO-SMOKE-01
+- run_class: minimal_staged
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-05T22:53:57Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `slice 2/3 from chain toychain-model-20260305b (resume-mode=model, loadpath=checkpoints/slice-chain-toy-model/checkpoint-0-8)`
+- git_commit: `bfc5546e6ae2bfa46a1d169a30300a95673c3f22`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Autonomous toy slice-chain validation (model resume), slice 2/3.
+- profiler: smoke
+- outputs:
+  - `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+  - `logs/prof/train-chain-toy-model-s02/`
+- findings_notes:
+  - Slice completed with model checkpoint handoff from slice 1.
+  - Next loadpath remained `checkpoints/slice-chain-toy-model/checkpoint-0-8`.
+- analysis_artifacts_path: `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 1.6
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260305-2255-toychain-model-20260305b-s03
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- slice_id: TR-AUTO-SMOKE-01
+- run_class: minimal_staged
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-05T22:55:42Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `slice 3/3 from chain toychain-model-20260305b (resume-mode=model, loadpath=checkpoints/slice-chain-toy-model/checkpoint-0-8)`
+- git_commit: `bfc5546e6ae2bfa46a1d169a30300a95673c3f22`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Autonomous toy slice-chain validation (model resume), slice 3/3.
+- profiler: smoke
+- outputs:
+  - `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+  - `logs/prof/train-chain-toy-model-s03/`
+- findings_notes:
+  - Slice completed; chain finished 3/3 successfully with automated resume and summary updates.
+- analysis_artifacts_path: `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 1.6
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260305-2258-toychain-state-20260305-s01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-AUTO-STATE-01
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- readiness_checklist:
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-05T22:58:27Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/run_slice_chain.sh --chain-id toychain-state-20260305 ... --dataset datasets/single-pretrain-v3-hf --num-slices 2 --max-train-steps 6 --max-eval-steps 3 --resume-mode state --mode smoke -- --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `bfc5546e6ae2bfa46a1d169a30300a95673c3f22`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Full-state autonomous slice-chain validation, slice 1/2.
+- profiler: smoke
+- outputs:
+  - `checkpoints/slice-chain-toy-state/state-slice-01/`
+  - `profiling/CHAIN_SUMMARY_toychain-state-20260305.md`
+  - `logs/prof/train-chain-toy-state-s01/`
+- findings_notes:
+  - Slice completed with full-state snapshot at `state-slice-01`.
+- analysis_artifacts_path: `profiling/CHAIN_SUMMARY_toychain-state-20260305.md`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 1.7
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260305-2300-toychain-state-20260305-s02
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-AUTO-STATE-01
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-05T23:00:07Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `slice 2/2 from chain toychain-state-20260305 (resume-mode=state, load_state_path=checkpoints/slice-chain-toy-state/state-slice-01)`
+- git_commit: `bfc5546e6ae2bfa46a1d169a30300a95673c3f22`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Full-state autonomous slice-chain validation, slice 2/2.
+- profiler: smoke
+- outputs:
+  - `checkpoints/slice-chain-toy-state/state-slice-02/`
+  - `profiling/CHAIN_SUMMARY_toychain-state-20260305.md`
+  - `logs/prof/train-chain-toy-state-s02/`
+- findings_notes:
+  - Slice completed using full-state resume from `state-slice-01` and wrote next full-state snapshot to `state-slice-02`.
+  - This validates full-state handoff across chained slices.
+- analysis_artifacts_path: `profiling/CHAIN_SUMMARY_toychain-state-20260305.md`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 1.6
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na

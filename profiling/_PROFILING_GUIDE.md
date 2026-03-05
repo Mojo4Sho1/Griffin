@@ -19,6 +19,7 @@ It does not store raw profiler binaries or large traces.
 - `sql/manual_queries.sql`: reusable query library for SQLite deep dives.
 - `scripts/profile_baseline.sh`: lightweight wrapper for smoke/`nsys`/`ncu` baseline commands.
 - `scripts/analyze_nsys_run.sh`: post-run summary generator for `nsys` traces.
+- `scripts/run_slice_chain.sh`: autonomous multi-slice runner with checkpoint/state handoff and per-chain markdown summaries.
 
 ## What Does Not Belong Here
 - Raw `nsys` / `ncu` output files.
@@ -45,6 +46,11 @@ Raw profiling outputs belong under `artifacts/profiles/` and remain out of Git.
    - then targeted hotspot deep dives (`ncu`)
 8. Do not run `ncu` until baseline + annotation gates are met for the scenario.
 9. Update `handoff/` files before ending the session.
+
+For autonomous chained slices:
+- Use `scripts/run_slice_chain.sh` with explicit `--max-train-steps`/`--max-eval-steps`.
+- `resume-mode=model` validates model-checkpoint handoff workflow.
+- `resume-mode=state` validates full trainer-state handoff workflow via `state-slice-<k>` directories.
 
 ## Config Conventions For Profiling
 - Default training config remains `hconfig.yaml` (repo baseline).

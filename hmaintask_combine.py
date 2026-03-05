@@ -43,8 +43,10 @@ def eval_task(model, dec, dataset, args, accelerator, metric):
     loader = accelerator.prepare(loader)
     outputs = []
     labels = []
+    eval_step = 0
     with torch.no_grad():
         for data in loader:
+            eval_step += 1
             output, label = compute_output(model, dec, data)
             if output.shape[0] < batchsize:
                 assert output.ndim == 2
@@ -66,6 +68,10 @@ def eval_task(model, dec, dataset, args, accelerator, metric):
                 output, label = output[mask], label[mask]
                 outputs.append(output.cpu())
                 labels.append(label.cpu())
+            if args.max_eval_steps > 0 and eval_step >= args.max_eval_steps:
+                if accelerator.is_main_process:
+                    print(f"Reached max_eval_steps={args.max_eval_steps}; stopping eval loop early.")
+                break
     #if metric.requires_gather:
     #    metric.outputs, metric.labels = accelerator.gather_for_metrics((metric.outputs, metric.labels))
     if accelerator.is_main_process:
@@ -178,6 +184,9 @@ def main(args):
         best_epoch = 0
 
         model, dec, optimizer = accelerator.prepare(model, dec, optimizer)
+        if args.load_state_path is not None:
+            with nvtx_range("gfm.checkpoint_io"):
+                accelerator.load_state(args.load_state_path)
 
     if args.mode == "test":
         with nvtx_range("gfm.mode_test_only"):
@@ -202,6 +211,7 @@ def main(args):
 
     model.train()
     step = 0
+    train_cap_reached = False
     for epoch in range(args.maxepoch):
         with nvtx_range("gfm.train_epoch"):
             if accelerator.is_main_process:
@@ -227,6 +237,11 @@ def main(args):
                     optimizer.step()
                     if step % 100 == 0:
                         tbtracker.log({"training_loss": loss}, step=step)
+                    if args.max_train_steps > 0 and step >= args.max_train_steps:
+                        train_cap_reached = True
+                        if accelerator.is_main_process:
+                            print(f"Reached max_train_steps={args.max_train_steps}; ending training slice.")
+                        break
             accelerator.wait_for_everyone()
             checkpoint_path = osp.join(args.savepath, f"checkpoint-{epoch}-{step}") if args.savepath is not None else None
             if args.savepath is not None:
@@ -283,6 +298,8 @@ def main(args):
                     print(f"Early stopping at epoch {epoch}")
                     break
                 model.train()
+            if train_cap_reached:
+                break
 
     test_metric = {}
     with nvtx_range("gfm.final_test_pass"):
@@ -319,6 +336,10 @@ def main(args):
             avg_metric = sum(test_metric.values()) / len(test_metric)
             print(f"Average test metric: {avg_metric}")
 
+    if args.save_state_path is not None:
+        with nvtx_range("gfm.checkpoint_io"):
+            accelerator.save_state(output_dir=args.save_state_path)
+
     accelerator.end_training()
 
 if __name__ == "__main__":
@@ -346,6 +367,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("--savepath", type=str, default=None)
     parser.add_argument("--loadpath", type=str, default=None)
+    parser.add_argument("--save_state_path", type=str, default=None)
+    parser.add_argument("--load_state_path", type=str, default=None)
     parser.add_argument("--seed", type=int, default=42)
 
     parser.add_argument("--batchsize", type=int, default=512)
@@ -353,6 +376,8 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--wd", type=float, default=4e-4)
     parser.add_argument("--maxepoch", type=int, default=10)
+    parser.add_argument("--max_train_steps", type=int, default=-1)
+    parser.add_argument("--max_eval_steps", type=int, default=-1)
     parser.add_argument("--patience", type=int, default=-1)
     parser.add_argument("--eval_per_epoch", type=int, default=3)
 

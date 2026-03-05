@@ -740,3 +740,54 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `gfm-20260304-r02 / TR-B1 / baseline_validation` with required preflight + GPU3 occupancy checks, then record smoke + `nsys` outcomes and analysis bundle path.
+
+## 2026-03-05T22:17:35Z - TR-B1 realistic-scale smoke attempt recorded as bounded-runtime blocker
+- task_scope: Execute `gfm-20260304-r02 / TR-B1 / baseline_validation` (preflight + occupancy + smoke/`nsys`) and sync campaign/handoff docs.
+- actions_taken:
+  - Ran `make profiling-preflight` in `griffin-profiling` and completed required GPU occupancy checks (`nvidia-smi` + compute-app query); GPU3 had no active compute process.
+  - Launched realistic-scale smoke run `20260305-2131-train-completion-01` on GPU3 against `datasets/single-pretrain-v3-hf`.
+  - Observed long-running smoke execution without bounded baseline-validation completion, then captured termination boundary (`accelerate` subprocess exited with `SIGTERM` after ~46.5 minutes).
+  - Deferred paired `nsys`/analysis-bundle step due incomplete smoke and updated campaign/handoff/docs with blocker evidence.
+- outcome: partial
+- blockers:
+  - Current realistic-scale train smoke command shape (`--batchsize 64`) is not bounded for baseline-validation short-slice intent; rerun must validate bounded non-semantic runtime shaping before `nsys`.
+- files_updated:
+  - `profiling/RUNS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Retry `TR-B1` smoke with bounded runtime-shaping args (`--batchsize 512`), then run paired `nsys` + analysis bundle only if smoke completes successfully.
+
+## 2026-03-05T23:01:57Z - Autonomous slice-chaining pipeline implemented and validated
+- task_scope: Implement two-stage autonomous slice-chaining workflow (toy model-resume validation + full-state resume validation) with step-bounded controls.
+- actions_taken:
+  - Added bounded-slice CLI controls to `hmaintask_completion.py` and `hmaintask_combine.py`:
+    - `--max_train_steps`, `--max_eval_steps`
+    - `--save_state_path`, `--load_state_path`
+  - Implemented early-exit loop behavior for capped train/eval slices with default-preserving behavior when caps are unset.
+  - Added `scripts/run_slice_chain.sh`:
+    - preflight once per chain
+    - per-slice GPU3 occupancy checks
+    - automatic `model` or `state` resume handoff
+    - append-only chain summaries in `profiling/CHAIN_SUMMARY_<chain_id>.md`
+  - Executed toy model-resume chain:
+    - initial chain `toychain-model-20260305` failed fast on missing historical dataset alias (expected failure-path validation)
+    - rerun chain `toychain-model-20260305b` succeeded `3/3` slices with checkpoint handoff
+  - Executed full-state chain `toychain-state-20260305` and validated `2/2` slices with `state-slice-01 -> state-slice-02` handoff.
+  - Updated profiling docs and handoff state for new automation capability and run evidence.
+- outcome: success
+- blockers:
+  - none for the autonomous chain implementation/validation scope.
+- files_updated:
+  - `hmaintask_completion.py`
+  - `hmaintask_combine.py`
+  - `scripts/run_slice_chain.sh`
+  - `profiling/COMMANDS.md`
+  - `profiling/_PROFILING_GUIDE.md`
+  - `profiling/RUNS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute realistic-scale row `gfm-20260304-r02 / TR-B1` with capped args (`--max_train_steps 8 --max_eval_steps 4`) for smoke + paired `nsys`, then generate analysis bundle and update campaign status.

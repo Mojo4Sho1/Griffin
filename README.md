@@ -145,10 +145,10 @@ To pretrain the model from scratch, you can use the following command:
 
 ```bash
 # Step 1: Completion Pretraining
-accelerate launch --config_file hconfig.yaml hmaintask_completion.py datasets/single-pretrain-v3 logs/single-completion log --savepath checkpoints/single-completion --hop 0 --fanout 10 --fewshotfanout 0 --maxepoch 5 --batchsize 4096 --lr 0.00010178976613680036 --wd 0.008749895419888909 --num_mp 4 --use_rev True --use_gate True --eval_per_epoch 1 --hiddim 512
+accelerate launch --config_file hconfig.yaml hmaintask_completion.py datasets/single-pretrain-v3-hf logs/single-completion log --savepath checkpoints/single-completion --hop 0 --fanout 10 --fewshotfanout 0 --maxepoch 5 --batchsize 4096 --lr 0.00010178976613680036 --wd 0.008749895419888909 --num_mp 4 --use_rev True --use_gate True --eval_per_epoch 1 --hiddim 512
 
 # Step 2: SFT Pretraining
-accelerate launch --config_file hconfig.yaml hmaintask_combine.py datasets/single-pretrain-v3 logs/single-sft log --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --task ALLTASK --hop 0 --fanout 10 --fewshotfanout 0 --maxepoch 40 --batchsize 4096 --lr 0.00042364843314963003 --wd 2.423189169972981e-05 --num_mp 4 --use_rev True --use_gate True --eval_per_epoch 2 --hiddim 512
+accelerate launch --config_file hconfig.yaml hmaintask_combine.py datasets/single-pretrain-v3-hf logs/single-sft log --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --task ALLTASK --hop 0 --fanout 10 --fewshotfanout 0 --maxepoch 40 --batchsize 4096 --lr 0.00042364843314963003 --wd 2.423189169972981e-05 --num_mp 4 --use_rev True --use_gate True --eval_per_epoch 2 --hiddim 512
 ```
 
 ### Finetuning on Specific Datasets

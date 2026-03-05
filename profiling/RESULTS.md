@@ -258,6 +258,7 @@ It is for conclusions and interpretation, not raw logs.
   - 20260303-1744-finetune-combine-01
   - 20260303-1745-finetune-combine-01
 - question: Did the minimal gather-device compatibility fix unblock FT-S1 baseline finetune smoke and `nsys` runs?
+
 - summary: Yes. After replacing `model.device` with `accelerator.device` at the validation gather site in `hmaintask_combine.py`, both smoke and `nsys` FT-S1 reruns completed end-to-end on GPU3. The finetune baseline path is now unblocked, and a fresh baseline `nsys` artifact has been captured.
 - runtime_overview:
   - wall_time_sec: unknown
@@ -558,3 +559,56 @@ It is for conclusions and interpretation, not raw logs.
 - approved_label_schema_version: nvtx-v1.0
 - approved_rank_scope: all_ranks
 - next_action: Start realistic-scale campaign row `gfm-20260304-r02 / TR-B1 / baseline_validation` or document concrete production-asset blocker if provenance requirements are not yet met.
+
+## Result: gfm-20260303-r01-train-auto-chain-smoke-01
+- campaign_id: gfm-20260303-r01
+- scenario: train
+- profile_stage: baseline_validation
+- date_time_utc: 2026-03-05T22:55:42Z
+- related_runs:
+  - 20260305-2252-toychain-model-20260305b-s01
+  - 20260305-2253-toychain-model-20260305b-s02
+  - 20260305-2255-toychain-model-20260305b-s03
+- question: Can an autonomous agent execute multiple bounded smoke slices with checkpoint handoff and summary logging without human intervention?
+- summary: The toy autonomous chain completed `3/3` slices with `resume-mode=model`, using fixed `max_train_steps` and `max_eval_steps` bounds. Checkpoint handoff and append-only chain summary updates were successful for each slice. A preceding run with missing dataset alias failed fast and validated chain failure handling.
+- runtime_overview:
+  - wall_time_sec: unknown
+  - gpu_busy_fraction: unknown
+- key_observations:
+  - Bounded train/eval controls reliably terminated slices at configured step limits.
+  - Chain summary file `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md` captured checkpoint in/out transitions and per-slice status.
+  - Stop-on-failure behavior was verified by the initial failed alias-path attempt.
+- comparison:
+  - baseline: 20260305-2250-toychain-model-20260305-s01
+  - variant: 20260305-2252-toychain-model-20260305b-s01
+  - delta: failure due missing dataset alias corrected by switching to available dataset path; chain then completed end-to-end
+- confidence: high
+- caveats:
+  - Evidence is smoke-only (no profiler traces) and primarily validates orchestration mechanics.
+- next_action: Run realistic-scale `TR-B1` with capped smoke + capped `nsys`, then generate analysis bundle.
+
+## Result: gfm-20260304-r02-train-auto-chain-state-01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- profile_stage: baseline_validation
+- date_time_utc: 2026-03-05T23:00:07Z
+- related_runs:
+  - 20260305-2258-toychain-state-20260305-s01
+  - 20260305-2300-toychain-state-20260305-s02
+- question: Is full trainer-state resume viable for unattended chained slices prior to realistic overnight campaign execution?
+- summary: Full-state chaining succeeded across two bounded slices using `save_state_path/load_state_path` handoff. Slice 2 successfully loaded from `state-slice-01` and produced `state-slice-02`, confirming state continuity workflow viability for unattended execution.
+- runtime_overview:
+  - wall_time_sec: unknown
+  - gpu_busy_fraction: unknown
+- key_observations:
+  - Full-state handoff directory convention (`state-slice-<k>`) worked as designed.
+  - Chain summary recorded deterministic state transition (`state-slice-01 -> state-slice-02`).
+  - No GPU3 occupancy blockers occurred during the chain.
+- comparison:
+  - baseline: 20260305-2258-toychain-state-20260305-s01
+  - variant: 20260305-2300-toychain-state-20260305-s02
+  - delta: successful resume from previous state snapshot
+- confidence: high
+- caveats:
+  - Validation was smoke-only and did not yet include `nsys` capture in this chain.
+- next_action: Apply the same bounded controls to realistic `TR-B1` smoke + paired `nsys` capture and analysis.

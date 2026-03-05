@@ -28,7 +28,8 @@ Without explicit run-scale definitions, users can incorrectly compare or over-in
 ## What Was Done Previously (Explicit Staged Setup)
 
 ### Asset Context
-- Dataset: `datasets/single-pretrain-v3` staged minimal synthetic structure for command-path verification.
+- Dataset: `datasets/single-pretrain-v3` staged minimal synthetic structure for command-path verification (historical; this path may be absent in current workspace snapshots).
+- Active realistic-scale dataset path: `datasets/single-pretrain-v3-hf`.
 - Checkpoints: staged/generated bounded checkpoints under:
   - `checkpoints/single-completion/best_checkpoint`
   - `checkpoints/single-sft/best_checkpoint`

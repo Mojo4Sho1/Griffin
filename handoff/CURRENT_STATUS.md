@@ -3,8 +3,8 @@
 ## Snapshot
 - Date: 2026-03-05 (UTC)
 - Branch: `main-public`
-- Commit: `235b7970ca75a77ab0f1043e6b5df5c1d330d9b9`
-- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), Phase 7 (`steady_annotated` capture execution), and Phase 8 (`review_gate`) are complete for campaign `gfm-20260303-r01`; review outcome explicitly keeps post-review escalation permissions disabled pending realistic-scale evidence.
+- Commit: `bfc5546e6ae2bfa46a1d169a30300a95673c3f22`
+- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), Phase 7 (`steady_annotated` capture execution), Phase 8 (`review_gate`), and Phase 3b autonomous slice-chaining validation are complete; review outcome explicitly keeps post-review escalation permissions disabled pending realistic-scale profiler evidence.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -79,7 +79,7 @@
 - `make profiling-preflight` now passes in `griffin-profiling` for the current environment.
 - Profiling asset-availability tracker now exists at `profiling/ASSETS_STATUS.md`.
 - Strict asset provenance manifest now exists at `profiling/ASSET_PROVENANCE.md` with pinned HF SHAs, hashes, and acquisition evidence for realistic-scale gating.
-- Dataset path `datasets/single-pretrain-v3` is now staged with minimal required metadata/embeddings/HF dataset tree so `Graph(args.dataset)` and `Task(args.dataset)` initialize successfully for command-path verification.
+- Historical note: dataset path `datasets/single-pretrain-v3` was previously staged for minimal command-path verification; current active dataset path is `datasets/single-pretrain-v3-hf`.
 - Completion-script fix applied at `hmaintask_completion.py:246` to use `accelerator.device` in the metric gather tensor allocation (non-semantic runtime compatibility fix).
 - Finetune combine-script compatibility fix applied at `hmaintask_combine.py:238` to use `accelerator.device` for validation metric gather tensor allocation (non-semantic runtime compatibility fix).
 - Baseline validation slices are now explicitly treated as pipeline-validation evidence only; optimization evidence requires steady-state gates.
@@ -93,6 +93,13 @@
   - `artifacts/profiles/ncu/`
 - Raw profiling artifact paths above are excluded from Git; lightweight summaries remain tracked in docs.
 - Wrapper compatibility fix applied: `scripts/profile_baseline.sh` now uses `nsys profile ... accelerate launch ...` (without extra `--` before application).
+- Bounded slice controls are implemented in both main task scripts:
+  - `--max_train_steps` and `--max_eval_steps`
+- Full trainer-state save/load hooks are implemented in both main task scripts:
+  - `--save_state_path` and `--load_state_path`
+- Autonomous chain wrapper is implemented at `scripts/run_slice_chain.sh` with:
+  - one-time preflight, per-slice GPU3 occupancy checks, and automated model/state handoff
+  - append-only per-chain summaries under `profiling/CHAIN_SUMMARY_<chain_id>.md`
 - Hybrid analysis workflow now exists:
   - Human playbook: `profiling/MANUAL_ANALYSIS.md`
   - SQL deep-dive query library: `profiling/sql/manual_queries.sql`
@@ -156,13 +163,17 @@
 - Baseline profiler output destination conventions (wrapper-confirmed):
   - Nsight Systems: `artifacts/profiles/nsys/<run_id>` (`scripts/profile_baseline.sh:70`)
   - Nsight Compute: `artifacts/profiles/ncu/<run_id>` (`scripts/profile_baseline.sh:79`)
-- Generated artifact from latest attempt:
-  - `artifacts/profiles/nsys/20260304-1652-inference-annotated-combine-01.nsys-rep`
+- Generated artifacts from latest attempt:
+  - `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md` (3-slice model-checkpoint autonomous chain validation)
+  - `profiling/CHAIN_SUMMARY_toychain-state-20260305.md` (2-slice full-state autonomous chain validation)
+  - `checkpoints/slice-chain-toy-state/state-slice-01`
+  - `checkpoints/slice-chain-toy-state/state-slice-02`
+  - Latest successful `nsys` artifact remains `artifacts/profiles/nsys/20260304-1652-inference-annotated-combine-01.nsys-rep`
 - Transfer script stdout/stderr logs: `output/transfer/.../*.log`.
 
 ## Blockers, Uncertainties, Assumptions
 - Baseline slice asset status now:
-  - `datasets/single-pretrain-v3`: present (minimal synthetic staging for command-path verification; non-production)
+  - `datasets/single-pretrain-v3`: missing in current workspace snapshot (historical staged dataset path)
   - `datasets/single-pretrain-v3-hf`: present and provenance-verified (`~6.4G`, `1528` non-cache files) from `yamboo/Griffin_datasets_single_pretrain_v3` SHA `dbb31254586361eaf271db0d1d9bfed6292b820d`
   - `datasets/joint-v65`: present and provenance-verified (`~91G`, `1336` non-cache files) from `yamboo/Griffin_datasets_joint_v65` SHA `e0c54ceada75317b06f11f8dcda7aa8304fbb593`
   - `checkpoints/single-completion/model.safetensors`: present and provenance-verified from `yamboo/Griffin_models` SHA `bd8c5be5130f34e7faa31099d0bd81d95d0aa995`
@@ -182,12 +193,18 @@
   - Phase 7 `steady_annotated` row `FT-SA1` is complete with verified coarse NVTX labels after forced-export `nvtx_sum` recheck (`20260304-1622-finetune-annotated-combine-01`); the earlier empty `nvtxsum` output is treated as an export/reporting-path false negative.
   - Phase 7 `steady_annotated` row `IF-SA1` is complete with forced-export `nvtx_sum` coverage present for inference-path coarse labels (`20260304-1652-inference-annotated-combine-01`).
   - Capture and review gates are now complete for `gfm-20260303-r01` (`gfm-20260303-r01-review-gate-01`), with post-review permissions intentionally remaining disabled under `minimal_staged` evidence interpretation.
-  - Realistic-scale campaign row `gfm-20260304-r02 / TR-B1` is now unblocked on assets; provenance gate is satisfied in `profiling/ASSET_PROVENANCE.md` and execution can proceed with standard preflight/GPU occupancy checks.
+  - Step-bounded slice controls are now implemented in `hmaintask_completion.py` and `hmaintask_combine.py` (`--max_train_steps`, `--max_eval_steps`) with default-preserving behavior when unset (`-1`).
+  - Full-state resume hooks are now implemented in both scripts (`--save_state_path`, `--load_state_path`) using `accelerator.save_state/load_state`.
+  - Autonomous chaining wrapper `scripts/run_slice_chain.sh` is now available (preflight once, per-slice GPU3 occupancy checks, checkpoint/state handoff, markdown summaries).
+  - Toy chain validation completed successfully:
+    - model resume: `toychain-model-20260305b` (`3/3` slices)
+    - full-state resume: `toychain-state-20260305` (`2/2` slices)
+  - Realistic-scale campaign row `gfm-20260304-r02 / TR-B1` remains pending capture rerun; prior uncapped run failed (~46.5 minutes, `SIGTERM`) and next execution should use new step-capped args plus paired `nsys`.
 - Optimization/recommendation policy surface:
   - Optimization recommendations require both `review_complete=true` and explicit `optimization_discussion_allowed=true`; current state keeps discussion disabled.
   - Current review decision keeps `targeted_fine_allowed=false`; label expansion remains prohibited until a later review explicitly approves hotspot focus.
   - `ncu` deep-dive runs remain prohibited while `ncu_allowed=false`.
   - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
-- Remaining uncertainty: staged campaign evidence remains synthetic/minimal by design, while newly staged realistic-scale assets still require runtime validation (`TR-B1` execution) to confirm operational compatibility and representative behavior.
+- Remaining uncertainty: bounded orchestration is validated, but realistic `TR-B1` profiler evidence (`smoke` + paired `nsys` + analysis bundle) with step-capped args is still pending.
 - NCU transition interpretation (staged optional tooling smoke vs realistic default deep-dive path) is canonical in `profiling/SCALE_PROFILES.md` under `NCU Transition Policy`.

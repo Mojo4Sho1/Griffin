@@ -70,6 +70,38 @@ Post-`nsys` analysis policy:
 scripts/profile_baseline.sh <smoke|nsys|ncu> <run_id> <task_script.py> <dataset> <log_dir> <log_name> -- <extra_task_args...>
 ```
 
+## Autonomous Slice-Chain Wrapper
+
+Use this wrapper to execute sequential bounded slices with automatic checkpoint/state handoff and summary output.
+
+```bash
+scripts/run_slice_chain.sh \
+  --chain-id <id> \
+  --campaign-id <campaign_id> \
+  --slice-id <slice_id> \
+  --run-class <minimal_staged|realistic_scale> \
+  --task-script <task_script.py> \
+  --dataset <dataset_path> \
+  --log-dir <log_dir> \
+  --log-name-prefix <prefix> \
+  --savepath <checkpoint_dir> \
+  --num-slices <n> \
+  --max-train-steps <n> \
+  --max-eval-steps <n> \
+  --mode <smoke|nsys> \
+  --resume-mode <model|state> \
+  --profile-stage <baseline_validation|steady_unannotated|steady_annotated|ncu_post_review> \
+  --scenario <train|finetune|inference> \
+  -- <extra_task_args...>
+```
+
+Notes:
+- Runs `make profiling-preflight` once at chain start.
+- Checks GPU3 occupancy before each slice.
+- Appends human-readable summary to `profiling/CHAIN_SUMMARY_<chain_id>.md` by default.
+- `resume-mode=model` uses latest `checkpoint-*` output path for next slice `--loadpath`.
+- `resume-mode=state` uses `--save_state_path/--load_state_path` handoff via `state-slice-<k>` directories.
+
 ## Post-Run Analysis Bundle Command
 
 ```bash
@@ -88,40 +120,44 @@ Expected outputs:
 
 These are intentionally bounded to verify command/runtime/profiler path health.
 
+Active dataset default in this workspace:
+- `datasets/single-pretrain-v3-hf`
+- `datasets/single-pretrain-v3` remains a historical staged path referenced by older records.
+
 ### Train (`hmaintask_completion.py`, mode `train`)
 
 Smoke:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke <YYYYMMDD-HHMM-train-completion-01> hmaintask_completion.py datasets/single-pretrain-v3 logs/prof train-baseline-smoke -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke <YYYYMMDD-HHMM-train-completion-01> hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-baseline-smoke -- --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 `nsys`:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-train-completion-01> hmaintask_completion.py datasets/single-pretrain-v3 logs/prof train-baseline-nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-train-completion-01> hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-baseline-nsys -- --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 ### Finetune (`hmaintask_combine.py`, mode `train`)
 
 Smoke:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke <YYYYMMDD-HHMM-finetune-combine-01> hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-baseline-smoke -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke <YYYYMMDD-HHMM-finetune-combine-01> hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof finetune-baseline-smoke -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 `nsys`:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-finetune-combine-01> hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-baseline-nsys -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-finetune-combine-01> hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof finetune-baseline-nsys -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 ### Inference (`hmaintask_combine.py`, mode `test`)
 
 Smoke:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke <YYYYMMDD-HHMM-inference-combine-01> hmaintask_combine.py datasets/single-pretrain-v3 logs/prof inference-baseline-smoke -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh smoke <YYYYMMDD-HHMM-inference-combine-01> hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof inference-baseline-smoke -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --max_eval_steps 4 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 `nsys`:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-inference-combine-01> hmaintask_combine.py datasets/single-pretrain-v3 logs/prof inference-baseline-nsys -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-inference-combine-01> hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof inference-baseline-nsys -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --max_eval_steps 4 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 ## 2) Steady-State Unannotated Profiling (Representativeness Gate)
@@ -164,17 +200,17 @@ Annotated `nsys` examples:
 
 Train:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-train-completion-annot-01> hmaintask_completion.py datasets/single-pretrain-v3 logs/prof train-annot-nsys -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-train-completion-annot-01> hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-annot-nsys -- --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 Finetune:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-finetune-combine-annot-01> hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-annot-nsys -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-finetune-combine-annot-01> hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof finetune-annot-nsys -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 Inference:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-inference-combine-annot-01> hmaintask_combine.py datasets/single-pretrain-v3 logs/prof inference-annot-nsys -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh nsys <YYYYMMDD-HHMM-inference-combine-annot-01> hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof inference-annot-nsys -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --max_eval_steps 4 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 ## 4) Targeted Deep Dive (`ncu_post_review`)
@@ -190,17 +226,17 @@ Staged exception:
 
 Train:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh ncu <YYYYMMDD-HHMM-train-completion-hotspot-01> hmaintask_completion.py datasets/single-pretrain-v3 logs/prof train-hotspot-ncu -- --savepath checkpoints/single-completion --maxepoch 1 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh ncu <YYYYMMDD-HHMM-train-completion-hotspot-01> hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-hotspot-ncu -- --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 Finetune:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh ncu <YYYYMMDD-HHMM-finetune-combine-hotspot-01> hmaintask_combine.py datasets/single-pretrain-v3 logs/prof finetune-hotspot-ncu -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh ncu <YYYYMMDD-HHMM-finetune-combine-hotspot-01> hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof finetune-hotspot-ncu -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 Inference:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh ncu <YYYYMMDD-HHMM-inference-combine-hotspot-01> hmaintask_combine.py datasets/single-pretrain-v3 logs/prof inference-hotspot-ncu -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh ncu <YYYYMMDD-HHMM-inference-combine-hotspot-01> hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof inference-hotspot-ncu -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --max_eval_steps 4 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 ## Preflight Command Snippets
