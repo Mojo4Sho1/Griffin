@@ -12,6 +12,7 @@ Policy gate: no optimization recommendations are permitted before Phase 8 (`Huma
 | Phase 2c: Session continuity and asset-status scaffolding | done | `handoff/SESSION_LOG.md` and `profiling/ASSETS_STATUS.md` added. |
 | Phase 3: Baseline validation command-path verification (short slices) | done | Validation-only scope; confirms profiling pipeline and command/runtime health. |
 | Phase 3b: Autonomous slice-chaining workflow validation | done | Step-bounded chain runner + summary generation validated (`toychain-model-20260305b` 3/3 model-resume slices; `toychain-state-20260305` 2/2 full-state slices). |
+| Phase 3c: Adaptive autonomous-slice policy documentation | done | Campaign + handoff docs now codify adaptive slice depth (`3 -> 5 -> 7 -> +2`), deterministic continuation contract (`slice N+1`), and required per-chain aggregate summary. |
 | Phase 4a: Baseline validation `nsys` capture (`train`) | done | Gate met: `2/2` successful short validation slices. |
 | Phase 4b: Baseline validation `nsys` capture (`finetune`) | done | Gate met: `2/2` successful short validation slices (`FT-B1`, `FT-B2`). |
 | Phase 4c: Baseline validation `nsys` capture (`inference`) | done | Gate met: `2/2` successful short validation slices (`IF-B1`, `IF-B2`). |
@@ -22,3 +23,4 @@ Policy gate: no optimization recommendations are permitted before Phase 8 (`Huma
 | Phase 8: Human analysis/review gate | done | `RV-G1` decision recorded in `gfm-20260303-r01-review-gate-01`; evidence class is `minimal_staged` (per `profiling/SCALE_PROFILES.md`) and post-review escalation permissions remain disabled. |
 | Phase 9: Post-review targeted deep kernel investigation (`ncu`) | not started | Review is complete, but `ncu_allowed=false`; realistic-scale evidence/review is required before decision-oriented deep dives. |
 | Phase 10: Post-review optimization strategy discussion | not started | Discussion/planning only after capture and review gates are complete. |
+| Phase 11: Scenario-chain aggregate summary execution discipline | in progress | Future scenario-chain runs must write both per-slice entries and one end-of-scenario aggregate summary with elapsed timing + representativeness decision. |

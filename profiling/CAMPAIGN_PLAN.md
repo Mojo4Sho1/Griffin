@@ -51,6 +51,44 @@ Status values in this file:
 - Human review gate:
   - Must be `done` before any `ncu_post_review` row can execute.
 
+## Autonomous Scenario Execution Policy
+
+- Single-agent ownership: one agent handles one scenario row at a time for chained slice execution.
+- Slice execution unit is step-bounded (`--max_train_steps`, optional `--max_eval_steps`), not wall-clock bounded.
+- Resume source for the next slice must be the latest successful output artifact from the prior slice:
+  - model-resume mode: latest `checkpoint-*`
+  - full-state mode: latest `state-slice-<k>`
+- Per-slice summaries are mandatory and append-only at `profiling/CHAIN_SUMMARY_<chain_id>.md`.
+
+## Adaptive Slice Depth Policy
+
+- Default target for each scenario chain is `3` slices.
+- If representativeness is not met at 3, extend target to `5`.
+- If representativeness is not met at 5, extend target to `7`.
+- If representativeness is still not met at 7, continue in `+2` blocks (`9`, `11`, `13`, ...) until criteria pass.
+- Every extension beyond the current target must include an explicit rationale in chain and handoff logs (stability/drift evidence and new target).
+
+## Continuation Contract (8+)
+
+- Continuation index is deterministic:
+  - `next_slice_index = last_completed_slice + 1`
+- Continuation resume source is deterministic:
+  - `resume_input = prior slice output artifact path`
+- Source of truth for continuation:
+  - latest entry in `profiling/CHAIN_SUMMARY_<chain_id>.md` for `last_completed_slice`, status, and output path.
+- New agents resuming a partial chain must not restart from slice 1 when a valid continuation artifact exists.
+
+## End-of-Scenario Aggregate Summary Requirement
+
+- After a scenario chain completes or stops, add one aggregate summary block to the same `profiling/CHAIN_SUMMARY_<chain_id>.md`.
+- Aggregate summary must include:
+  - slices attempted/completed
+  - representativeness decision (`pass`, `fail`, or `extend`)
+  - hotspot stability trend across the processed slices
+  - total elapsed wall time for the chain
+  - explicit next action (`stop`, `extend to <target>`, or `handoff resume at slice <N+1>`)
+- Mirror timing + decision outcome in `handoff/SESSION_LOG.md`.
+
 ## Active Campaign
 
 - campaign_id: `gfm-20260303-r01`
@@ -94,6 +132,9 @@ Status values in this file:
 - Update row `status`, run IDs, and blocker text immediately after each run attempt.
 - If representativeness fails, use `blocked_non_representative` and record stability metrics.
 - If a run exceeds planning budget due to healthy progress, allow completion and log overrun details; do not mark this as failure.
+- For autonomous scenario chains, update chain target according to adaptive slice depth policy (`3 -> 5 -> 7 -> +2`) and log extension rationale.
+- For resumed chains at slice `8+`, record continuation source path and `next_slice_index` derivation in the chain summary.
+- Every completed/stopped chain must include an end-of-scenario aggregate summary block in `profiling/CHAIN_SUMMARY_<chain_id>.md`.
 - `ncu_post_review` rows are invalid unless `RV-G1` is `done`.
 - `ncu_post_review` rows marked `ncu_intent: tooling_smoke` are allowed before `RV-G1` completion when the sole intent is path validation.
 - If a required precondition is missing (asset, GPU availability, etc.), mark row `blocked` and mirror blocker details in:

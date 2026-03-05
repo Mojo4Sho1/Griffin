@@ -100,6 +100,10 @@
 - Autonomous chain wrapper is implemented at `scripts/run_slice_chain.sh` with:
   - one-time preflight, per-slice GPU3 occupancy checks, and automated model/state handoff
   - append-only per-chain summaries under `profiling/CHAIN_SUMMARY_<chain_id>.md`
+- Autonomous realistic-campaign operating policy is now adaptive by default:
+  - per-scenario chain starts at `3` slices, then extends to `5`, `7`, and `+2` blocks only when representativeness requires it
+  - continuation semantics are deterministic (`next_slice_index = last_completed_slice + 1`, resume from prior slice output artifact)
+  - end-of-scenario aggregate summary is required in each `profiling/CHAIN_SUMMARY_<chain_id>.md` and mirrored in `handoff/SESSION_LOG.md`
 - Hybrid analysis workflow now exists:
   - Human playbook: `profiling/MANUAL_ANALYSIS.md`
   - SQL deep-dive query library: `profiling/sql/manual_queries.sql`
@@ -196,6 +200,8 @@
   - Step-bounded slice controls are now implemented in `hmaintask_completion.py` and `hmaintask_combine.py` (`--max_train_steps`, `--max_eval_steps`) with default-preserving behavior when unset (`-1`).
   - Full-state resume hooks are now implemented in both scripts (`--save_state_path`, `--load_state_path`) using `accelerator.save_state/load_state`.
   - Autonomous chaining wrapper `scripts/run_slice_chain.sh` is now available (preflight once, per-slice GPU3 occupancy checks, checkpoint/state handoff, markdown summaries).
+  - Documentation now requires adaptive autonomous chain depth control (`3 -> 5 -> 7 -> +2`) and explicit continuation contract for resuming at slice `8+`.
+  - Documentation now requires a scenario-level aggregate summary after chain completion/stop (attempted/completed slices, representativeness decision, hotspot trend, elapsed wall time, and explicit next action).
   - Toy chain validation completed successfully:
     - model resume: `toychain-model-20260305b` (`3/3` slices)
     - full-state resume: `toychain-state-20260305` (`2/2` slices)

@@ -19,6 +19,13 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
 - next_hint: <single sentence to help the next agent start faster>
 ```
 
+For autonomous scenario chains, include these additional lines under `actions_taken`:
+- `chain_timing_total: <HH:MM:SS>`
+- `chain_timing_per_slice: <s01=...; s02=...; ...>`
+- `chain_decision: <pass|fail|extend>`
+- `chain_extension_rationale: <none or stability/drift evidence>`
+- `chain_next_resume: <stop or slice N+1 with resume artifact path>`
+
 ## 2026-02-28T16:35:00Z - Profiling setup scaffolding complete
 - task_scope: Establish initial profiling infrastructure and handoff loop.
 - actions_taken:
@@ -791,3 +798,25 @@ Append-only log of session outcomes for quick continuity across fresh-context ag
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute realistic-scale row `gfm-20260304-r02 / TR-B1` with capped args (`--max_train_steps 8 --max_eval_steps 4`) for smoke + paired `nsys`, then generate analysis bundle and update campaign status.
+
+## 2026-03-05T23:25:00Z - Adaptive autonomous-slice policy documentation activated
+- task_scope: Codify autonomous per-scenario adaptive slice execution and aggregate reporting requirements across campaign and handoff docs.
+- actions_taken:
+  - Added campaign-level policy sections for single-agent scenario ownership, adaptive depth (`3 -> 5 -> 7 -> +2`), deterministic continuation (`slice N+1`), and required end-of-scenario aggregate summaries.
+  - Updated handoff docs to mark adaptive policy as active operating mode and clarified continuation semantics for new-agent resume at slice `8+`.
+  - Updated next-task expectations to require per-slice chain summaries plus one aggregate scenario summary and elapsed timing mirror in session log.
+  - chain_timing_total: n/a (documentation session)
+  - chain_timing_per_slice: n/a (documentation session)
+  - chain_decision: n/a (documentation session)
+  - chain_extension_rationale: n/a (documentation session)
+  - chain_next_resume: `TR-B1` chain starts at slice `01`; if needed extend deterministically to slice `05`, `07`, then `09+`.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `TR-B1` as a 3-slice autonomous chain, write per-slice and aggregate summaries, then decide pass vs extension to 5 using representativeness evidence.
