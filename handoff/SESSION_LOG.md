@@ -958,3 +958,69 @@ For autonomous scenario chains, include these additional lines under `actions_ta
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `gfm-20260304-r02 / IF-B1 / baseline_validation` as a detached realistic-v2 multi-slice `nsys` chain on GPU3 with per-slice analysis bundles, then rotate to `RV-R2` if scenario completion is met.
+
+## 2026-03-06T16:25:36Z - IF-B1 realistic-v2 nsys scenario attempt recorded with inference-chain blocker
+- task_scope: Complete `gfm-20260304-r02 / IF-B1 / baseline_validation` as one realistic-v2 detached multi-slice `nsys` chain with per-slice analysis bundles and synchronized campaign/handoff state.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); confirmed GPU3 had no active compute process attached (GPU0 only).
+  - Launched detached `tmux` chain `ifb1-realistic-20260306a` on GPU3 using the prescribed `IF-B1` `nsys` command template.
+  - Captured one successful profiler slice: `20260306-1619-ifb1-realistic-20260306a-s01`.
+  - Executed `scripts/analyze_nsys_run.sh --run-id 20260306-1619-ifb1-realistic-20260306a-s01` and verified required bundle outputs under `artifacts/profiles/analysis/20260306-1619-ifb1-realistic-20260306a-s01/`.
+  - Documented chain stop reason and aggregate summary in `profiling/chains/active/CHAIN_SUMMARY_ifb1-realistic-20260306a.md`.
+  - Updated campaign/run/handoff docs and rotated `handoff/NEXT_TASK.md` to one bounded continuation task with `next_action=continue_scenario`.
+  - chain_timing_total: 00:02:16 (approx)
+  - chain_timing_per_slice: s01=00:02:16
+  - chain_decision: fail
+  - chain_extension_rationale: chain continuation logic requires `checkpoint-*` handoff; inference `--mode test` does not emit checkpoints.
+  - chain_next_resume: stop current chain and rerun full `IF-B1` scenario with new `chain_id` after inference-compatible chain continuation fix.
+- outcome: partial
+- blockers:
+  - `scripts/run_slice_chain.sh` enforces model-checkpoint handoff for each slice, blocking `IF-B1` inference continuation in `--mode test`.
+- files_updated:
+  - `profiling/chains/active/CHAIN_SUMMARY_ifb1-realistic-20260306a.md`
+  - `profiling/RUNS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Apply a minimal inference-compatible continuation fix in `scripts/run_slice_chain.sh`, then rerun `IF-B1` end-to-end with new chain id `ifb1-realistic-20260306b` and per-slice analysis bundles.
+
+## 2026-03-06T16:57:40Z - IF-B1 fixed-resume chain implemented, completed, and superseded partial attempt archived
+- task_scope: Implement inference checkpointless continuation policy (`resume_mode=fixed`), rerun `gfm-20260304-r02 / IF-B1 / baseline_validation` as a full 3-slice `nsys` chain, and archive prior one-slice partial chain.
+- actions_taken:
+  - Updated `scripts/run_slice_chain.sh` to support `--resume-mode fixed` with required `--initial-loadpath`, automatic per-slice `--loadpath` injection, and explicit guard against duplicate extra `--loadpath` arguments.
+  - Updated policy docs (`profiling/COMMANDS.md`, `profiling/CAMPAIGN_PLAN.md`) to codify checkpointless inference continuation using fixed resume.
+  - Executed fixed-mode runner sanity smoke chain (`ifb1-fixed-smoke-20260306c`) for 2 slices; both slices completed without checkpoint-handoff failure.
+  - Executed full realistic-v2 IF-B1 chain (`ifb1-realistic-20260306b`) with successful slices:
+    - `20260306-1647-ifb1-realistic-20260306b-s01`
+    - `20260306-1650-ifb1-realistic-20260306b-s02`
+    - `20260306-1652-ifb1-realistic-20260306b-s03`
+  - Generated required analysis bundles for each successful IF-B1 slice via `scripts/analyze_nsys_run.sh --run-id <slice_run_id>`.
+  - Archived superseded partial chain summary:
+    - `scripts/archive_chain_summary.sh --chain-id ifb1-realistic-20260306a --reason "superseded: inference checkpointless resume policy update"`
+  - Added required aggregate summary block to `profiling/chains/active/CHAIN_SUMMARY_ifb1-realistic-20260306b.md`.
+  - Updated campaign/run/handoff docs and rotated `handoff/NEXT_TASK.md` to `RV-R2` cross-scenario review.
+  - chain_timing_total: 00:07:32 (approx)
+  - chain_timing_per_slice: s01=00:02:11; s02=00:02:11; s03=00:03:10
+  - chain_decision: pass
+  - chain_extension_rationale: none (3/3 slices succeeded; no depth or size-tier extension required)
+  - chain_next_resume: stop chain execution; proceed to `RV-R2` cross-scenario realistic review
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `scripts/run_slice_chain.sh`
+  - `profiling/COMMANDS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/_PROFILING_GUIDE.md`
+  - `profiling/RUNS.md`
+  - `profiling/chains/active/CHAIN_SUMMARY_ifb1-realistic-20260306b.md`
+  - `profiling/chains/archive/ARCHIVE_INDEX.md`
+  - `profiling/chains/archive/CHAIN_SUMMARY_ifb1-realistic-20260306a.20260306T165459Z.md`
+  - `profiling/chains/archive/CHAIN_SUMMARY_ifb1-fixed-smoke-20260306a.20260306T165830Z.md`
+  - `profiling/chains/archive/CHAIN_SUMMARY_ifb1-fixed-smoke-20260306b.20260306T165835Z.md`
+  - `profiling/chains/archive/CHAIN_SUMMARY_ifb1-fixed-smoke-20260306c.20260306T165840Z.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `RV-R2` cross-scenario realistic review using completed `TR-B1`, `FT-B1`, and `IF-B1` evidence; record gate decision and downstream permissions in campaign/handoff docs.

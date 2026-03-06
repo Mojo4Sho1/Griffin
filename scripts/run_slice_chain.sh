@@ -18,7 +18,7 @@ Usage:
     --max-train-steps <n> \
     [--max-eval-steps <n>] \
     [--mode <smoke|nsys>] \
-    [--resume-mode <model|state>] \
+    [--resume-mode <model|state|fixed>] \
     [--initial-loadpath <path>] \
     [--profile-stage <stage>] \
     [--scenario <scenario>] \
@@ -91,13 +91,25 @@ if [[ "$MODE" != "smoke" && "$MODE" != "nsys" ]]; then
   echo "error: --mode must be smoke or nsys" >&2
   exit 2
 fi
-if [[ "$RESUME_MODE" != "model" && "$RESUME_MODE" != "state" ]]; then
-  echo "error: --resume-mode must be model or state" >&2
+if [[ "$RESUME_MODE" != "model" && "$RESUME_MODE" != "state" && "$RESUME_MODE" != "fixed" ]]; then
+  echo "error: --resume-mode must be model, state, or fixed" >&2
   exit 2
 fi
 if [[ "$MAX_TRAIN_STEPS" -le 0 ]]; then
   echo "error: --max-train-steps must be > 0 for slice chaining" >&2
   exit 2
+fi
+if [[ "$RESUME_MODE" == "fixed" && -z "$INITIAL_LOADPATH" ]]; then
+  echo "error: --initial-loadpath is required when --resume-mode=fixed" >&2
+  exit 2
+fi
+if [[ "$RESUME_MODE" == "fixed" ]]; then
+  for arg in "${EXTRA_ARGS[@]}"; do
+    if [[ "$arg" == "--loadpath" || "$arg" == --loadpath=* ]]; then
+      echo "error: do not pass --loadpath in extra args when --resume-mode=fixed; use --initial-loadpath" >&2
+      exit 2
+    fi
+  done
 fi
 
 mkdir -p "$SAVEPATH" "$LOG_DIR" profiling/chains/active profiling/chains/archive
@@ -153,6 +165,9 @@ for ((i=1; i<=NUM_SLICES; i++)); do
   )
 
   if [[ "$RESUME_MODE" == "model" && -n "$CURRENT_LOADPATH" ]]; then
+    cmd_extra+=(--loadpath "$CURRENT_LOADPATH")
+  fi
+  if [[ "$RESUME_MODE" == "fixed" ]]; then
     cmd_extra+=(--loadpath "$CURRENT_LOADPATH")
   fi
   if [[ "$RESUME_MODE" == "state" ]]; then
@@ -217,7 +232,7 @@ for ((i=1; i<=NUM_SLICES; i++)); do
       exit 1
     fi
     checkpoint_out="$newest_ckpt"
-  else
+  elif [[ "$RESUME_MODE" == "state" ]]; then
     if [[ ! -d "$state_path" ]]; then
       {
         echo "## Slice $slice_num"
@@ -232,6 +247,8 @@ for ((i=1; i<=NUM_SLICES; i++)); do
       exit 1
     fi
     checkpoint_out="$state_path"
+  else
+    checkpoint_out="$CURRENT_LOADPATH"
   fi
 
   {

@@ -99,7 +99,8 @@ scripts/run_slice_chain.sh \
   --max-train-steps <n> \
   --max-eval-steps <n> \
   --mode <smoke|nsys> \
-  --resume-mode <model|state> \
+  --resume-mode <model|state|fixed> \
+  --initial-loadpath <path> \
   --profile-stage <baseline_validation|steady_unannotated|steady_annotated|ncu_post_review> \
   --scenario <train|finetune|inference> \
   -- <extra_task_args...>
@@ -109,8 +110,10 @@ Notes:
 - Runs `make profiling-preflight` once at chain start.
 - Checks GPU3 occupancy before each slice.
 - Appends human-readable summary to `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md` by default.
-- `resume-mode=model` uses latest `checkpoint-*` output path for next slice `--loadpath`.
+- `resume-mode=model` uses latest `checkpoint-*` output path for next slice `--loadpath` (checkpoint-producing scenarios only).
 - `resume-mode=state` uses `--save_state_path/--load_state_path` handoff via `state-slice-<k>` directories.
+- `resume-mode=fixed` uses a constant `--initial-loadpath` for every slice and does not require `checkpoint-*` or `state-slice-*` outputs.
+- In `resume-mode=fixed`, do not pass `--loadpath` in extra args; the wrapper injects it from `--initial-loadpath`.
 
 ### Realistic-Scale Scenario Standard (`realistic-v2`)
 
@@ -121,7 +124,8 @@ Default starting parameters:
 - `--max-train-steps 8`
 - `--max-eval-steps 4`
 - `--mode nsys`
-- `--resume-mode model`
+- `--resume-mode model` for checkpoint-producing scenarios (`train`/`finetune`)
+- `--resume-mode fixed` for checkpointless inference scenarios (`--mode test`)
 
 If stability is insufficient:
 1. Extend depth first: `3 -> 5 -> 7 -> +2`
@@ -245,12 +249,14 @@ CUDA_VISIBLE_DEVICES=3 scripts/run_slice_chain.sh \
   --log-name-prefix inference-ifb1-realistic-nsys \
   --savepath checkpoints/slice-chain-ifb1-realistic \
   --num-slices 3 \
+  --max-train-steps 8 \
   --max-eval-steps 4 \
   --mode nsys \
-  --resume-mode model \
+  --resume-mode fixed \
+  --initial-loadpath checkpoints/single-sft/best_checkpoint \
   --profile-stage baseline_validation \
   --scenario inference \
-  -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+  -- --mode test --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 ## 2) Steady-State Unannotated Profiling (Representativeness Gate)

@@ -57,6 +57,7 @@ For autonomous chained slices:
 - Use `scripts/run_slice_chain.sh` with explicit `--max-train-steps`/`--max-eval-steps`.
 - `resume-mode=model` validates model-checkpoint handoff workflow.
 - `resume-mode=state` validates full trainer-state handoff workflow via `state-slice-<k>` directories.
+- `resume-mode=fixed` validates checkpointless continuation by reusing `--initial-loadpath` across slices (required for inference `--mode test` chains).
 
 For realistic-scale (`realistic-v2`) specifically:
 - One agent owns one scenario end-to-end before handoff (`train` or `finetune` or `inference`).

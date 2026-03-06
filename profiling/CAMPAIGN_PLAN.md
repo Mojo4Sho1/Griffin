@@ -72,6 +72,7 @@ Required for all new realistic-scale campaign rows:
 - Resume source for the next slice must be the latest successful output artifact from the prior slice:
   - model-resume mode: latest `checkpoint-*`
   - full-state mode: latest `state-slice-<k>`
+  - fixed-resume mode: constant `--initial-loadpath` reused for each slice (for checkpointless inference `--mode test`)
 - Per-slice summaries are mandatory and append-only at `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md`.
 
 ## Chain Rerun and Supersession Policy
@@ -107,6 +108,7 @@ Required for all new realistic-scale campaign rows:
   - `next_slice_index = last_completed_slice + 1`
 - Continuation resume source is deterministic:
   - `resume_input = prior slice output artifact path`
+  - checkpointless inference exception: `resume_input = fixed initial loadpath` when `resume_mode=fixed`
 - Source of truth for continuation:
   - latest entry in `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md` for `last_completed_slice`, status, and output path.
 - New agents resuming a partial chain must not restart from slice 1 when a valid continuation artifact exists.
@@ -132,7 +134,7 @@ Required for all new realistic-scale campaign rows:
 - campaign_id: `gfm-20260304-r02`
 - run_class: `realistic_scale`
 - execution_policy_version: `realistic-v2`
-- current gate note: asset acquisition/provenance gate is satisfied; execute remaining scenario-owned multi-slice `nsys` chains with per-slice analysis bundles (`IF-B1` pending); `TR-B1` is legacy pre-update evidence and `FT-B1` is now complete under `realistic-v2`.
+- current gate note: asset acquisition/provenance gate is satisfied; `TR-B1` (`complete_legacy`), `FT-B1` (`complete`), and `IF-B1` (`complete`) are all now satisfied for realistic-v2 scenario completion and campaign is ready for cross-scenario review row `RV-R2`.
 
 ## Slice Matrix
 
@@ -158,7 +160,7 @@ Required for all new realistic-scale campaign rows:
 | gfm-20260304-r02 | train | TR-B1 | baseline_validation | Realistic-scale baseline train validation slice gated on production-equivalent assets/provenance. | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `-` | `checkpoints/single-completion` | `20260305-2131-train-completion-01;20260306-0049-trb1-realistic-20260306b-s01;20260306-0051-trb1-realistic-20260306b-s02;20260306-0052-trb1-realistic-20260306b-s03` | `20260306-1502-trb1-realistic-nsys-01` | `-` | done | execution_policy_version=`realistic-v2`; legacy_policy_evidence=`true`; slice_size_tier=`8/4`; scenario_completion_state=`complete_legacy`; canonical detached rerun chain completed successfully (`profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260306b.md`); paired realistic-scale `nsys` capture + analysis bundle completed (`artifacts/profiles/analysis/20260306-1502-trb1-realistic-nsys-01/`); retained as legacy pre-update evidence (no rerun required). |
 | gfm-20260304-r02 | train | TR-AUTO-STATE-01 | baseline_validation | Full-state autonomous chain validation before realistic unattended campaign. | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `state-slice-<k-1>` | `checkpoints/slice-chain-toy-state` | `20260305-2258-toychain-state-20260305-s01;20260305-2300-toychain-state-20260305-s02` | `-` | `-` | done | validated full trainer-state handoff with `state-slice-01 -> state-slice-02` (`profiling/chains/active/CHAIN_SUMMARY_toychain-state-20260305.md`). |
 | gfm-20260304-r02 | finetune | FT-B1 | baseline_validation | Realistic-scale finetune scenario under `realistic-v2`: one agent runs a multi-slice `nsys` chain with per-slice analysis bundles. | `hmaintask_combine.py` | `train` | `datasets/single-pretrain-v3-hf` | `checkpoints/single-completion` | `checkpoints/single-sft` | `-` | `20260306-1538-ftb1-realistic-20260306a-s01;20260306-1543-ftb1-realistic-20260306a-s02;20260306-1553-ftb1-realistic-20260306a-s03` | `-` | done | execution_policy_version=`realistic-v2`; legacy_policy_evidence=`false`; slice_size_tier=`8/4`; scenario_completion_state=`complete`; detached multi-slice `nsys` chain completed successfully with per-slice analysis bundles (`profiling/chains/active/CHAIN_SUMMARY_ftb1-realistic-20260306a.md`). |
-| gfm-20260304-r02 | inference | IF-B1 | baseline_validation | Realistic-scale inference scenario under `realistic-v2`: one agent runs a multi-slice `nsys` chain with per-slice analysis bundles. | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3-hf` | `checkpoints/single-sft` | `-` | `-` | `-` | `-` | not started | execution_policy_version=`realistic-v2`; legacy_policy_evidence=`false`; slice_size_tier=`8/4`; scenario_completion_state=`in_progress`; next scenario objective is full `IF-B1` completion. |
+| gfm-20260304-r02 | inference | IF-B1 | baseline_validation | Realistic-scale inference scenario under `realistic-v2`: one agent runs a multi-slice `nsys` chain with per-slice analysis bundles. | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3-hf` | `checkpoints/single-sft` | `-` | `-` | `20260306-1647-ifb1-realistic-20260306b-s01;20260306-1650-ifb1-realistic-20260306b-s02;20260306-1652-ifb1-realistic-20260306b-s03` | `-` | done | execution_policy_version=`realistic-v2`; legacy_policy_evidence=`false`; slice_size_tier=`8/4`; scenario_completion_state=`complete`; fixed-resume chain completed successfully with per-slice analysis bundles (`profiling/chains/active/CHAIN_SUMMARY_ifb1-realistic-20260306b.md`); prior one-slice attempt `ifb1-realistic-20260306a` is superseded and archived (`profiling/chains/archive/CHAIN_SUMMARY_ifb1-realistic-20260306a.20260306T165459Z.md`). |
 | gfm-20260304-r02 | campaign | RV-R2 | review_gate | Cross-scenario realistic-scale review after `TR-B1`, `FT-B1`, and `IF-B1` scenario completion states are satisfied. | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | not started | execution_policy_version=`realistic-v2`; run only after scenario completion states are `complete`/`complete_legacy`, then decide readiness for realistic-scale `ncu` planning. |
 
 ## Update Rule
