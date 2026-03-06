@@ -1,20 +1,26 @@
 # Next Task
 
 ## Single Bounded Task
-Execute campaign row `gfm-20260304-r02 / TR-B1 / baseline_validation` as an autonomous scenario chain under the adaptive policy: run required preflight + GPU3 occupancy checks, run initial 3 step-capped slices (`--max_train_steps 8 --max_eval_steps 4`) with per-slice chain summary updates, then write an end-of-scenario aggregate summary and mirror elapsed timing/decision in `handoff/SESSION_LOG.md`.
+Execute a full overnight rerun of campaign row `gfm-20260304-r02 / TR-B1 / baseline_validation` as a new autonomous 3-slice smoke chain in detached `tmux` with a fresh chain ID (do not reuse `trb1-realistic-20260305a`), then sync campaign/handoff docs and supersession metadata.
 
 ## Why This Is Immediate Priority
-- Asset provenance is satisfied and bounded slice orchestration is now validated via autonomous chain runs.
-- `TR-B1` still lacks successful realistic-scale autonomous chain evidence under the updated bounded controls and adaptive depth policy.
-- Completing this row unlocks realistic campaign sequencing to `FT-B1`/`IF-B1`.
+- A successful capped 3-slice chain already exists (`trb1-realistic-20260305a`), but canonical evidence is intentionally rerun because continuity was uncertain during the prior session.
+- Detached `tmux` operation is now validated on this host and should be used for unattended overnight execution.
+- Completing canonical `TR-B1` chain evidence unlocks paired realistic-scale `nsys` follow-up and campaign progression.
 
 ## Exact Outputs Expected
-- Run 3 capped slices for `TR-B1` and append per-slice records in `profiling/RUNS.md` (`run_class: realistic_scale`).
-- Update `profiling/CHAIN_SUMMARY_<chain_id>.md` after each slice with status and checkpoint/state handoff path.
-- Add one end-of-scenario aggregate summary block to `profiling/CHAIN_SUMMARY_<chain_id>.md` (attempted/completed, representativeness decision, hotspot stability trend, total wall time, explicit next action).
-- Mirror chain total time, per-slice elapsed deltas, and any extension rationale in `handoff/SESSION_LOG.md`.
-- Update `profiling/CAMPAIGN_PLAN.md` row `TR-B1` with run IDs/status and whether policy requires extension to 5.
-- Update `handoff/CURRENT_STATUS.md` and `handoff/SESSION_LOG.md` to reflect completion or concrete blocker boundary.
+- Launch the chain in detached `tmux` (GPU3 only) with:
+  - `--num-slices 3`
+  - `--max_train_steps 8`
+  - `--max_eval_steps 4`
+  - `--mode smoke`
+  - `--resume-mode model`
+- Write per-slice records and one aggregate summary block to `profiling/chains/active/CHAIN_SUMMARY_<new_chain_id>.md`.
+- Append 3 run records in `profiling/RUNS.md` for the new chain (`run_class: realistic_scale`, `slice_id: TR-B1`).
+- Update `profiling/CAMPAIGN_PLAN.md` `TR-B1` row with the new chain run IDs and canonical status.
+- Mark prior chain `trb1-realistic-20260305a` as superseded in `profiling/RUNS.md` notes + `handoff/SESSION_LOG.md`; archive it with:
+  - `scripts/archive_chain_summary.sh --chain-id trb1-realistic-20260305a --reason "superseded by <new_chain_id> overnight rerun"`
+- Update `handoff/CURRENT_STATUS.md` and append `handoff/SESSION_LOG.md` with chain timing and decision lines.
 - Keep `handoff/NEXT_TASK.md` rotated to exactly one bounded follow-up action.
 
 ## Must Not Change
@@ -23,17 +29,17 @@ Execute campaign row `gfm-20260304-r02 / TR-B1 / baseline_validation` as an auto
 - No optimization recommendations; this remains baseline-validation evidence capture.
 
 ## Stopping Criteria
-- Three initial capped slices are attempted and documented with per-slice chain summary entries.
-- One aggregate end-of-scenario summary is written and mirrored to `handoff/SESSION_LOG.md` with elapsed timing.
-- If representativeness fails at 3, extension recommendation to 5 is documented (without ambiguity on continuation input/path).
-- If any slice fails, blocker is documented with concrete runtime evidence and one bounded follow-up is set.
-- Campaign + handoff docs are synchronized to the execution outcome.
-- `handoff/NEXT_TASK.md` remains a single bounded next action for the subsequent agent.
+- New detached `tmux` chain completes 3 attempted slices and is fully documented.
+- Aggregate summary exists for the new chain and timing/decision is mirrored in `handoff/SESSION_LOG.md`.
+- Prior chain is explicitly marked superseded and archived.
+- Campaign + handoff docs are synchronized to the rerun outcome.
+- `handoff/NEXT_TASK.md` remains a single bounded next action.
 
 ## Definition Of Done (Template Style)
-- [ ] Three capped `TR-B1` slice run records are appended in `profiling/RUNS.md`.
-- [ ] `profiling/CHAIN_SUMMARY_<chain_id>.md` contains per-slice entries and one aggregate end-of-scenario summary block.
-- [ ] `handoff/SESSION_LOG.md` includes chain elapsed timing (total + per-slice deltas) and decision/extension rationale.
-- [ ] `profiling/CAMPAIGN_PLAN.md` `TR-B1` row is updated with run IDs/status and next-target decision.
-- [ ] Relevant handoff docs are updated (`CURRENT_STATUS` and `SESSION_LOG`).
+- [ ] Detached `tmux` chain run executed with a new `chain_id` for `TR-B1` (`3` capped slices attempted).
+- [ ] `profiling/chains/active/CHAIN_SUMMARY_<new_chain_id>.md` contains per-slice entries and one aggregate summary block.
+- [ ] Three new `TR-B1` run records are appended in `profiling/RUNS.md`.
+- [ ] Prior chain `trb1-realistic-20260305a` is marked superseded and archived under `profiling/chains/archive/`.
+- [ ] `profiling/CAMPAIGN_PLAN.md` `TR-B1` row is updated with canonical rerun status/run IDs.
+- [ ] `handoff/CURRENT_STATUS.md` and `handoff/SESSION_LOG.md` are updated.
 - [ ] `handoff/NEXT_TASK.md` contains one bounded follow-up action.

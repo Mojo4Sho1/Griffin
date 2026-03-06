@@ -1,9 +1,9 @@
 # Current Status
 
 ## Snapshot
-- Date: 2026-03-05 (UTC)
+- Date: 2026-03-06 (UTC)
 - Branch: `main-public`
-- Commit: `bfc5546e6ae2bfa46a1d169a30300a95673c3f22`
+- Commit: `69d63ed018184b7825e854dd97739bb00a37c71a`
 - Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), Phase 7 (`steady_annotated` capture execution), Phase 8 (`review_gate`), and Phase 3b autonomous slice-chaining validation are complete; review outcome explicitly keeps post-review escalation permissions disabled pending realistic-scale profiler evidence.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
@@ -99,11 +99,11 @@
   - `--save_state_path` and `--load_state_path`
 - Autonomous chain wrapper is implemented at `scripts/run_slice_chain.sh` with:
   - one-time preflight, per-slice GPU3 occupancy checks, and automated model/state handoff
-  - append-only per-chain summaries under `profiling/CHAIN_SUMMARY_<chain_id>.md`
+  - append-only per-chain summaries under `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md`
 - Autonomous realistic-campaign operating policy is now adaptive by default:
   - per-scenario chain starts at `3` slices, then extends to `5`, `7`, and `+2` blocks only when representativeness requires it
   - continuation semantics are deterministic (`next_slice_index = last_completed_slice + 1`, resume from prior slice output artifact)
-  - end-of-scenario aggregate summary is required in each `profiling/CHAIN_SUMMARY_<chain_id>.md` and mirrored in `handoff/SESSION_LOG.md`
+  - end-of-scenario aggregate summary is required in each `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md` and mirrored in `handoff/SESSION_LOG.md`
 - Hybrid analysis workflow now exists:
   - Human playbook: `profiling/MANUAL_ANALYSIS.md`
   - SQL deep-dive query library: `profiling/sql/manual_queries.sql`
@@ -168,8 +168,11 @@
   - Nsight Systems: `artifacts/profiles/nsys/<run_id>` (`scripts/profile_baseline.sh:70`)
   - Nsight Compute: `artifacts/profiles/ncu/<run_id>` (`scripts/profile_baseline.sh:79`)
 - Generated artifacts from latest attempt:
-  - `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md` (3-slice model-checkpoint autonomous chain validation)
-  - `profiling/CHAIN_SUMMARY_toychain-state-20260305.md` (2-slice full-state autonomous chain validation)
+  - `profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md` (3-slice model-checkpoint autonomous chain validation)
+  - `profiling/chains/active/CHAIN_SUMMARY_toychain-state-20260305.md` (2-slice full-state autonomous chain validation)
+  - `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260305a.md` (3-slice realistic-scale `TR-B1` capped smoke chain; includes aggregate summary block)
+  - `profiling/chains/archive/CHAIN_SUMMARY_toychain-model-20260305.20260306T003855Z.md` (superseded failed chain archived)
+  - `profiling/chains/archive/ARCHIVE_INDEX.md` (append-only archive ledger)
   - `checkpoints/slice-chain-toy-state/state-slice-01`
   - `checkpoints/slice-chain-toy-state/state-slice-02`
   - Latest successful `nsys` artifact remains `artifacts/profiles/nsys/20260304-1652-inference-annotated-combine-01.nsys-rep`
@@ -205,12 +208,12 @@
   - Toy chain validation completed successfully:
     - model resume: `toychain-model-20260305b` (`3/3` slices)
     - full-state resume: `toychain-state-20260305` (`2/2` slices)
-  - Realistic-scale campaign row `gfm-20260304-r02 / TR-B1` remains pending capture rerun; prior uncapped run failed (~46.5 minutes, `SIGTERM`) and next execution should use new step-capped args plus paired `nsys`.
+  - Realistic-scale campaign row `gfm-20260304-r02 / TR-B1` now has a successful initial capped 3-slice smoke chain (`trb1-realistic-20260305a`), but canonical completion is intentionally pending one full rerun in detached `tmux` with a new `chain_id` due prior continuity uncertainty.
 - Optimization/recommendation policy surface:
   - Optimization recommendations require both `review_complete=true` and explicit `optimization_discussion_allowed=true`; current state keeps discussion disabled.
   - Current review decision keeps `targeted_fine_allowed=false`; label expansion remains prohibited until a later review explicitly approves hotspot focus.
   - `ncu` deep-dive runs remain prohibited while `ncu_allowed=false`.
   - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
-- Remaining uncertainty: bounded orchestration is validated, but realistic `TR-B1` profiler evidence (`smoke` + paired `nsys` + analysis bundle) with step-capped args is still pending.
+- Remaining uncertainty: detached overnight rerun of realistic `TR-B1` with a new `chain_id` is pending before canonicalizing chain evidence and proceeding to paired `nsys` + analysis bundle.
 - NCU transition interpretation (staged optional tooling smoke vs realistic default deep-dive path) is canonical in `profiling/SCALE_PROFILES.md` under `NCU Transition Policy`.

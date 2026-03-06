@@ -98,9 +98,25 @@ scripts/run_slice_chain.sh \
 Notes:
 - Runs `make profiling-preflight` once at chain start.
 - Checks GPU3 occupancy before each slice.
-- Appends human-readable summary to `profiling/CHAIN_SUMMARY_<chain_id>.md` by default.
+- Appends human-readable summary to `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md` by default.
 - `resume-mode=model` uses latest `checkpoint-*` output path for next slice `--loadpath`.
 - `resume-mode=state` uses `--save_state_path/--load_state_path` handoff via `state-slice-<k>` directories.
+
+### Detached Execution (Required for Long Runs)
+
+Use `tmux` for unattended or overnight chains. Do not rely on a foreground shell session.
+
+```bash
+tmux new -d -s <session_name> "bash -lc 'eval \"\$(conda shell.bash hook)\" && conda activate griffin-profiling && CUDA_VISIBLE_DEVICES=3 scripts/run_slice_chain.sh ...'"
+tmux ls
+tmux capture-pane -pt <session_name> | tail -n 80
+```
+
+If a disconnect/session interruption occurs:
+- do not delete prior chain artifacts or docs;
+- rerun the full scenario with a new `chain_id`;
+- mark the prior chain as superseded in `profiling/RUNS.md` and `handoff/SESSION_LOG.md`;
+- archive non-canonical summaries with `scripts/archive_chain_summary.sh --chain-id <old_chain_id> --reason "<reason>"`.
 
 ## Post-Run Analysis Bundle Command
 

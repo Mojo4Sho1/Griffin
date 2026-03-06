@@ -55,10 +55,21 @@ Status values in this file:
 
 - Single-agent ownership: one agent handles one scenario row at a time for chained slice execution.
 - Slice execution unit is step-bounded (`--max_train_steps`, optional `--max_eval_steps`), not wall-clock bounded.
+- Long-running or overnight chains should be launched in detached `tmux` sessions; do not depend on an attached terminal session.
 - Resume source for the next slice must be the latest successful output artifact from the prior slice:
   - model-resume mode: latest `checkpoint-*`
   - full-state mode: latest `state-slice-<k>`
-- Per-slice summaries are mandatory and append-only at `profiling/CHAIN_SUMMARY_<chain_id>.md`.
+- Per-slice summaries are mandatory and append-only at `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md`.
+
+## Chain Rerun and Supersession Policy
+
+- Chain history is append-only; never delete prior chain summaries/run records due to interruption uncertainty.
+- If continuity is uncertain (disconnect/session loss), rerun the full scenario from slice 1 with a new `chain_id`.
+- Mark the earlier chain as `superseded` in:
+  - `profiling/RUNS.md` (notes field or explicit supersession metadata)
+  - `handoff/SESSION_LOG.md`
+- Archive superseded summaries from `profiling/chains/active/` into `profiling/chains/archive/` using `scripts/archive_chain_summary.sh`.
+- Canonical decision input for a scenario row should reference only the latest non-superseded full-chain result.
 
 ## Adaptive Slice Depth Policy
 
@@ -75,12 +86,12 @@ Status values in this file:
 - Continuation resume source is deterministic:
   - `resume_input = prior slice output artifact path`
 - Source of truth for continuation:
-  - latest entry in `profiling/CHAIN_SUMMARY_<chain_id>.md` for `last_completed_slice`, status, and output path.
+  - latest entry in `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md` for `last_completed_slice`, status, and output path.
 - New agents resuming a partial chain must not restart from slice 1 when a valid continuation artifact exists.
 
 ## End-of-Scenario Aggregate Summary Requirement
 
-- After a scenario chain completes or stops, add one aggregate summary block to the same `profiling/CHAIN_SUMMARY_<chain_id>.md`.
+- After a scenario chain completes or stops, add one aggregate summary block to the same `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md`.
 - Aggregate summary must include:
   - slices attempted/completed
   - representativeness decision (`pass`, `fail`, or `extend`)
@@ -120,9 +131,9 @@ Status values in this file:
 | gfm-20260303-r01 | train | TR-N1 | ncu_post_review | One staged train `ncu` tooling-smoke run (optional, non-gating). | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3` | `-` | `checkpoints/single-completion` | `-` | `-` | `-` | not started | optional; if used, record `ncu_intent: tooling_smoke` |
 | gfm-20260303-r01 | finetune | FT-N1 | ncu_post_review | One staged finetune `ncu` tooling-smoke run (optional, non-gating). | `hmaintask_combine.py` | `train` | `datasets/single-pretrain-v3` | `checkpoints/single-completion/best_checkpoint` | `checkpoints/single-sft` | `-` | `-` | `-` | not started | optional; if used, record `ncu_intent: tooling_smoke` |
 | gfm-20260303-r01 | inference | IF-N1 | ncu_post_review | One staged inference `ncu` tooling-smoke run (optional, non-gating). | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3` | `checkpoints/single-sft/best_checkpoint` | `-` | `-` | `-` | `-` | not started | optional; if used, record `ncu_intent: tooling_smoke` |
-| gfm-20260303-r01 | train | TR-AUTO-SMOKE-01 | baseline_validation | Autonomous toy smoke chain validation (3 slices, model-checkpoint handoff). | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `latest checkpoint-*` | `checkpoints/slice-chain-toy-model` | `20260305-2252-toychain-model-20260305b-s01;20260305-2253-toychain-model-20260305b-s02;20260305-2255-toychain-model-20260305b-s03` | `-` | `-` | done | validated autonomous multi-slice orchestration and checkpoint handoff (`profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`). |
-| gfm-20260304-r02 | train | TR-B1 | baseline_validation | Realistic-scale baseline train validation slice gated on production-equivalent assets/provenance. | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `-` | `checkpoints/single-completion` | `20260305-2131-train-completion-01` | `-` | `-` | blocked | prior uncapped smoke overran (~46.5 min, `SIGTERM`); rerun pending with step-capped args (`--max_train_steps`, `--max_eval_steps`) followed by paired `nsys`. |
-| gfm-20260304-r02 | train | TR-AUTO-STATE-01 | baseline_validation | Full-state autonomous chain validation before realistic unattended campaign. | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `state-slice-<k-1>` | `checkpoints/slice-chain-toy-state` | `20260305-2258-toychain-state-20260305-s01;20260305-2300-toychain-state-20260305-s02` | `-` | `-` | done | validated full trainer-state handoff with `state-slice-01 -> state-slice-02` (`profiling/CHAIN_SUMMARY_toychain-state-20260305.md`). |
+| gfm-20260303-r01 | train | TR-AUTO-SMOKE-01 | baseline_validation | Autonomous toy smoke chain validation (3 slices, model-checkpoint handoff). | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `latest checkpoint-*` | `checkpoints/slice-chain-toy-model` | `20260305-2252-toychain-model-20260305b-s01;20260305-2253-toychain-model-20260305b-s02;20260305-2255-toychain-model-20260305b-s03` | `-` | `-` | done | validated autonomous multi-slice orchestration and checkpoint handoff (`profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md`). |
+| gfm-20260304-r02 | train | TR-B1 | baseline_validation | Realistic-scale baseline train validation slice gated on production-equivalent assets/provenance. | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `-` | `checkpoints/single-completion` | `20260305-2131-train-completion-01;20260305-2359-trb1-realistic-20260305a-s01;20260306-0000-trb1-realistic-20260305a-s02;20260306-0002-trb1-realistic-20260305a-s03` | `-` | `-` | in progress | initial 3-slice capped chain completed (`profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260305a.md`); run is treated as provisional due disconnect uncertainty and should be rerun end-to-end in detached `tmux` with a new chain_id before marking canonical completion. |
+| gfm-20260304-r02 | train | TR-AUTO-STATE-01 | baseline_validation | Full-state autonomous chain validation before realistic unattended campaign. | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `state-slice-<k-1>` | `checkpoints/slice-chain-toy-state` | `20260305-2258-toychain-state-20260305-s01;20260305-2300-toychain-state-20260305-s02` | `-` | `-` | done | validated full trainer-state handoff with `state-slice-01 -> state-slice-02` (`profiling/chains/active/CHAIN_SUMMARY_toychain-state-20260305.md`). |
 | gfm-20260304-r02 | finetune | FT-B1 | baseline_validation | Realistic-scale baseline finetune validation slice after TR-B1 and production-equivalent checkpoint confirmation. | `hmaintask_combine.py` | `train` | `datasets/single-pretrain-v3-hf` | `checkpoints/single-completion` | `checkpoints/single-sft` | `-` | `-` | `-` | not started | awaiting campaign execution order (`TR-B1` first). |
 | gfm-20260304-r02 | inference | IF-B1 | baseline_validation | Realistic-scale baseline inference validation slice after TR-B1/FT-B1 readiness. | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3-hf` | `checkpoints/single-sft` | `-` | `-` | `-` | `-` | not started | awaiting campaign execution order (`TR-B1` then `FT-B1`). |
 
@@ -134,7 +145,7 @@ Status values in this file:
 - If a run exceeds planning budget due to healthy progress, allow completion and log overrun details; do not mark this as failure.
 - For autonomous scenario chains, update chain target according to adaptive slice depth policy (`3 -> 5 -> 7 -> +2`) and log extension rationale.
 - For resumed chains at slice `8+`, record continuation source path and `next_slice_index` derivation in the chain summary.
-- Every completed/stopped chain must include an end-of-scenario aggregate summary block in `profiling/CHAIN_SUMMARY_<chain_id>.md`.
+- Every completed/stopped chain must include an end-of-scenario aggregate summary block in `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md`.
 - `ncu_post_review` rows are invalid unless `RV-G1` is `done`.
 - `ncu_post_review` rows marked `ncu_intent: tooling_smoke` are allowed before `RV-G1` completion when the sole intent is path validation.
 - If a required precondition is missing (asset, GPU availability, etc.), mark row `blocked` and mirror blocker details in:

@@ -576,7 +576,7 @@ It is for conclusions and interpretation, not raw logs.
   - gpu_busy_fraction: unknown
 - key_observations:
   - Bounded train/eval controls reliably terminated slices at configured step limits.
-  - Chain summary file `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md` captured checkpoint in/out transitions and per-slice status.
+  - Chain summary file `profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md` captured checkpoint in/out transitions and per-slice status.
   - Stop-on-failure behavior was verified by the initial failed alias-path attempt.
 - comparison:
   - baseline: 20260305-2250-toychain-model-20260305-s01

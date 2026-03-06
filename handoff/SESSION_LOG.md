@@ -777,7 +777,7 @@ For autonomous scenario chains, include these additional lines under `actions_ta
     - preflight once per chain
     - per-slice GPU3 occupancy checks
     - automatic `model` or `state` resume handoff
-    - append-only chain summaries in `profiling/CHAIN_SUMMARY_<chain_id>.md`
+    - append-only chain summaries in `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md`
   - Executed toy model-resume chain:
     - initial chain `toychain-model-20260305` failed fast on missing historical dataset alias (expected failure-path validation)
     - rerun chain `toychain-model-20260305b` succeeded `3/3` slices with checkpoint handoff
@@ -820,3 +820,40 @@ For autonomous scenario chains, include these additional lines under `actions_ta
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `TR-B1` as a 3-slice autonomous chain, write per-slice and aggregate summaries, then decide pass vs extension to 5 using representativeness evidence.
+
+## 2026-03-06T00:40:59Z - TR-B1 capped chain recorded; chain-summary storage and archival workflow upgraded
+- task_scope: Sync `TR-B1` autonomous chain outcomes, rotate handoff state for fresh-agent overnight rerun, and formalize chain summary storage/archival process.
+- actions_taken:
+  - Recorded completed realistic-scale `TR-B1` capped smoke chain (`chain_id=trb1-realistic-20260305a`) with per-slice run IDs in `profiling/RUNS.md`.
+  - Added required aggregate summary block to `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260305a.md`.
+  - Updated campaign row `gfm-20260304-r02 / TR-B1` to `in progress` with provisional-chain evidence and explicit rerun requirement using a new chain ID.
+  - Migrated chain summary location to `profiling/chains/active/` and updated `scripts/run_slice_chain.sh` default output path.
+  - Added chain-summary archival process: `scripts/archive_chain_summary.sh` and `profiling/chains/README.md`.
+  - Archived obsolete failed chain summary `toychain-model-20260305` into `profiling/chains/archive/` and logged it in `profiling/chains/archive/ARCHIVE_INDEX.md`.
+  - Verified `tmux` availability and detached execution capability via smoke tests (`tmux 3.2a`; detached session write/read proof succeeded).
+  - chain_timing_total: 00:04:52 (approx, event/log timestamp derived)
+  - chain_timing_per_slice: s01=00:01:41; s02=00:01:39; s03=00:01:32
+  - chain_decision: pass (bounded baseline-validation health), then rerun
+  - chain_extension_rationale: none (3/3 slices succeeded); rerun rationale is continuity/canonicalization, not representativeness failure.
+  - chain_next_resume: stop current chain; rerun full scenario from slice 01 with new `chain_id` in detached `tmux`.
+- outcome: success
+- blockers:
+  - none for capped-chain execution; canonical overnight rerun remains pending by policy decision.
+- files_updated:
+  - `AGENTS.md`
+  - `scripts/run_slice_chain.sh`
+  - `scripts/archive_chain_summary.sh`
+  - `profiling/COMMANDS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `profiling/chains/README.md`
+  - `profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md`
+  - `profiling/chains/active/CHAIN_SUMMARY_toychain-state-20260305.md`
+  - `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260305a.md`
+  - `profiling/chains/archive/CHAIN_SUMMARY_toychain-model-20260305.20260306T003855Z.md`
+  - `profiling/chains/archive/ARCHIVE_INDEX.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Launch new-chain overnight `TR-B1` rerun in detached `tmux`, then mark `trb1-realistic-20260305a` as superseded if rerun succeeds and rotate to paired `nsys` follow-up.

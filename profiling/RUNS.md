@@ -114,6 +114,8 @@ Example:
 - For reruns of the same slice, keep separate records and reference prior `run_id`.
 - Do not paste raw profiler dumps; link paths only.
 - Every run record must map to exactly one row in `profiling/CAMPAIGN_PLAN.md` (`campaign_id + slice_id`).
+- For autonomous chains, include `chain_id` in notes and keep prior chain records when rerunning.
+- If a chain is repeated due disconnect/continuity uncertainty, rerun with a new `chain_id` and mark old-chain entries as superseded (do not delete history).
 - Default rank-emission mode is `all_ranks`.
 - Runs using `single_rank` or `subset` must explicitly declare `rank_emission_mode` and `rank_filter_if_any` with reason in notes.
 - `label_schema_version` must match `nvtx-v<major>.<minor>`.
@@ -1462,7 +1464,7 @@ Example:
 - slice_definition: Autonomous toy slice-chain validation (model resume), slice 1/3.
 - profiler: smoke
 - outputs:
-  - `profiling/CHAIN_SUMMARY_toychain-model-20260305.md`
+  - `profiling/chains/archive/CHAIN_SUMMARY_toychain-model-20260305.20260306T003855Z.md`
 - findings_notes:
   - Slice failed before training start because `datasets/single-pretrain-v3/metanode.yaml` was missing in current workspace state.
   - Failure was used as failure-path validation for chain-stop behavior.
@@ -1514,12 +1516,12 @@ Example:
 - profiler: smoke
 - outputs:
   - `checkpoints/slice-chain-toy-model/checkpoint-0-8`
-  - `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+  - `profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md`
   - `logs/prof/train-chain-toy-model-s01/`
 - findings_notes:
   - Slice completed successfully with `max_train_steps=8` and `max_eval_steps=4`.
   - Chain summary recorded checkpoint handoff for next slice (`checkpoint-0-8`).
-- analysis_artifacts_path: `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+- analysis_artifacts_path: `profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md`
 - analysis_status: success
 - analysis_warnings: none
 - status: success
@@ -1561,12 +1563,12 @@ Example:
 - slice_definition: Autonomous toy slice-chain validation (model resume), slice 2/3.
 - profiler: smoke
 - outputs:
-  - `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+  - `profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md`
   - `logs/prof/train-chain-toy-model-s02/`
 - findings_notes:
   - Slice completed with model checkpoint handoff from slice 1.
   - Next loadpath remained `checkpoints/slice-chain-toy-model/checkpoint-0-8`.
-- analysis_artifacts_path: `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+- analysis_artifacts_path: `profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md`
 - analysis_status: success
 - analysis_warnings: none
 - status: success
@@ -1608,11 +1610,11 @@ Example:
 - slice_definition: Autonomous toy slice-chain validation (model resume), slice 3/3.
 - profiler: smoke
 - outputs:
-  - `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+  - `profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md`
   - `logs/prof/train-chain-toy-model-s03/`
 - findings_notes:
   - Slice completed; chain finished 3/3 successfully with automated resume and summary updates.
-- analysis_artifacts_path: `profiling/CHAIN_SUMMARY_toychain-model-20260305b.md`
+- analysis_artifacts_path: `profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md`
 - analysis_status: success
 - analysis_warnings: none
 - status: success
@@ -1659,11 +1661,11 @@ Example:
 - profiler: smoke
 - outputs:
   - `checkpoints/slice-chain-toy-state/state-slice-01/`
-  - `profiling/CHAIN_SUMMARY_toychain-state-20260305.md`
+  - `profiling/chains/active/CHAIN_SUMMARY_toychain-state-20260305.md`
   - `logs/prof/train-chain-toy-state-s01/`
 - findings_notes:
   - Slice completed with full-state snapshot at `state-slice-01`.
-- analysis_artifacts_path: `profiling/CHAIN_SUMMARY_toychain-state-20260305.md`
+- analysis_artifacts_path: `profiling/chains/active/CHAIN_SUMMARY_toychain-state-20260305.md`
 - analysis_status: success
 - analysis_warnings: none
 - status: success
@@ -1706,12 +1708,12 @@ Example:
 - profiler: smoke
 - outputs:
   - `checkpoints/slice-chain-toy-state/state-slice-02/`
-  - `profiling/CHAIN_SUMMARY_toychain-state-20260305.md`
+  - `profiling/chains/active/CHAIN_SUMMARY_toychain-state-20260305.md`
   - `logs/prof/train-chain-toy-state-s02/`
 - findings_notes:
   - Slice completed using full-state resume from `state-slice-01` and wrote next full-state snapshot to `state-slice-02`.
   - This validates full-state handoff across chained slices.
-- analysis_artifacts_path: `profiling/CHAIN_SUMMARY_toychain-state-20260305.md`
+- analysis_artifacts_path: `profiling/chains/active/CHAIN_SUMMARY_toychain-state-20260305.md`
 - analysis_status: success
 - analysis_warnings: none
 - status: success
@@ -1724,6 +1726,150 @@ Example:
 - representative_pass: na
 - planned_soft_cap_minutes: na
 - actual_runtime_minutes: 1.6
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260305-2359-trb1-realistic-20260305a-s01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-B1
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-05T23:59:20Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/run_slice_chain.sh --chain-id trb1-realistic-20260305a --campaign-id gfm-20260304-r02 --slice-id TR-B1 --run-class realistic_scale --task-script hmaintask_completion.py --dataset datasets/single-pretrain-v3-hf --log-dir logs/prof --log-name-prefix train-trb1-realistic-smoke --savepath checkpoints/slice-chain-trb1-realistic-20260305a --num-slices 3 --max-train-steps 8 --max-eval-steps 4 --mode smoke --resume-mode model --profile-stage baseline_validation --scenario train -- --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `69d63ed018184b7825e854dd97739bb00a37c71a`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Autonomous realistic-scale chain run, slice 1/3 (`chain_id=trb1-realistic-20260305a`).
+- profiler: smoke
+- outputs:
+  - `checkpoints/slice-chain-trb1-realistic-20260305a/checkpoint-0-8/`
+  - `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260305a.md`
+  - `logs/prof/train-trb1-realistic-smoke-s01/`
+- findings_notes:
+  - Slice completed under bounded controls (`--max_train_steps 8`, `--max_eval_steps 4`).
+  - Establishes model-resume handoff path for slice 2.
+- analysis_artifacts_path: `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260305a.md`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 1.7
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260306-0000-trb1-realistic-20260305a-s02
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-B1
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-06T00:01:01Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `slice 2/3 from chain trb1-realistic-20260305a (resume-mode=model, loadpath=checkpoints/slice-chain-trb1-realistic-20260305a/checkpoint-0-8)`
+- git_commit: `69d63ed018184b7825e854dd97739bb00a37c71a`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Autonomous realistic-scale chain run, slice 2/3 (`chain_id=trb1-realistic-20260305a`).
+- profiler: smoke
+- outputs:
+  - `checkpoints/slice-chain-trb1-realistic-20260305a/checkpoint-0-8/`
+  - `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260305a.md`
+  - `logs/prof/train-trb1-realistic-smoke-s02/`
+- findings_notes:
+  - Slice completed with resume from slice 1 checkpoint.
+  - Checkpoint handoff remained stable (`checkpoint-0-8`).
+- analysis_artifacts_path: `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260305a.md`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 1.7
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260306-0002-trb1-realistic-20260305a-s03
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-B1
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-06T00:02:40Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `slice 3/3 from chain trb1-realistic-20260305a (resume-mode=model, loadpath=checkpoints/slice-chain-trb1-realistic-20260305a/checkpoint-0-8)`
+- git_commit: `69d63ed018184b7825e854dd97739bb00a37c71a`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Autonomous realistic-scale chain run, slice 3/3 (`chain_id=trb1-realistic-20260305a`).
+- profiler: smoke
+- outputs:
+  - `checkpoints/slice-chain-trb1-realistic-20260305a/checkpoint-0-8/`
+  - `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260305a.md`
+  - `logs/prof/train-trb1-realistic-smoke-s03/`
+- findings_notes:
+  - Slice completed with stable checkpoint resume behavior.
+  - Initial 3-slice TR-B1 chain completed successfully.
+- analysis_artifacts_path: `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260305a.md`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 1.5
 - overrun_reason_if_any: none
 - review_gate_state_at_run: done
 - ncu_intent: na

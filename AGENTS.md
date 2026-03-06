@@ -43,6 +43,8 @@ This fork exists to profile and analyze Griffin GPU execution behavior to identi
 - If GPU3 has any active compute process attached, do not run profiling; notify the human operator and document the blocker in `profiling/RUNS.md`, `handoff/CURRENT_STATUS.md`, and `handoff/SESSION_LOG.md`.
 - If preflight or environment setup fails, document the blocker in `profiling/RUNS.md` and `handoff/CURRENT_STATUS.md`.
 - Do not modify `hconfig.yaml` for profiling tasks; use `hconfig_profiling_single_gpu.yaml` or add a new profiling-specific config file.
+- Long-running profiling/autonomous chains should be launched in a detached `tmux` session so execution is resilient to client disconnects.
+- If a chain run has uncertain continuity (disconnect/session loss), do not delete prior artifacts/logs; rerun the full scenario with a new `chain_id` and mark the prior chain as superseded in profiling/handoff docs.
 
 ## Handoff Protocol
 - `handoff/CURRENT_STATUS.md` is the current state snapshot.

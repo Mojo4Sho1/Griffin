@@ -100,9 +100,9 @@ if [[ "$MAX_TRAIN_STEPS" -le 0 ]]; then
   exit 2
 fi
 
-mkdir -p "$SAVEPATH" "$LOG_DIR" profiling
+mkdir -p "$SAVEPATH" "$LOG_DIR" profiling/chains/active profiling/chains/archive
 if [[ -z "$SUMMARY_PATH" ]]; then
-  SUMMARY_PATH="profiling/CHAIN_SUMMARY_${CHAIN_ID}.md"
+  SUMMARY_PATH="profiling/chains/active/CHAIN_SUMMARY_${CHAIN_ID}.md"
 fi
 
 CURRENT_LOADPATH="$INITIAL_LOADPATH"
