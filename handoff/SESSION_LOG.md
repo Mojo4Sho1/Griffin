@@ -929,3 +929,32 @@ For autonomous scenario chains, include these additional lines under `actions_ta
   - `handoff/CHECKLIST.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `FT-B1` as a full realistic-v2 `nsys` scenario chain (default `8/4`, depth target `3`), generate per-slice analysis bundles, and set `next_action` based on scenario completion state.
+
+## 2026-03-06T16:03:00Z - FT-B1 realistic-v2 multi-slice nsys scenario completed
+- task_scope: Complete `gfm-20260304-r02 / FT-B1 / baseline_validation` as one realistic-v2 scenario-owned detached multi-slice `nsys` chain with per-slice analysis bundles and synchronized campaign/handoff state.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); confirmed GPU3 had no active compute process attached.
+  - Launched detached `tmux` chain `ftb1-realistic-20260306a` on GPU3 with bounded args (`--num-slices 3 --max-train-steps 8 --max-eval-steps 4 --mode nsys --resume-mode model`).
+  - Completed all three slices successfully:
+    - `20260306-1538-ftb1-realistic-20260306a-s01`
+    - `20260306-1543-ftb1-realistic-20260306a-s02`
+    - `20260306-1553-ftb1-realistic-20260306a-s03`
+  - Generated required analysis bundles for each successful slice via `scripts/analyze_nsys_run.sh --run-id <slice_run_id>` and verified standardized outputs under `artifacts/profiles/analysis/<slice_run_id>/`.
+  - Updated `profiling/chains/active/CHAIN_SUMMARY_ftb1-realistic-20260306a.md` with required end-of-scenario aggregate summary block.
+  - Updated campaign/run/handoff docs and rotated `handoff/NEXT_TASK.md` to bounded `IF-B1` follow-up.
+  - chain_timing_total: 00:21:03 (approx)
+  - chain_timing_per_slice: s01=00:05:51; s02=00:10:13; s03=00:06:03
+  - chain_decision: pass
+  - chain_extension_rationale: none (3/3 slices succeeded; no depth or size-tier extension required)
+  - chain_next_resume: stop chain execution; proceed to `IF-B1` realistic-v2 scenario chain from slice 01
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `profiling/chains/active/CHAIN_SUMMARY_ftb1-realistic-20260306a.md`
+  - `profiling/RUNS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260304-r02 / IF-B1 / baseline_validation` as a detached realistic-v2 multi-slice `nsys` chain on GPU3 with per-slice analysis bundles, then rotate to `RV-R2` if scenario completion is met.

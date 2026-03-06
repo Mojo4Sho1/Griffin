@@ -2100,3 +2100,170 @@ Example:
 - overrun_reason_if_any: none
 - review_gate_state_at_run: done
 - ncu_intent: na
+
+### Run: 20260306-1538-ftb1-realistic-20260306a-s01
+- campaign_id: gfm-20260304-r02
+- scenario: finetune
+- slice_id: FT-B1
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- execution_policy_version: realistic-v2
+- legacy_policy_evidence: false
+- slice_size_tier: 8/4
+- scenario_completion_state: in_progress
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- readiness_checklist:
+  - `conda activate griffin-profiling`: passed
+  - `make profiling-preflight`: passed
+  - `nvidia-smi`: passed; GPU3 had no compute process attached (GPU0 had unrelated active compute workload)
+  - `nvidia-smi --query-compute-apps=...`: passed
+- date_time_utc: 2026-03-06T15:38:11Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `CUDA_VISIBLE_DEVICES=3 scripts/run_slice_chain.sh --chain-id ftb1-realistic-20260306a --campaign-id gfm-20260304-r02 --slice-id FT-B1 --run-class realistic_scale --task-script hmaintask_combine.py --dataset datasets/single-pretrain-v3-hf --log-dir logs/prof --log-name-prefix finetune-ftb1-realistic-nsys --savepath checkpoints/slice-chain-ftb1-realistic --num-slices 3 --max-train-steps 8 --max-eval-steps 4 --mode nsys --resume-mode model --profile-stage baseline_validation --scenario finetune -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `b0bf840756094f7c7d99ca266d09da4ea06f9b42`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Autonomous realistic-v2 finetune chain run, slice 1/3 (`chain_id=ftb1-realistic-20260306a`) with bounded controls (`max_train_steps=8`, `max_eval_steps=4`).
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260306-1538-ftb1-realistic-20260306a-s01.nsys-rep`
+  - `artifacts/profiles/nsys/20260306-1538-ftb1-realistic-20260306a-s01.sqlite`
+  - `logs/prof/finetune-ftb1-realistic-nsys-s01/`
+  - `profiling/chains/active/CHAIN_SUMMARY_ftb1-realistic-20260306a.md`
+- findings_notes:
+  - Slice completed end-to-end under bounded controls and produced checkpoint handoff output for continuation.
+  - Post-run analysis bundle generated successfully.
+  - Scenario chain remained in progress after this slice.
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260306-1538-ftb1-realistic-20260306a-s01/`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: 5.7
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260306-1543-ftb1-realistic-20260306a-s02
+- campaign_id: gfm-20260304-r02
+- scenario: finetune
+- slice_id: FT-B1
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- execution_policy_version: realistic-v2
+- legacy_policy_evidence: false
+- slice_size_tier: 8/4
+- scenario_completion_state: in_progress
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-06T15:43:50Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `slice 2/3 from chain ftb1-realistic-20260306a (resume-mode=model, loadpath=checkpoints/slice-chain-ftb1-realistic/checkpoint-0-8)`
+- git_commit: `b0bf840756094f7c7d99ca266d09da4ea06f9b42`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Autonomous realistic-v2 finetune chain run, slice 2/3 (`chain_id=ftb1-realistic-20260306a`).
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260306-1543-ftb1-realistic-20260306a-s02.nsys-rep`
+  - `artifacts/profiles/nsys/20260306-1543-ftb1-realistic-20260306a-s02.sqlite`
+  - `logs/prof/finetune-ftb1-realistic-nsys-s02/`
+  - `profiling/chains/active/CHAIN_SUMMARY_ftb1-realistic-20260306a.md`
+- findings_notes:
+  - Slice completed with stable checkpoint resume from slice 1 output.
+  - Post-run analysis bundle generated successfully.
+  - Scenario chain remained in progress after this slice.
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260306-1543-ftb1-realistic-20260306a-s02/`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: 9.4
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
+
+### Run: 20260306-1553-ftb1-realistic-20260306a-s03
+- campaign_id: gfm-20260304-r02
+- scenario: finetune
+- slice_id: FT-B1
+- run_class: realistic_scale
+- profile_stage: baseline_validation
+- execution_policy_version: realistic-v2
+- legacy_policy_evidence: false
+- slice_size_tier: 8/4
+- scenario_completion_state: complete
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-06T15:53:13Z
+- mode: fine-tune
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `slice 3/3 from chain ftb1-realistic-20260306a (resume-mode=model, loadpath=checkpoints/slice-chain-ftb1-realistic/checkpoint-0-8)`
+- git_commit: `b0bf840756094f7c7d99ca266d09da4ea06f9b42`
+- config: `hconfig_profiling_single_gpu.yaml`
+- slice_definition: Autonomous realistic-v2 finetune chain run, slice 3/3 (`chain_id=ftb1-realistic-20260306a`), completing scenario-owned baseline-validation chain.
+- profiler: nsys
+- outputs:
+  - `artifacts/profiles/nsys/20260306-1553-ftb1-realistic-20260306a-s03.nsys-rep`
+  - `artifacts/profiles/nsys/20260306-1553-ftb1-realistic-20260306a-s03.sqlite`
+  - `logs/prof/finetune-ftb1-realistic-nsys-s03/`
+  - `profiling/chains/active/CHAIN_SUMMARY_ftb1-realistic-20260306a.md`
+- findings_notes:
+  - Slice completed successfully with stable checkpoint resume behavior.
+  - Post-run analysis bundle generated successfully.
+  - `FT-B1` scenario completion criteria satisfied under `realistic-v2` (`3/3` multi-slice `nsys` captures + per-slice analysis bundles).
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260306-1553-ftb1-realistic-20260306a-s03/`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: 45
+- actual_runtime_minutes: 5.8
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: na
