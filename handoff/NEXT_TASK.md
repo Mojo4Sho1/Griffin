@@ -20,6 +20,27 @@ Complete realistic-scale scenario row `gfm-20260304-r02 / FT-B1 / baseline_valid
   - default tier: `--max_train_steps 8 --max_eval_steps 4`
   - default depth target: `--num-slices 3`
   - scenario args include `--mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft`
+- Use this exact command template (replace `<chain_id>` only):
+```bash
+CUDA_VISIBLE_DEVICES=3 scripts/run_slice_chain.sh \
+  --chain-id <chain_id> \
+  --campaign-id gfm-20260304-r02 \
+  --slice-id FT-B1 \
+  --run-class realistic_scale \
+  --task-script hmaintask_combine.py \
+  --dataset datasets/single-pretrain-v3-hf \
+  --log-dir logs/prof \
+  --log-name-prefix finetune-ftb1-realistic-nsys \
+  --savepath checkpoints/slice-chain-ftb1-realistic \
+  --num-slices 3 \
+  --max-train-steps 8 \
+  --max-eval-steps 4 \
+  --mode nsys \
+  --resume-mode model \
+  --profile-stage baseline_validation \
+  --scenario finetune \
+  -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --tasks ALLTASK --maxepoch 1 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+```
 - After each successful slice:
   - execute `scripts/analyze_nsys_run.sh --run-id <slice_run_id>`
   - verify bundle under `artifacts/profiles/analysis/<slice_run_id>/`
@@ -34,6 +55,31 @@ Complete realistic-scale scenario row `gfm-20260304-r02 / FT-B1 / baseline_valid
   - chain summary includes end-of-scenario aggregate block
   - `handoff/CURRENT_STATUS.md` and append `handoff/SESSION_LOG.md`
   - rotate `handoff/NEXT_TASK.md` to exactly one bounded follow-up
+
+## Completion Checklist Artifact Map
+- Per successful slice run ID:
+  - `artifacts/profiles/nsys/<slice_run_id>.nsys-rep`
+  - `artifacts/profiles/analysis/<slice_run_id>/summary.md`
+  - `artifacts/profiles/analysis/<slice_run_id>/metrics.json`
+  - `artifacts/profiles/analysis/<slice_run_id>/nvtx_sum.txt`
+  - `artifacts/profiles/analysis/<slice_run_id>/cuda_gpu_kern_sum.txt`
+  - `artifacts/profiles/analysis/<slice_run_id>/cuda_api_sum.txt`
+  - `artifacts/profiles/analysis/<slice_run_id>/meta.txt`
+- Scenario chain summary:
+  - `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md` with required end-of-scenario aggregate block
+- Documentation state:
+  - `profiling/CAMPAIGN_PLAN.md` row `FT-B1` updated (run IDs, status, blocker, metadata fields)
+  - `profiling/RUNS.md` appended for each run/slice with required realistic-v2 metadata fields
+  - `handoff/CURRENT_STATUS.md` and `handoff/SESSION_LOG.md` updated
+  - `handoff/NEXT_TASK.md` rotated with explicit `next_action`
+
+## Interruption / Continuity Branch
+- If session continuity is uncertain (disconnect, tmux/session loss, incomplete artifact provenance):
+  - do not delete prior artifacts or logs
+  - rerun full `FT-B1` scenario from slice 1 with a new `chain_id`
+  - mark the prior chain as superseded in `profiling/RUNS.md` and `handoff/SESSION_LOG.md`
+  - archive prior chain summary via `scripts/archive_chain_summary.sh --chain-id <old_chain_id> --reason \"superseded due continuity uncertainty\"`
+  - continue under the new chain as the canonical decision input
 
 ## Required Metadata Values (`FT-B1`)
 - `execution_policy_version=realistic-v2`
