@@ -857,3 +857,30 @@ For autonomous scenario chains, include these additional lines under `actions_ta
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Launch new-chain overnight `TR-B1` rerun in detached `tmux`, then mark `trb1-realistic-20260305a` as superseded if rerun succeeds and rotate to paired `nsys` follow-up.
+
+## 2026-03-06T00:59:30Z - TR-B1 canonical detached rerun completed and provisional chain superseded
+- task_scope: Execute `gfm-20260304-r02 / TR-B1 / baseline_validation` as a fresh detached `tmux` 3-slice smoke chain, then sync supersession metadata and handoff docs.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling`: `make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query; confirmed GPU3 had no active compute process.
+  - Launched detached `tmux` chain `trb1-realistic-20260306b` on GPU3 with bounded args (`--num-slices 3 --max_train_steps 8 --max_eval_steps 4 --mode smoke --resume-mode model`).
+  - Completed all three slices successfully (`20260306-0049-trb1-realistic-20260306b-s01`, `20260306-0051-trb1-realistic-20260306b-s02`, `20260306-0052-trb1-realistic-20260306b-s03`) and added aggregate summary to `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260306b.md`.
+  - Marked prior chain `trb1-realistic-20260305a` as superseded in run notes and archived its summary via `scripts/archive_chain_summary.sh` to `profiling/chains/archive/CHAIN_SUMMARY_trb1-realistic-20260305a.20260306T005702Z.md`.
+  - Updated `profiling/CAMPAIGN_PLAN.md`, `profiling/RUNS.md`, `handoff/CURRENT_STATUS.md`, and rotated `handoff/NEXT_TASK.md` to one bounded follow-up action.
+  - chain_timing_total: 00:05:04 (approx, run-id timestamp derived)
+  - chain_timing_per_slice: s01=00:01:40; s02=00:01:38; s03=00:01:46
+  - chain_decision: pass
+  - chain_extension_rationale: none (3/3 slices succeeded; no representativeness extension needed)
+  - chain_next_resume: stop chain execution; proceed to paired realistic-scale `TR-B1` `nsys` run and analysis bundle.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260306b.md`
+  - `profiling/chains/archive/CHAIN_SUMMARY_trb1-realistic-20260305a.20260306T005702Z.md`
+  - `profiling/chains/archive/ARCHIVE_INDEX.md`
+  - `profiling/RUNS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Run one realistic-scale `TR-B1` `nsys` capture on GPU3 using the bounded baseline-validation args, then generate `artifacts/profiles/analysis/<run_id>/` and update campaign/run/handoff records.

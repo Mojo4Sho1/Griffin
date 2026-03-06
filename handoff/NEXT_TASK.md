@@ -1,45 +1,49 @@
 # Next Task
 
 ## Single Bounded Task
-Execute a full overnight rerun of campaign row `gfm-20260304-r02 / TR-B1 / baseline_validation` as a new autonomous 3-slice smoke chain in detached `tmux` with a fresh chain ID (do not reuse `trb1-realistic-20260305a`), then sync campaign/handoff docs and supersession metadata.
+Execute one paired realistic-scale profiler run for campaign row `gfm-20260304-r02 / TR-B1 / baseline_validation` (`nsys` mode, GPU3 only) using the same bounded arguments as the canonical smoke chain, then generate the required analysis bundle and sync campaign/handoff docs.
 
 ## Why This Is Immediate Priority
-- A successful capped 3-slice chain already exists (`trb1-realistic-20260305a`), but canonical evidence is intentionally rerun because continuity was uncertain during the prior session.
-- Detached `tmux` operation is now validated on this host and should be used for unattended overnight execution.
-- Completing canonical `TR-B1` chain evidence unlocks paired realistic-scale `nsys` follow-up and campaign progression.
+- Canonical detached smoke-chain evidence for `TR-B1` is now complete (`trb1-realistic-20260306b`).
+- The next required baseline-validation artifact is the paired realistic-scale `nsys` capture.
+- Policy requires an analysis bundle for every successful new `nsys` run.
 
 ## Exact Outputs Expected
-- Launch the chain in detached `tmux` (GPU3 only) with:
-  - `--num-slices 3`
-  - `--max_train_steps 8`
-  - `--max_eval_steps 4`
-  - `--mode smoke`
-  - `--resume-mode model`
-- Write per-slice records and one aggregate summary block to `profiling/chains/active/CHAIN_SUMMARY_<new_chain_id>.md`.
-- Append 3 run records in `profiling/RUNS.md` for the new chain (`run_class: realistic_scale`, `slice_id: TR-B1`).
-- Update `profiling/CAMPAIGN_PLAN.md` `TR-B1` row with the new chain run IDs and canonical status.
-- Mark prior chain `trb1-realistic-20260305a` as superseded in `profiling/RUNS.md` notes + `handoff/SESSION_LOG.md`; archive it with:
-  - `scripts/archive_chain_summary.sh --chain-id trb1-realistic-20260305a --reason "superseded by <new_chain_id> overnight rerun"`
-- Update `handoff/CURRENT_STATUS.md` and append `handoff/SESSION_LOG.md` with chain timing and decision lines.
-- Keep `handoff/NEXT_TASK.md` rotated to exactly one bounded follow-up action.
+- Run preconditions in order:
+  - activate `griffin-profiling`
+  - `make profiling-preflight`
+  - `nvidia-smi`
+  - `nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv`
+- If GPU3 is occupied, do not run; document blocker in `profiling/RUNS.md`, `handoff/CURRENT_STATUS.md`, and `handoff/SESSION_LOG.md`.
+- If GPU3 is clear, execute one `nsys` run with:
+  - `CUDA_VISIBLE_DEVICES=3`
+  - `hmaintask_completion.py`
+  - dataset `datasets/single-pretrain-v3-hf`
+  - bounded args matching chain shape (`--max_train_steps 8`, `--max_eval_steps 4`, plus current baseline flags)
+- Generate analysis bundle:
+  - `scripts/analyze_nsys_run.sh --run-id <new_run_id>`
+  - verify outputs under `artifacts/profiles/analysis/<new_run_id>/`
+- Update docs:
+  - append run record in `profiling/RUNS.md` (with `analysis_artifacts_path` and `analysis_status`)
+  - update `profiling/CAMPAIGN_PLAN.md` `TR-B1` row `nsys_run_id`
+  - update `handoff/CURRENT_STATUS.md` and append `handoff/SESSION_LOG.md`
+  - keep `handoff/NEXT_TASK.md` rotated to exactly one bounded follow-up.
 
 ## Must Not Change
 - No model semantic changes.
 - No NVTX instrumentation expansion beyond current coarse schema.
-- No optimization recommendations; this remains baseline-validation evidence capture.
+- No optimization recommendations.
 
 ## Stopping Criteria
-- New detached `tmux` chain completes 3 attempted slices and is fully documented.
-- Aggregate summary exists for the new chain and timing/decision is mirrored in `handoff/SESSION_LOG.md`.
-- Prior chain is explicitly marked superseded and archived.
-- Campaign + handoff docs are synchronized to the rerun outcome.
-- `handoff/NEXT_TASK.md` remains a single bounded next action.
+- Exactly one new realistic-scale `TR-B1` `nsys` run attempt is recorded and fully documented.
+- If successful, analysis bundle exists and is referenced in profiling docs.
+- Campaign + handoff state is synchronized.
+- `handoff/NEXT_TASK.md` remains one bounded action.
 
 ## Definition Of Done (Template Style)
-- [ ] Detached `tmux` chain run executed with a new `chain_id` for `TR-B1` (`3` capped slices attempted).
-- [ ] `profiling/chains/active/CHAIN_SUMMARY_<new_chain_id>.md` contains per-slice entries and one aggregate summary block.
-- [ ] Three new `TR-B1` run records are appended in `profiling/RUNS.md`.
-- [ ] Prior chain `trb1-realistic-20260305a` is marked superseded and archived under `profiling/chains/archive/`.
-- [ ] `profiling/CAMPAIGN_PLAN.md` `TR-B1` row is updated with canonical rerun status/run IDs.
-- [ ] `handoff/CURRENT_STATUS.md` and `handoff/SESSION_LOG.md` are updated.
-- [ ] `handoff/NEXT_TASK.md` contains one bounded follow-up action.
+- [ ] Preconditions executed (`preflight` + GPU3 occupancy checks).
+- [ ] One new `TR-B1` realistic-scale `nsys` run attempted on GPU3 (or blocker documented if occupied).
+- [ ] `scripts/analyze_nsys_run.sh --run-id <new_run_id>` executed for successful run.
+- [ ] `profiling/RUNS.md` and `profiling/CAMPAIGN_PLAN.md` updated.
+- [ ] `handoff/CURRENT_STATUS.md` and `handoff/SESSION_LOG.md` updated.
+- [ ] `handoff/NEXT_TASK.md` rotated to one bounded follow-up action.

@@ -3,7 +3,7 @@
 ## Snapshot
 - Date: 2026-03-06 (UTC)
 - Branch: `main-public`
-- Commit: `69d63ed018184b7825e854dd97739bb00a37c71a`
+- Commit: `473523cb3e7b101c375c7ad58203cf5ae3efd559`
 - Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), Phase 7 (`steady_annotated` capture execution), Phase 8 (`review_gate`), and Phase 3b autonomous slice-chaining validation are complete; review outcome explicitly keeps post-review escalation permissions disabled pending realistic-scale profiler evidence.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
@@ -170,7 +170,8 @@
 - Generated artifacts from latest attempt:
   - `profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md` (3-slice model-checkpoint autonomous chain validation)
   - `profiling/chains/active/CHAIN_SUMMARY_toychain-state-20260305.md` (2-slice full-state autonomous chain validation)
-  - `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260305a.md` (3-slice realistic-scale `TR-B1` capped smoke chain; includes aggregate summary block)
+  - `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260306b.md` (canonical detached 3-slice realistic-scale `TR-B1` smoke chain; includes aggregate summary block)
+  - `profiling/chains/archive/CHAIN_SUMMARY_trb1-realistic-20260305a.20260306T005702Z.md` (superseded provisional `TR-B1` chain archived)
   - `profiling/chains/archive/CHAIN_SUMMARY_toychain-model-20260305.20260306T003855Z.md` (superseded failed chain archived)
   - `profiling/chains/archive/ARCHIVE_INDEX.md` (append-only archive ledger)
   - `checkpoints/slice-chain-toy-state/state-slice-01`
@@ -208,12 +209,12 @@
   - Toy chain validation completed successfully:
     - model resume: `toychain-model-20260305b` (`3/3` slices)
     - full-state resume: `toychain-state-20260305` (`2/2` slices)
-  - Realistic-scale campaign row `gfm-20260304-r02 / TR-B1` now has a successful initial capped 3-slice smoke chain (`trb1-realistic-20260305a`), but canonical completion is intentionally pending one full rerun in detached `tmux` with a new `chain_id` due prior continuity uncertainty.
+  - Realistic-scale campaign row `gfm-20260304-r02 / TR-B1` canonical detached rerun is complete (`trb1-realistic-20260306b`, `3/3` slices); prior provisional chain `trb1-realistic-20260305a` is superseded and archived.
 - Optimization/recommendation policy surface:
   - Optimization recommendations require both `review_complete=true` and explicit `optimization_discussion_allowed=true`; current state keeps discussion disabled.
   - Current review decision keeps `targeted_fine_allowed=false`; label expansion remains prohibited until a later review explicitly approves hotspot focus.
   - `ncu` deep-dive runs remain prohibited while `ncu_allowed=false`.
   - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
-- Remaining uncertainty: detached overnight rerun of realistic `TR-B1` with a new `chain_id` is pending before canonicalizing chain evidence and proceeding to paired `nsys` + analysis bundle.
+- Remaining uncertainty: none for `TR-B1` chain continuity; next pending execution is paired realistic-scale `TR-B1` `nsys` capture plus required analysis bundle generation.
 - NCU transition interpretation (staged optional tooling smoke vs realistic default deep-dive path) is canonical in `profiling/SCALE_PROFILES.md` under `NCU Transition Policy`.
