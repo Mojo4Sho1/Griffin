@@ -32,11 +32,17 @@ Raw profiling outputs belong under `artifacts/profiles/` and remain out of Git.
 - `handoff/` files track project state and the single immediate next task.
 - `profiling/` files track profiling operations and findings over time.
 - Keep these responsibilities separate: execution continuity in `handoff/`, profiling evidence in `profiling/`.
+- For realistic-scale `realistic-v2`, handoff entries must include explicit `next_action` state:
+  - `continue_scenario`
+  - `scenario_done`
+  - `ready_for_cross_scenario_review`
 
 ## High-Level Workflow
 1. Run `make profiling-preflight`.
 2. Select the next pending campaign row (`campaign_id + slice_id + profile_stage`) in `CAMPAIGN_PLAN.md`.
-3. Run bounded smoke + profiler commands for that row and write raw outputs to `artifacts/profiles/...`.
+3. Execute the row using the active policy:
+   - realistic-scale (`execution_policy_version=realistic-v2`): one full scenario-owned multi-slice `nsys` chain with per-slice analysis bundles.
+   - staged/historical rows: bounded single-run commands as documented.
 4. Record run metadata in `RUNS.md` (including `campaign_id`, `scenario`, `slice_id`, `profile_stage`).
 5. Update row status and run IDs in `CAMPAIGN_PLAN.md`.
 6. Generate analysis bundle for each successful `nsys` run (`scripts/analyze_nsys_run.sh --run-id <run_id>`).
@@ -44,7 +50,7 @@ Raw profiling outputs belong under `artifacts/profiles/` and remain out of Git.
    - baseline unannotated summaries first (`nsys`)
    - then coarse NVTX-annotated summaries (`nsys`)
    - then targeted hotspot deep dives (`ncu`)
-8. Do not run `ncu` until baseline + annotation gates are met for the scenario.
+8. Do not run `ncu` until baseline + annotation gates are met for the scenario and cross-scenario realistic review is complete.
 9. Update `handoff/` files before ending the session.
 
 For autonomous chained slices:
@@ -52,10 +58,20 @@ For autonomous chained slices:
 - `resume-mode=model` validates model-checkpoint handoff workflow.
 - `resume-mode=state` validates full trainer-state handoff workflow via `state-slice-<k>` directories.
 
+For realistic-scale (`realistic-v2`) specifically:
+- One agent owns one scenario end-to-end before handoff (`train` or `finetune` or `inference`).
+- Default size tier is `8/4`; expand depth first (`3 -> 5 -> 7 -> +2`) before increasing size tier (`8/4 -> 16/8 -> 32/16`).
+- Do not exceed `32/16` without explicit human instruction.
+- Mark pre-policy realistic evidence as `legacy_policy_evidence=true` where applicable.
+
 ## Config Conventions For Profiling
 - Default training config remains `hconfig.yaml` (repo baseline).
 - Profiling baseline slices should prefer `hconfig_profiling_single_gpu.yaml` to reduce multi-process noise and improve reproducibility for first-pass traces.
 - Workflow order is strict: baseline `nsys` -> minimal NVTX annotation -> annotated `nsys` validation -> hotspot shortlist -> targeted `ncu`.
+- For realistic-scale capture sequencing:
+  - complete scenario rows `TR-B1`, `FT-B1`, and `IF-B1` under active policy
+  - run cross-scenario review gate (`RV-R2`)
+  - only then plan/authorize realistic-scale `ncu` trials
 
 ## Trace and Analysis Artifact Roles
 
@@ -69,6 +85,14 @@ For autonomous chained slices:
 Historical migration policy:
 - Backfill analysis bundles for gate-critical historical runs only.
 - For new successful `nsys` runs, analysis bundle generation is mandatory.
+
+## Realistic-Scale Metadata Contract (`realistic-v2`)
+
+For all new realistic-scale run/campaign entries, record:
+- `execution_policy_version` (`realistic-v2`)
+- `legacy_policy_evidence` (`true|false`)
+- `slice_size_tier` (`8/4|16/8|32/16`)
+- `scenario_completion_state` (`in_progress|complete|complete_legacy`)
 
 ## Phase 6a Coarse NVTX Taxonomy (Spec Only)
 This Phase 6a output defines the minimal NVTX label set for Phase 6b insertion. It is intentionally coarse, reversible, and limited to high-level workload boundaries.

@@ -14,9 +14,10 @@ It complements `profiling/RUNS.md` (append-only run records) by tracking require
 - Optimization recommendations are prohibited until capture + review gates are complete.
 - Staged `ncu` row execution is optional and non-gating; use it only as tooling smoke validation when needed.
 - Realistic-scale `ncu` rows are the default source for optimization-oriented deep-dive evidence.
-- Until a dedicated table column is introduced, campaign rows should declare run class (`minimal_staged` or `realistic_scale`) in objective/blocker notes where ambiguity could affect interpretation.
 - Canonical run-scale definitions and criteria are documented in `profiling/SCALE_PROFILES.md`.
 - Historical `minimal_staged` rows may reference legacy dataset path `datasets/single-pretrain-v3`; active/default path for current realistic execution is `datasets/single-pretrain-v3-hf`.
+- Realistic-scale execution policy version is now `realistic-v2`.
+- For realistic-scale rows, scenario unit is a multi-slice `nsys` chain with per-slice analysis bundles; smoke-only chains are no longer sufficient evidence.
 
 Status values in this file:
 - `not started`
@@ -50,6 +51,18 @@ Status values in this file:
   - All baseline + steady-state rows are complete, or blocked with documented non-actionable reasons.
 - Human review gate:
   - Must be `done` before any `ncu_post_review` row can execute.
+- Realistic-scale capture-complete gate (`realistic-v2`):
+  - `TR-B1`, `FT-B1`, and `IF-B1` each reach scenario completion (`scenario_completion_state` is `complete` or `complete_legacy`).
+  - Scenario completion for `realistic-v2` requires multi-slice `nsys` chain evidence plus per-slice analysis bundles.
+  - After all three are complete, execute a single cross-scenario review row before any realistic-scale `ncu` planning.
+
+## Realistic-Scale Metadata Schema (`realistic-v2`)
+
+Required for all new realistic-scale campaign rows:
+- `execution_policy_version`: `realistic-v2`
+- `legacy_policy_evidence`: `true|false`
+- `slice_size_tier`: `8/4|16/8|32/16`
+- `scenario_completion_state`: `in_progress|complete|complete_legacy`
 
 ## Autonomous Scenario Execution Policy
 
@@ -78,6 +91,15 @@ Status values in this file:
 - If representativeness is not met at 5, extend target to `7`.
 - If representativeness is still not met at 7, continue in `+2` blocks (`9`, `11`, `13`, ...) until criteria pass.
 - Every extension beyond the current target must include an explicit rationale in chain and handoff logs (stability/drift evidence and new target).
+
+## Adaptive Slice Size Policy (`realistic-v2`)
+
+- Default slice-size tier is `8/4` (`max_train_steps=8`, `max_eval_steps=4`; inference uses eval cap only).
+- Adaptation order is fixed:
+  - expand depth first (`3 -> 5 -> 7 -> +2`)
+  - only if still unstable, increase size tier and restart scenario chain with a new `chain_id`
+  - size tiers: `8/4 -> 16/8 -> 32/16`
+- Hard cap: do not exceed tier `32/16` without explicit human instruction.
 
 ## Continuation Contract (8+)
 
@@ -109,7 +131,8 @@ Status values in this file:
 
 - campaign_id: `gfm-20260304-r02`
 - run_class: `realistic_scale`
-- current gate note: asset acquisition/provenance gate is satisfied; bounded slice controls and autonomous chain workflow are validated, and `TR-B1` can be rerun with step-capped arguments before paired `nsys`.
+- execution_policy_version: `realistic-v2`
+- current gate note: asset acquisition/provenance gate is satisfied; execute scenario-owned multi-slice `nsys` chains with per-slice analysis bundles (`FT-B1` then `IF-B1`); `TR-B1` remains legacy pre-update evidence.
 
 ## Slice Matrix
 
@@ -132,21 +155,29 @@ Status values in this file:
 | gfm-20260303-r01 | finetune | FT-N1 | ncu_post_review | One staged finetune `ncu` tooling-smoke run (optional, non-gating). | `hmaintask_combine.py` | `train` | `datasets/single-pretrain-v3` | `checkpoints/single-completion/best_checkpoint` | `checkpoints/single-sft` | `-` | `-` | `-` | not started | optional; if used, record `ncu_intent: tooling_smoke` |
 | gfm-20260303-r01 | inference | IF-N1 | ncu_post_review | One staged inference `ncu` tooling-smoke run (optional, non-gating). | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3` | `checkpoints/single-sft/best_checkpoint` | `-` | `-` | `-` | `-` | not started | optional; if used, record `ncu_intent: tooling_smoke` |
 | gfm-20260303-r01 | train | TR-AUTO-SMOKE-01 | baseline_validation | Autonomous toy smoke chain validation (3 slices, model-checkpoint handoff). | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `latest checkpoint-*` | `checkpoints/slice-chain-toy-model` | `20260305-2252-toychain-model-20260305b-s01;20260305-2253-toychain-model-20260305b-s02;20260305-2255-toychain-model-20260305b-s03` | `-` | `-` | done | validated autonomous multi-slice orchestration and checkpoint handoff (`profiling/chains/active/CHAIN_SUMMARY_toychain-model-20260305b.md`). |
-| gfm-20260304-r02 | train | TR-B1 | baseline_validation | Realistic-scale baseline train validation slice gated on production-equivalent assets/provenance. | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `-` | `checkpoints/single-completion` | `20260305-2131-train-completion-01;20260306-0049-trb1-realistic-20260306b-s01;20260306-0051-trb1-realistic-20260306b-s02;20260306-0052-trb1-realistic-20260306b-s03` | `-` | `-` | done | canonical detached rerun chain completed successfully (`profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260306b.md`); prior provisional chain `trb1-realistic-20260305a` was superseded and archived (`profiling/chains/archive/CHAIN_SUMMARY_trb1-realistic-20260305a.20260306T005702Z.md`). |
+| gfm-20260304-r02 | train | TR-B1 | baseline_validation | Realistic-scale baseline train validation slice gated on production-equivalent assets/provenance. | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `-` | `checkpoints/single-completion` | `20260305-2131-train-completion-01;20260306-0049-trb1-realistic-20260306b-s01;20260306-0051-trb1-realistic-20260306b-s02;20260306-0052-trb1-realistic-20260306b-s03` | `20260306-1502-trb1-realistic-nsys-01` | `-` | done | execution_policy_version=`realistic-v2`; legacy_policy_evidence=`true`; slice_size_tier=`8/4`; scenario_completion_state=`complete_legacy`; canonical detached rerun chain completed successfully (`profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260306b.md`); paired realistic-scale `nsys` capture + analysis bundle completed (`artifacts/profiles/analysis/20260306-1502-trb1-realistic-nsys-01/`); retained as legacy pre-update evidence (no rerun required). |
 | gfm-20260304-r02 | train | TR-AUTO-STATE-01 | baseline_validation | Full-state autonomous chain validation before realistic unattended campaign. | `hmaintask_completion.py` | `train` | `datasets/single-pretrain-v3-hf` | `state-slice-<k-1>` | `checkpoints/slice-chain-toy-state` | `20260305-2258-toychain-state-20260305-s01;20260305-2300-toychain-state-20260305-s02` | `-` | `-` | done | validated full trainer-state handoff with `state-slice-01 -> state-slice-02` (`profiling/chains/active/CHAIN_SUMMARY_toychain-state-20260305.md`). |
-| gfm-20260304-r02 | finetune | FT-B1 | baseline_validation | Realistic-scale baseline finetune validation slice after TR-B1 and production-equivalent checkpoint confirmation. | `hmaintask_combine.py` | `train` | `datasets/single-pretrain-v3-hf` | `checkpoints/single-completion` | `checkpoints/single-sft` | `-` | `-` | `-` | not started | awaiting campaign execution order (`TR-B1` first). |
-| gfm-20260304-r02 | inference | IF-B1 | baseline_validation | Realistic-scale baseline inference validation slice after TR-B1/FT-B1 readiness. | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3-hf` | `checkpoints/single-sft` | `-` | `-` | `-` | `-` | not started | awaiting campaign execution order (`TR-B1` then `FT-B1`). |
+| gfm-20260304-r02 | finetune | FT-B1 | baseline_validation | Realistic-scale finetune scenario under `realistic-v2`: one agent runs a multi-slice `nsys` chain with per-slice analysis bundles. | `hmaintask_combine.py` | `train` | `datasets/single-pretrain-v3-hf` | `checkpoints/single-completion` | `checkpoints/single-sft` | `-` | `-` | `-` | not started | execution_policy_version=`realistic-v2`; legacy_policy_evidence=`false`; slice_size_tier=`8/4`; scenario_completion_state=`in_progress`; next scenario objective is full `FT-B1` completion, not single paired runs. |
+| gfm-20260304-r02 | inference | IF-B1 | baseline_validation | Realistic-scale inference scenario under `realistic-v2`: one agent runs a multi-slice `nsys` chain with per-slice analysis bundles. | `hmaintask_combine.py` | `test` | `datasets/single-pretrain-v3-hf` | `checkpoints/single-sft` | `-` | `-` | `-` | `-` | not started | execution_policy_version=`realistic-v2`; legacy_policy_evidence=`false`; slice_size_tier=`8/4`; scenario_completion_state=`in_progress`; awaits `FT-B1` scenario completion. |
+| gfm-20260304-r02 | campaign | RV-R2 | review_gate | Cross-scenario realistic-scale review after `TR-B1`, `FT-B1`, and `IF-B1` scenario completion states are satisfied. | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | not started | execution_policy_version=`realistic-v2`; run only after scenario completion states are `complete`/`complete_legacy`, then decide readiness for realistic-scale `ncu` planning. |
 
 ## Update Rule
 
 - Every completed run entry in `profiling/RUNS.md` must map to exactly one matrix row above.
 - Update row `status`, run IDs, and blocker text immediately after each run attempt.
+- For realistic-scale rows, every update must include explicit metadata values for:
+  - `execution_policy_version`
+  - `legacy_policy_evidence`
+  - `slice_size_tier`
+  - `scenario_completion_state`
 - If representativeness fails, use `blocked_non_representative` and record stability metrics.
 - If a run exceeds planning budget due to healthy progress, allow completion and log overrun details; do not mark this as failure.
 - For autonomous scenario chains, update chain target according to adaptive slice depth policy (`3 -> 5 -> 7 -> +2`) and log extension rationale.
+- Apply adaptation order strictly for realistic-scale rows: depth expansion first, then size-tier increase (`8/4 -> 16/8 -> 32/16`) only if still unstable.
 - For resumed chains at slice `8+`, record continuation source path and `next_slice_index` derivation in the chain summary.
 - Every completed/stopped chain must include an end-of-scenario aggregate summary block in `profiling/chains/active/CHAIN_SUMMARY_<chain_id>.md`.
 - `ncu_post_review` rows are invalid unless `RV-G1` is `done`.
+- Realistic-scale `ncu` planning is additionally gated on `RV-R2` completion.
 - `ncu_post_review` rows marked `ncu_intent: tooling_smoke` are allowed before `RV-G1` completion when the sole intent is path validation.
 - If a required precondition is missing (asset, GPU availability, etc.), mark row `blocked` and mirror blocker details in:
   - `profiling/RUNS.md`

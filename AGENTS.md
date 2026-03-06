@@ -18,6 +18,7 @@ This fork exists to profile and analyze Griffin GPU execution behavior to identi
 2. Coarse human-readable annotations second.
 3. Hotspot analysis third.
 4. Deep kernel analysis only after hotspots are confirmed.
+5. For realistic-scale campaigns, execute full scenarios as multi-slice `nsys` chains (not smoke-chain plus single `nsys`).
 
 ## Instrumentation Rules
 - Prefer minimal, reversible instrumentation changes.
@@ -45,6 +46,10 @@ This fork exists to profile and analyze Griffin GPU execution behavior to identi
 - Do not modify `hconfig.yaml` for profiling tasks; use `hconfig_profiling_single_gpu.yaml` or add a new profiling-specific config file.
 - Long-running profiling/autonomous chains should be launched in a detached `tmux` session so execution is resilient to client disconnects.
 - If a chain run has uncertain continuity (disconnect/session loss), do not delete prior artifacts/logs; rerun the full scenario with a new `chain_id` and mark the prior chain as superseded in profiling/handoff docs.
+- Realistic-scale scenario unit is one scenario-owned chain (`train` or `finetune` or `inference`) with per-slice `nsys` captures and analysis bundles.
+- Realistic-scale default chain sizing is `max_train_steps=8` and `max_eval_steps=4` (inference uses eval cap only), depth target `3` slices.
+- If representativeness is insufficient, extend depth first (`3 -> 5 -> 7 -> +2`); increase size tier only after depth expansion (`8/4 -> 16/8 -> 32/16`).
+- Do not exceed size tier `32/16` without explicit human instruction.
 
 ## Handoff Protocol
 - `handoff/CURRENT_STATUS.md` is the current state snapshot.
@@ -52,6 +57,11 @@ This fork exists to profile and analyze Griffin GPU execution behavior to identi
 - `handoff/CHECKLIST.md` is the durable cumulative phase tracker.
 - `handoff/SESSION_LOG.md` is an append-only cross-session activity log.
 - Every completed task must update all relevant handoff files before stopping.
+- For realistic-scale capture, each agent should complete one full scenario before handoff; avoid partial mixed-scope tasks.
+- `handoff/NEXT_TASK.md` should encode one scenario-level objective and must declare `next_action` as one of:
+  - `continue_scenario`
+  - `scenario_done`
+  - `ready_for_cross_scenario_review`
 
 ## Fresh-Agent Operating Loop
 1. Read `AGENTS.md`.

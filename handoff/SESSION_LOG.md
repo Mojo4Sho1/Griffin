@@ -884,3 +884,48 @@ For autonomous scenario chains, include these additional lines under `actions_ta
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Run one realistic-scale `TR-B1` `nsys` capture on GPU3 using the bounded baseline-validation args, then generate `artifacts/profiles/analysis/<run_id>/` and update campaign/run/handoff records.
+
+## 2026-03-06T15:08:33Z - TR-B1 paired realistic-scale nsys capture and analysis completed
+- task_scope: Execute one paired realistic-scale profiler run for `gfm-20260304-r02 / TR-B1 / baseline_validation` (GPU3), generate analysis bundle, and sync campaign/handoff docs.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling`: `make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query; confirmed GPU3 had no active compute process (unrelated workload present on GPU0 only).
+  - Executed realistic-scale bounded `nsys` run `20260306-1502-trb1-realistic-nsys-01` on GPU3 with `hmaintask_completion.py` and bounded args (`--max_train_steps 8 --max_eval_steps 4`).
+  - Verified profiler artifact generation at `artifacts/profiles/nsys/20260306-1502-trb1-realistic-nsys-01.nsys-rep`.
+  - Executed `scripts/analyze_nsys_run.sh --run-id 20260306-1502-trb1-realistic-nsys-01` and verified bundle outputs under `artifacts/profiles/analysis/20260306-1502-trb1-realistic-nsys-01/`.
+  - Updated `profiling/RUNS.md`, `profiling/CAMPAIGN_PLAN.md`, `handoff/CURRENT_STATUS.md`, `handoff/CHECKLIST.md`, and rotated `handoff/NEXT_TASK.md` to bounded realistic-scale `FT-B1` follow-up.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `profiling/RUNS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260304-r02 / FT-B1 / baseline_validation` on GPU3 (smoke first, then paired `nsys` + analysis bundle if smoke succeeds).
+
+## 2026-03-06T15:26:16Z - Realistic-v2 scenario-execution policy documentation implemented
+- task_scope: Implement documentation migration to realistic-scale single-agent full-scenario multi-slice `nsys` execution with per-slice analysis bundles and explicit handoff contract.
+- actions_taken:
+  - Updated core governance in `AGENTS.md` to codify realistic-scale scenario unit, adaptation order (depth-first then size tiers), and handoff `next_action` values.
+  - Updated `profiling/CAMPAIGN_PLAN.md` with `realistic-v2` policy language, required realistic metadata schema fields, adaptive size policy, `TR-B1` legacy marker, and new cross-scenario review row `RV-R2`.
+  - Updated `profiling/COMMANDS.md` with realistic-v2 scenario chain standard (`nsys`-chain preferred), depth-first/size-tier adaptation policy, and chain examples for `FT-B1` and `IF-B1`.
+  - Updated `profiling/_PROFILING_GUIDE.md` workflow to prioritize scenario-owned `nsys` chains for realistic-scale execution and require cross-scenario review before realistic `ncu` planning.
+  - Extended `profiling/RUNS.md` schema/template with `execution_policy_version`, `legacy_policy_evidence`, `slice_size_tier`, and `scenario_completion_state`, and marked `TR-B1` run `20260306-1502-trb1-realistic-nsys-01` as `legacy_policy_evidence=true`.
+  - Rotated `handoff/NEXT_TASK.md` to a full-scenario `FT-B1` objective under `realistic-v2` with explicit `next_action` contract.
+  - Synced `handoff/CURRENT_STATUS.md` and `handoff/CHECKLIST.md` to the new policy framing.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `AGENTS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/_PROFILING_GUIDE.md`
+  - `profiling/RUNS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `FT-B1` as a full realistic-v2 `nsys` scenario chain (default `8/4`, depth target `3`), generate per-slice analysis bundles, and set `next_action` based on scenario completion state.
