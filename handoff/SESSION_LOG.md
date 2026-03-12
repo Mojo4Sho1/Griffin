@@ -1024,3 +1024,48 @@ For autonomous scenario chains, include these additional lines under `actions_ta
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `RV-R2` cross-scenario realistic review using completed `TR-B1`, `FT-B1`, and `IF-B1` evidence; record gate decision and downstream permissions in campaign/handoff docs.
+
+## 2026-03-11T13:21:30Z - Next-task rotation to TR-B1 parity rerun before RV-R2 and NCU planning
+- task_scope: Update handoff documentation so the immediate bounded objective is `TR-B1` parity correction (multi-slice `nsys` chain with per-slice analysis bundles), not cross-scenario review.
+- actions_taken:
+  - Revalidated chain/run records and confirmed mismatch shape: `TR-B1` is smoke-chain + standalone legacy `nsys`, while `FT-B1`/`IF-B1` are scenario-owned multi-slice `nsys` chains.
+  - Rewrote `handoff/NEXT_TASK.md` to make `gfm-20260304-r02 / TR-B1 / baseline_validation` realistic-v2 parity rerun the single bounded next task with explicit outputs and `next_action` contract.
+  - Updated `handoff/CURRENT_STATUS.md` blocker/uncertainty language to mark parity rerun as required before `RV-R2`.
+  - Explicitly kept realistic-scale `ncu` work gated until parity rerun completion and subsequent cross-scenario review.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `handoff/NEXT_TASK.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute a fresh detached realistic-v2 `TR-B1` 3-slice `nsys` chain on GPU3 (`8/4` bounded controls), run per-slice `scripts/analyze_nsys_run.sh`, then rotate to `RV-R2`.
+
+## 2026-03-12T15:46:01Z - TR-B1 realistic-v2 parity rerun completed and handoff rotated to RV-R2
+- task_scope: Execute `gfm-20260304-r02 / TR-B1 / baseline_validation` as a fresh detached realistic-v2 3-slice `nsys` chain with per-slice analysis bundles and synchronize profiling/handoff docs.
+- actions_taken:
+  - Ran required preconditions in `griffin-profiling` (`make profiling-preflight`, `nvidia-smi`, and compute-app occupancy query); confirmed GPU3 had no active compute process attached.
+  - Launched detached `tmux` chain `trb1-realistic-20260312a` on GPU3 with bounded args (`--num-slices 3 --max-train-steps 8 --max-eval-steps 4 --mode nsys --resume-mode model`).
+  - Completed all three slices successfully:
+    - `20260312-1526-trb1-realistic-20260312a-s01`
+    - `20260312-1532-trb1-realistic-20260312a-s02`
+    - `20260312-1537-trb1-realistic-20260312a-s03`
+  - Generated required per-slice analysis bundles via `scripts/analyze_nsys_run.sh --run-id <slice_run_id>` and verified outputs under `artifacts/profiles/analysis/<run_id>/`.
+  - Updated `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260312a.md` with aggregate summary and explicit parity completion note.
+  - Updated `profiling/RUNS.md`, `profiling/CAMPAIGN_PLAN.md`, `handoff/CURRENT_STATUS.md`, and rotated `handoff/NEXT_TASK.md` to bounded `RV-R2` review.
+  - chain_timing_total: 00:17:08 (approx)
+  - chain_timing_per_slice: s01=00:05:36; s02=00:05:39; s03=00:06:07
+  - chain_decision: pass
+  - chain_extension_rationale: none (3/3 slices succeeded; no depth or size-tier extension required)
+  - chain_next_resume: stop chain execution; proceed to `RV-R2` cross-scenario realistic review
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260312a.md`
+  - `profiling/RUNS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Execute `gfm-20260304-r02 / RV-R2 / review_gate` cross-scenario realistic review and record gate outcomes before any realistic-scale `ncu` planning.

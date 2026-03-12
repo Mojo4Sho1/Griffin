@@ -1,9 +1,9 @@
 # Current Status
 
 ## Snapshot
-- Date: 2026-03-06 (UTC)
+- Date: 2026-03-12 (UTC)
 - Branch: `main-public`
-- Commit: `7d24554587e346f884f51d511e983bdcf4adffb6`
+- Commit: `bb998df3e90b7bf4c94c47eafbcea2c80c19aa9e`
 - Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), Phase 7 (`steady_annotated` capture execution), Phase 8 (`review_gate`), and Phase 3b autonomous slice-chaining validation are complete; realistic-scale policy is `realistic-v2` (single-agent full-scenario multi-slice `nsys` chains) with fixed-resume checkpointless inference continuation now validated.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
@@ -182,6 +182,7 @@
   - `artifacts/profiles/analysis/20260306-1502-trb1-realistic-nsys-01/` (required post-run analysis bundle with standardized outputs)
   - `profiling/chains/active/CHAIN_SUMMARY_ftb1-realistic-20260306a.md` (realistic-v2 detached 3-slice `FT-B1` `nsys` chain with aggregate summary block)
   - `profiling/chains/active/CHAIN_SUMMARY_ifb1-realistic-20260306b.md` (realistic-v2 detached 3-slice `IF-B1` `nsys` chain using fixed-resume checkpointless continuation; includes aggregate summary block)
+  - `profiling/chains/active/CHAIN_SUMMARY_trb1-realistic-20260312a.md` (realistic-v2 detached 3-slice `TR-B1` `nsys` parity chain with aggregate summary block and explicit parity completion note)
   - `profiling/chains/archive/CHAIN_SUMMARY_ifb1-realistic-20260306a.20260306T165459Z.md` (superseded one-slice `IF-B1` chain archived after fixed-resume policy update)
   - `artifacts/profiles/nsys/20260306-1538-ftb1-realistic-20260306a-s01.nsys-rep`
   - `artifacts/profiles/nsys/20260306-1543-ftb1-realistic-20260306a-s02.nsys-rep`
@@ -190,6 +191,9 @@
   - `artifacts/profiles/nsys/20260306-1647-ifb1-realistic-20260306b-s01.nsys-rep`
   - `artifacts/profiles/nsys/20260306-1650-ifb1-realistic-20260306b-s02.nsys-rep`
   - `artifacts/profiles/nsys/20260306-1652-ifb1-realistic-20260306b-s03.nsys-rep`
+  - `artifacts/profiles/nsys/20260312-1526-trb1-realistic-20260312a-s01.nsys-rep`
+  - `artifacts/profiles/nsys/20260312-1532-trb1-realistic-20260312a-s02.nsys-rep`
+  - `artifacts/profiles/nsys/20260312-1537-trb1-realistic-20260312a-s03.nsys-rep`
   - `artifacts/profiles/analysis/20260306-1538-ftb1-realistic-20260306a-s01/` (required post-run analysis bundle)
   - `artifacts/profiles/analysis/20260306-1543-ftb1-realistic-20260306a-s02/` (required post-run analysis bundle)
   - `artifacts/profiles/analysis/20260306-1553-ftb1-realistic-20260306a-s03/` (required post-run analysis bundle)
@@ -197,9 +201,12 @@
   - `artifacts/profiles/analysis/20260306-1647-ifb1-realistic-20260306b-s01/` (required post-run analysis bundle)
   - `artifacts/profiles/analysis/20260306-1650-ifb1-realistic-20260306b-s02/` (required post-run analysis bundle)
   - `artifacts/profiles/analysis/20260306-1652-ifb1-realistic-20260306b-s03/` (required post-run analysis bundle)
+  - `artifacts/profiles/analysis/20260312-1526-trb1-realistic-20260312a-s01/` (required post-run analysis bundle)
+  - `artifacts/profiles/analysis/20260312-1532-trb1-realistic-20260312a-s02/` (required post-run analysis bundle)
+  - `artifacts/profiles/analysis/20260312-1537-trb1-realistic-20260312a-s03/` (required post-run analysis bundle)
   - `checkpoints/slice-chain-toy-state/state-slice-01`
   - `checkpoints/slice-chain-toy-state/state-slice-02`
-  - Latest successful `nsys` artifact is `artifacts/profiles/nsys/20260306-1652-ifb1-realistic-20260306b-s03.nsys-rep`
+  - Latest successful `nsys` artifact is `artifacts/profiles/nsys/20260312-1537-trb1-realistic-20260312a-s03.nsys-rep`
 - Transfer script stdout/stderr logs: `output/transfer/.../*.log`.
 
 ## Blockers, Uncertainties, Assumptions
@@ -234,7 +241,11 @@
     - full-state resume: `toychain-state-20260305` (`2/2` slices)
   - Realistic-scale campaign row `gfm-20260304-r02 / TR-B1` canonical detached rerun is complete (`trb1-realistic-20260306b`, `3/3` slices); prior provisional chain `trb1-realistic-20260305a` is superseded and archived.
   - Paired realistic-scale `TR-B1` `nsys` baseline-validation capture is complete (`20260306-1502-trb1-realistic-nsys-01`) with required analysis bundle at `artifacts/profiles/analysis/20260306-1502-trb1-realistic-nsys-01/`.
-  - `TR-B1` is now explicitly treated as legacy pre-policy realistic evidence (`legacy_policy_evidence=true`, `scenario_completion_state=complete_legacy`) and will not be rerun for policy uniformity unless explicitly requested.
+  - Realistic-scale campaign row `gfm-20260304-r02 / TR-B1` parity rerun is complete under `realistic-v2` via detached multi-slice `nsys` chain `trb1-realistic-20260312a` (`3/3` slices) with required per-slice analysis bundles:
+    - `20260312-1526-trb1-realistic-20260312a-s01`
+    - `20260312-1532-trb1-realistic-20260312a-s02`
+    - `20260312-1537-trb1-realistic-20260312a-s03`
+  - `TR-B1` realistic metadata state is now `execution_policy_version=realistic-v2`, `legacy_policy_evidence=false`, `slice_size_tier=8/4`, `scenario_completion_state=complete`.
   - Realistic-scale campaign row `gfm-20260304-r02 / FT-B1` is complete under `realistic-v2` via detached multi-slice `nsys` chain `ftb1-realistic-20260306a` (`3/3` slices) with required per-slice analysis bundles:
     - `20260306-1538-ftb1-realistic-20260306a-s01`
     - `20260306-1543-ftb1-realistic-20260306a-s02`
@@ -247,10 +258,10 @@
   - `IF-B1` realistic metadata state is now `execution_policy_version=realistic-v2`, `legacy_policy_evidence=false`, `slice_size_tier=8/4`, `scenario_completion_state=complete`.
 - Optimization/recommendation policy surface:
   - Optimization recommendations require both `review_complete=true` and explicit `optimization_discussion_allowed=true`; current state keeps discussion disabled.
-  - Realistic-scale `ncu` planning is additionally gated on cross-scenario review row `RV-R2` after `TR-B1`/`FT-B1`/`IF-B1` scenario completion states are satisfied.
+  - Realistic-scale `ncu` planning is additionally gated on cross-scenario review row `RV-R2` after `TR-B1`/`FT-B1`/`IF-B1` scenario completion states are satisfied under parity-consistent multi-slice `nsys` evidence.
   - Current review decision keeps `targeted_fine_allowed=false`; label expansion remains prohibited until a later review explicitly approves hotspot focus.
   - `ncu` deep-dive runs remain prohibited while `ncu_allowed=false`.
   - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
-- Remaining uncertainty: none on IF-B1 execution policy; next pending execution is cross-scenario realistic review row `RV-R2`.
+- Remaining uncertainty: no unresolved scenario execution issues; next pending execution is `RV-R2` cross-scenario realistic review.
 - NCU transition interpretation (staged optional tooling smoke vs realistic default deep-dive path) is canonical in `profiling/SCALE_PROFILES.md` under `NCU Transition Policy`.
