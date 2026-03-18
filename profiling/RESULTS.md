@@ -612,3 +612,51 @@ It is for conclusions and interpretation, not raw logs.
 - caveats:
   - Validation was smoke-only and did not yet include `nsys` capture in this chain.
 - next_action: Apply the same bounded controls to realistic `TR-B1` smoke + paired `nsys` capture and analysis.
+
+## Result: gfm-20260304-r02-realistic-cross-scenario-review-01
+- campaign_id: gfm-20260304-r02
+- profile_stage: baseline_validation (cross-scenario)
+- date_time_utc: 2026-03-18T00:00:00Z
+- related_runs:
+  - 20260312-1526-trb1-realistic-20260312a-s01
+  - 20260312-1532-trb1-realistic-20260312a-s02
+  - 20260312-1537-trb1-realistic-20260312a-s03
+  - 20260306-1538-ftb1-realistic-20260306a-s01
+  - 20260306-1543-ftb1-realistic-20260306a-s02
+  - 20260306-1553-ftb1-realistic-20260306a-s03
+  - 20260306-1647-ifb1-realistic-20260306b-s01
+  - 20260306-1650-ifb1-realistic-20260306b-s02
+  - 20260306-1652-ifb1-realistic-20260306b-s03
+- question: Are the realistic-scale TR-B1, FT-B1, and IF-B1 nsys chains consistent, stable, and sufficient to approve realistic-scale ncu deep-dive planning?
+- summary: Yes. All 9 slices across three scenarios completed with `nvtx_coverage_status: present` and deterministic intra-scenario kernel launch counts. The top-3 GPU kernel identities are identical across train, finetune, and inference in type and rank — dominated by small-tile GEMM (`ampere_sgemm_32x32_sliced1x4_tn` ~30-32%), flash attention (`fmha_cutlassF_f32_aligned_64x64_rf_sm80` ~12.5-13%), and a second GEMM variant (`ampere_sgemm_32x128_tn` ~9.3-9.8%). NVTX timeshare structure is stable within each scenario across 3 slices. Evidence quality is sufficient to approve realistic-scale ncu targeting.
+- scenario_comparison:
+  - train: NVTX dominated by eval_task (~48.5%), train_epoch (~33%), final_test_pass (~16.5%); GPU top-3 sgemm_32x32 30.4%, fmha 12.5%, sgemm_32x128 9.3%; 22731 sgemm launches/slice (stable).
+  - finetune: Near-identical NVTX structure to train (same script path, different initial checkpoint); GPU top-3 sgemm_32x32 30.5%, fmha 12.5%, sgemm_32x128 9.4%; 22754 sgemm launches/slice (stable).
+  - inference: NVTX dominated by mode_test_only+eval_task (~96%), no train_epoch; GPU top-3 sgemm_32x32 31.7%, fmha 13.0%, sgemm_32x128 9.8%; 7477 sgemm launches/slice (~1/3 of train/finetune, consistent with 51 vs 153 eval_task instances).
+- confidence: high
+- caveats:
+  - Evidence is at slice_size_tier=8/4 (max_train_steps=8, max_eval_steps=4); inference is eval-only. Kernel time-share percentages should be treated as relative indicators, not absolute production-scale measures.
+  - Intra-scenario slice-to-slice NVTX wall-time variation exists (e.g. TR-B1 eval_task 122s vs 131s vs 124s total_ms) but top-3 kernel identity and rank are stable — this is expected shared-host noise.
+  - cudaHostAlloc costs are elevated in train/finetune (338-415 calls, ~1884-1951 µs/call) vs near-absent in inference; optimizer state allocation is the likely cause and is a secondary investigation candidate.
+- next_action: Execute realistic-scale ncu run on approved hotspot shortlist; start with scenario `train` targeting `ampere_sgemm_32x32_sliced1x4_tn` (top kernel by GPU time share, present in all scenarios).
+
+## Result: gfm-20260304-r02-realistic-review-gate-01
+- campaign_id: gfm-20260304-r02
+- profile_stage: review_gate
+- date_time_utc: 2026-03-18T00:00:00Z
+- related_runs:
+  - gfm-20260304-r02-realistic-cross-scenario-review-01
+- question: Has the cross-scenario realistic-scale review approved progression to realistic-scale ncu deep dives?
+- review_outcome:
+  - review_complete: true
+  - ncu_allowed: true
+  - targeted_fine_allowed: false
+  - optimization_discussion_allowed: false
+- summary: RV-R2 cross-scenario review decision is PASS. All three realistic-scale scenarios (TR-B1, FT-B1, IF-B1) provide consistent, stable multi-slice nsys evidence under realistic-v2 policy. A cross-scenario hotspot shortlist of three kernels was identified (sgemm_32x32, fmha, sgemm_32x128) with identical type-and-rank ordering across all scenarios. Realistic-scale ncu deep dives are now approved against this shortlist. Targeted fine NVTX expansion and optimization discussion remain disabled pending ncu evidence.
+- approved_hotspots_or_focus:
+  - hotspot_1: `ampere_sgemm_32x32_sliced1x4_tn` (~30-32% GPU time; present in all 3 scenarios; priority target)
+  - hotspot_2: `fmha_cutlassF_f32_aligned_64x64_rf_sm80` (~12.5-13% GPU time; present in all 3 scenarios)
+  - hotspot_3: `ampere_sgemm_32x128_tn` (~9.3-9.8% GPU time; present in all 3 scenarios)
+- approved_label_schema_version: nvtx-v1.0
+- approved_rank_scope: all_ranks
+- next_action: Plan and execute first realistic-scale ncu run targeting hotspot_1 (`ampere_sgemm_32x32_sliced1x4_tn`) in the train scenario; record ncu_intent, command, and findings in RUNS.md and RESULTS.md.

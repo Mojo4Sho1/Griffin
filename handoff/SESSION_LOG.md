@@ -1069,3 +1069,26 @@ For autonomous scenario chains, include these additional lines under `actions_ta
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: Execute `gfm-20260304-r02 / RV-R2 / review_gate` cross-scenario realistic review and record gate outcomes before any realistic-scale `ncu` planning.
+
+## 2026-03-18T00:00:00Z - RV-R2 cross-scenario realistic review complete
+- task_scope: Execute `gfm-20260304-r02 / RV-R2 / review_gate` cross-scenario realistic review using completed TR-B1, FT-B1, and IF-B1 realistic-v2 multi-slice nsys evidence.
+- actions_taken:
+  - Reviewed all 9 per-slice analysis bundle summaries (3 per scenario: TR-B1 `trb1-realistic-20260312a`, FT-B1 `ftb1-realistic-20260306a`, IF-B1 `ifb1-realistic-20260306b`).
+  - Synthesized cross-scenario kernel hotspot evidence: top-3 GPU kernels identical in type and rank across all three scenarios.
+  - Recorded cross-scenario review result `gfm-20260304-r02-realistic-cross-scenario-review-01` in `profiling/RESULTS.md`.
+  - Recorded review gate result `gfm-20260304-r02-realistic-review-gate-01` in `profiling/RESULTS.md`.
+  - Updated `profiling/CAMPAIGN_PLAN.md` row `RV-R2` from `not started` to `done` with decision notes.
+  - Added `RV-R2` decision record entry to `profiling/RUNS.md`.
+  - Updated `handoff/CURRENT_STATUS.md`: date, commit, gate fields (`realistic_cross_scenario_review_complete=true`, `ncu_allowed=true`), hotspot shortlist, and blockers section.
+  - Rotated `handoff/NEXT_TASK.md` to realistic-scale `ncu` first run.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+  - `handoff/NEXT_TASK.md`
+- next_hint: `ncu_allowed=true`; approved hotspot shortlist is in `gfm-20260304-r02-realistic-review-gate-01`; next task is realistic-scale ncu on `ampere_sgemm_32x32_sliced1x4_tn` in the train scenario; check GPU3 occupancy and run with `CUDA_VISIBLE_DEVICES=3`.

@@ -1,10 +1,10 @@
 # Current Status
 
 ## Snapshot
-- Date: 2026-03-12 (UTC)
+- Date: 2026-03-18 (UTC)
 - Branch: `main-public`
-- Commit: `bb998df3e90b7bf4c94c47eafbcea2c80c19aa9e`
-- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), Phase 7 (`steady_annotated` capture execution), Phase 8 (`review_gate`), and Phase 3b autonomous slice-chaining validation are complete; realistic-scale policy is `realistic-v2` (single-agent full-scenario multi-slice `nsys` chains) with fixed-resume checkpointless inference continuation now validated.
+- Commit: `44a2c99`
+- Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), Phase 7 (`steady_annotated` capture execution), Phase 8 (`review_gate`), and Phase 3b autonomous slice-chaining validation are complete; realistic-scale policy is `realistic-v2` (single-agent full-scenario multi-slice `nsys` chains) with fixed-resume checkpointless inference continuation now validated; cross-scenario realistic review `RV-R2` is complete with decision PASS and `ncu_allowed=true`; approved hotspot shortlist is recorded in `gfm-20260304-r02-realistic-review-gate-01`.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
   - `ncu`: `/usr/local/bin/ncu` (version `2024.3.2.0`)
@@ -52,7 +52,8 @@
   - finetune: 0
   - inference: 0
 - counter_interpretation:
-  - `realistic_scale.ncu_success` is expected to increase only after realistic review approval and hotspot shortlist selection.
+  - `realistic_scale.ncu_success` will increase after realistic-scale `ncu` runs execute against the approved hotspot shortlist.
+  - Realistic-scale `ncu` is now allowed (`ncu_allowed=true`); approved hotspot shortlist is in `gfm-20260304-r02-realistic-review-gate-01`.
   - Realistic-scale `ncu` remains the default source of optimization-oriented deep-dive evidence.
 
 ## Workflow Gate State
@@ -61,11 +62,17 @@
 - review_complete: true
 - review_result_id: gfm-20260303-r01-review-gate-01
 - review_outcome_pending: false
-- ncu_allowed: false
+- ncu_allowed: true
 - targeted_fine_allowed: false
 - optimization_discussion_allowed: false
 - realistic_execution_policy_version: realistic-v2
-- realistic_cross_scenario_review_complete: false
+- realistic_cross_scenario_review_complete: true
+- realistic_review_result_id: gfm-20260304-r02-realistic-review-gate-01
+- realistic_review_decision: pass
+- realistic_ncu_hotspot_shortlist:
+  - hotspot_1: ampere_sgemm_32x32_sliced1x4_tn (~30-32% GPU time; all scenarios; priority target)
+  - hotspot_2: fmha_cutlassF_f32_aligned_64x64_rf_sm80 (~12.5-13%; all scenarios)
+  - hotspot_3: ampere_sgemm_32x128_tn (~9.3-9.8%; all scenarios)
 
 ## What Is Established
 - Stable project operating rules now live in `AGENTS.md`.
@@ -256,12 +263,13 @@
     - `20260306-1650-ifb1-realistic-20260306b-s02`
     - `20260306-1652-ifb1-realistic-20260306b-s03`
   - `IF-B1` realistic metadata state is now `execution_policy_version=realistic-v2`, `legacy_policy_evidence=false`, `slice_size_tier=8/4`, `scenario_completion_state=complete`.
+  - `gfm-20260304-r02 / RV-R2` cross-scenario realistic review is complete with decision PASS (`gfm-20260304-r02-realistic-review-gate-01`); `realistic_cross_scenario_review_complete=true`, `ncu_allowed=true`.
+  - Approved hotspot shortlist for realistic-scale `ncu`: (1) `ampere_sgemm_32x32_sliced1x4_tn` (~30-32%), (2) `fmha_cutlassF_f32_aligned_64x64_rf_sm80` (~12.5-13%), (3) `ampere_sgemm_32x128_tn` (~9.3-9.8%); all three confirmed stable and present across TR-B1, FT-B1, and IF-B1.
 - Optimization/recommendation policy surface:
-  - Optimization recommendations require both `review_complete=true` and explicit `optimization_discussion_allowed=true`; current state keeps discussion disabled.
-  - Realistic-scale `ncu` planning is additionally gated on cross-scenario review row `RV-R2` after `TR-B1`/`FT-B1`/`IF-B1` scenario completion states are satisfied under parity-consistent multi-slice `nsys` evidence.
-  - Current review decision keeps `targeted_fine_allowed=false`; label expansion remains prohibited until a later review explicitly approves hotspot focus.
-  - `ncu` deep-dive runs remain prohibited while `ncu_allowed=false`.
+  - Optimization recommendations require both `review_complete=true` and explicit `optimization_discussion_allowed=true`; `optimization_discussion_allowed` remains `false` pending `ncu` evidence.
+  - Realistic-scale `ncu` is now allowed (`ncu_allowed=true`) and should target the approved hotspot shortlist.
+  - `targeted_fine_allowed=false`; NVTX label expansion remains prohibited until a later review explicitly approves hotspot focus after `ncu` evidence is in hand.
   - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
-- Remaining uncertainty: no unresolved scenario execution issues; next pending execution is `RV-R2` cross-scenario realistic review.
+- Remaining uncertainty: no unresolved scenario execution issues; next pending execution is realistic-scale `ncu` targeting hotspot_1 (`ampere_sgemm_32x32_sliced1x4_tn`) in the train scenario.
 - NCU transition interpretation (staged optional tooling smoke vs realistic default deep-dive path) is canonical in `profiling/SCALE_PROFILES.md` under `NCU Transition Policy`.

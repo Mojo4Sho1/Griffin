@@ -2656,3 +2656,58 @@ Example:
 - overrun_reason_if_any: none
 - review_gate_state_at_run: done
 - ncu_intent: na
+
+### Run: gfm-20260304-r02-RV-R2-review-gate
+- campaign_id: gfm-20260304-r02
+- scenario: campaign
+- slice_id: RV-R2
+- run_class: realistic_scale
+- profile_stage: review_gate
+- execution_policy_version: realistic-v2
+- legacy_policy_evidence: false
+- slice_size_tier: na
+- scenario_completion_state: na
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: na
+- parent_label_anchor: na
+- rank_emission_mode: na
+- rank_filter_if_any: na
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-18T00:00:00Z
+- mode: na
+- dataset: na
+- command: na (review gate — no profiler run; decision record only)
+- git_commit: `44a2c99`
+- config: na
+- slice_definition: Cross-scenario realistic-scale review of TR-B1, FT-B1, and IF-B1 multi-slice nsys evidence under realistic-v2 policy.
+- profiler: none
+- outputs:
+  - `profiling/RUNS.md` (this entry)
+  - `profiling/CAMPAIGN_PLAN.md` (RV-R2 row updated)
+  - `profiling/RESULTS.md` (gfm-20260304-r02-realistic-review-gate-01)
+- findings_notes:
+  - Reviewed 9 analysis bundles (3 per scenario): TR-B1 `trb1-realistic-20260312a`, FT-B1 `ftb1-realistic-20260306a`, IF-B1 `ifb1-realistic-20260306b`.
+  - Cross-scenario GPU kernel top-3 is identical in type and rank: sgemm_32x32 (~30-32%), fmha_cutlass (~12.5-13%), sgemm_32x128 (~9.3-9.8%).
+  - All 9 slices show `nvtx_coverage_status: present` and stable intra-scenario launch counts.
+  - Decision: PASS. Approved hotspot shortlist for realistic-scale ncu: (1) ampere_sgemm_32x32_sliced1x4_tn, (2) fmha_cutlassF_f32_aligned_64x64_rf_sm80, (3) ampere_sgemm_32x128_tn.
+  - Gate update: `realistic_cross_scenario_review_complete=true`, `ncu_allowed=true`.
+- analysis_artifacts_path: na
+- analysis_status: na
+- analysis_warnings: none
+- status: done
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: na
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done (this is the gate)
+- ncu_intent: na
