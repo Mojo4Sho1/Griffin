@@ -102,6 +102,7 @@
   - `artifacts/profiles/ncu/`
 - Raw profiling artifact paths above are excluded from Git; lightweight summaries remain tracked in docs.
 - Wrapper compatibility fix applied: `scripts/profile_baseline.sh` now uses `nsys profile ... accelerate launch ...` (without extra `--` before application).
+- Wrapper compatibility fix applied: `scripts/profile_baseline.sh` now uses `ncu ... accelerate launch ...` (without extra `--` before application) for local Nsight Compute CLI compatibility.
 - Bounded slice controls are implemented in both main task scripts:
   - `--max_train_steps` and `--max_eval_steps`
 - Full trainer-state save/load hooks are implemented in both main task scripts:
@@ -265,11 +266,13 @@
   - `IF-B1` realistic metadata state is now `execution_policy_version=realistic-v2`, `legacy_policy_evidence=false`, `slice_size_tier=8/4`, `scenario_completion_state=complete`.
   - `gfm-20260304-r02 / RV-R2` cross-scenario realistic review is complete with decision PASS (`gfm-20260304-r02-realistic-review-gate-01`); `realistic_cross_scenario_review_complete=true`, `ncu_allowed=true`.
   - Approved hotspot shortlist for realistic-scale `ncu`: (1) `ampere_sgemm_32x32_sliced1x4_tn` (~30-32%), (2) `fmha_cutlassF_f32_aligned_64x64_rf_sm80` (~12.5-13%), (3) `ampere_sgemm_32x128_tn` (~9.3-9.8%); all three confirmed stable and present across TR-B1, FT-B1, and IF-B1.
+  - `gfm-20260304-r02 / TR-N1 / ncu_post_review` cleared the earlier GPU3 occupancy blocker and launched on `2026-03-18`, but valid `ncu` capture is now blocked by host-side NVIDIA GPU performance counter permissions: direct `ncu` launch for `20260318-1946-train-completion-01` emitted `ERR_NVGPUCTRPERM` and produced no `.ncu-rep` artifact.
+  - Current agreed execution plan: the human operator will run the bounded hotspot-targeted `sudo ncu ...` command manually in their own terminal (no reboot/module-policy change), then the next agent should inspect the produced `.ncu-rep` artifact and complete results/handoff updates.
 - Optimization/recommendation policy surface:
   - Optimization recommendations require both `review_complete=true` and explicit `optimization_discussion_allowed=true`; `optimization_discussion_allowed` remains `false` pending `ncu` evidence.
   - Realistic-scale `ncu` is now allowed (`ncu_allowed=true`) and should target the approved hotspot shortlist.
   - `targeted_fine_allowed=false`; NVTX label expansion remains prohibited until a later review explicitly approves hotspot focus after `ncu` evidence is in hand.
   - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
-- Remaining uncertainty: no unresolved scenario execution issues; next pending execution is realistic-scale `ncu` targeting hotspot_1 (`ampere_sgemm_32x32_sliced1x4_tn`) in the train scenario.
+- Remaining uncertainty: no unresolved environment or command-shape issue is blocking realistic-scale `ncu`; the remaining blocker is host-side GPU performance counter access (`ERR_NVGPUCTRPERM`) for non-sudo runs. The current plan is not to change host policy; instead, the human will execute the bounded `sudo ncu` command manually and hand off the resulting artifact for analysis.
 - NCU transition interpretation (staged optional tooling smoke vs realistic default deep-dive path) is canonical in `profiling/SCALE_PROFILES.md` under `NCU Transition Policy`.

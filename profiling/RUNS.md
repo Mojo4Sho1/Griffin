@@ -2711,3 +2711,109 @@ Example:
 - overrun_reason_if_any: none
 - review_gate_state_at_run: done (this is the gate)
 - ncu_intent: na
+
+### Run: 20260318-1752-train-completion-01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-N1
+- run_class: realistic_scale
+- profile_stage: ncu_post_review
+- execution_policy_version: realistic-v2
+- legacy_policy_evidence: false
+- slice_size_tier: 8/4
+- scenario_completion_state: complete
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: hotspot_1
+- parent_label_anchor: na
+- rank_emission_mode: all_ranks
+- rank_filter_if_any: none
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-18T17:52:01Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `CUDA_VISIBLE_DEVICES=3 NCU_FLAGS="--kernel-name ampere_sgemm_32x32_sliced1x4_tn --set full" scripts/profile_baseline.sh ncu 20260318-1752-train-completion-01 hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-hotspot-ncu -- --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `6fb3d7ed7a64`
+- config: `hconfig_profiling_single_gpu.yaml`; `NCU_FLAGS="--kernel-name ampere_sgemm_32x32_sliced1x4_tn --set full"`
+- slice_definition: Realistic-scale bounded train hotspot deep dive on approved hotspot_1 with `max_train_steps=8` and `max_eval_steps=4`.
+- profiler: ncu
+- outputs:
+  - `artifacts/profiles/ncu/20260318-1752-train-completion-01` (not created; run blocked before launch)
+  - `logs/prof` (no new hotspot log; run blocked before launch)
+- findings_notes:
+  - Required occupancy checks were executed first per policy.
+  - `make profiling-preflight` passed in `griffin-profiling` before the execution decision.
+  - GPU3 had active compute processes attached during both occupancy checks, so the `ncu` launch was intentionally not started.
+  - This is a shared-host availability blocker, not an environment, asset, or script-path blocker.
+- analysis_artifacts_path: na
+- analysis_status: not_run
+- analysis_warnings: GPU3 occupied by active compute processes; profiler launch intentionally skipped
+- status: failed
+- blocker_if_any: GPU3 occupancy blocker. `nvidia-smi` at `2026-03-18T17:51:42Z` showed four active python compute processes on GPU3 (PIDs `2841863`, `2842223`, `2843966`, `2845611`); do not run profiling until GPU3 is clear.
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 0
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: hotspot_deep_dive
+
+### Run: 20260318-1946-train-completion-01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-N1
+- run_class: realistic_scale
+- profile_stage: ncu_post_review
+- execution_policy_version: realistic-v2
+- legacy_policy_evidence: false
+- slice_size_tier: 8/4
+- scenario_completion_state: complete
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: hotspot_1
+- parent_label_anchor: na
+- rank_emission_mode: all_ranks
+- rank_filter_if_any: none
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-18T19:46:00Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `CUDA_VISIBLE_DEVICES=3 ncu -k regex:ampere_sgemm_32x32_sliced1x4_tn --kernel-name-base function --set full --export artifacts/profiles/ncu/20260318-1946-train-completion-01 --target-processes all accelerate launch --config_file hconfig_profiling_single_gpu.yaml hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-hotspot-ncu --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `6fb3d7ed7a64`
+- config: `hconfig_profiling_single_gpu.yaml`; kernel filter `-k regex:ampere_sgemm_32x32_sliced1x4_tn --kernel-name-base function`; metric set `--set full`
+- slice_definition: Realistic-scale bounded train hotspot deep dive on approved hotspot_1 with `max_train_steps=8` and `max_eval_steps=4`.
+- profiler: ncu
+- outputs:
+  - `logs/prof/train-hotspot-ncu/events.out.tfevents.1773863246.cse-139634.2863086.0`
+  - `artifacts/profiles/ncu/20260318-1946-train-completion-01.ncu-rep` (not created; profiler aborted metric collection)
+- findings_notes:
+  - GPU3 occupancy checks passed immediately before launch; no shared-host occupancy blocker remained.
+  - The initial wrapper-form attempt exposed an `ncu` CLI compatibility issue; direct invocation confirmed the wrapper's extra separator was the problem.
+  - The bounded train workload itself completed under the profiler launch path, but `ncu` emitted `ERR_NVGPUCTRPERM` as soon as it attempted kernel profiling.
+  - No `.ncu-rep` artifact was produced, so this run does not count as successful `ncu` evidence and cannot support hotspot metric findings.
+- analysis_artifacts_path: na
+- analysis_status: failed
+- analysis_warnings: `ERR_NVGPUCTRPERM`; no report file generated
+- status: failed
+- blocker_if_any: Host-side NVIDIA GPU performance counter permissions are disabled for the current user on target device 0/GPU3 (`ERR_NVGPUCTRPERM`), preventing any valid `ncu` metric capture.
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: na
+- actual_runtime_minutes: 5.2
+- overrun_reason_if_any: none
+- review_gate_state_at_run: done
+- ncu_intent: hotspot_deep_dive

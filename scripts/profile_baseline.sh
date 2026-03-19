@@ -81,7 +81,7 @@ case "$MODE" in
     if [[ -n "${NCU_FLAGS:-}" ]]; then
       read -r -a NCU_FLAG_ARR <<< "${NCU_FLAGS}"
     fi
-    CMD=(ncu "${NCU_FLAG_ARR[@]}" --export "$OUT_PATH" --target-processes all -- "${ACCEL_CMD[@]}")
+    CMD=(ncu "${NCU_FLAG_ARR[@]}" --export "$OUT_PATH" --target-processes all "${ACCEL_CMD[@]}")
     ;;
   *)
     echo "error: unknown mode '$MODE' (expected smoke|nsys|ncu)" >&2

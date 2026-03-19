@@ -660,3 +660,22 @@ It is for conclusions and interpretation, not raw logs.
 - approved_label_schema_version: nvtx-v1.0
 - approved_rank_scope: all_ranks
 - next_action: Plan and execute first realistic-scale ncu run targeting hotspot_1 (`ampere_sgemm_32x32_sliced1x4_tn`) in the train scenario; record ncu_intent, command, and findings in RUNS.md and RESULTS.md.
+
+## Result: gfm-20260304-r02-train-ncu-hotspot-01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- profile_stage: ncu_post_review
+- date_time_utc: 2026-03-18T19:46:00Z
+- related_runs:
+  - 20260318-1946-train-completion-01
+  - 20260312-1537-trb1-realistic-20260312a-s03
+- hotspot_id: hotspot_1
+- summary: TR-N1 was relaunched successfully after GPU3 cleared and the local `ncu` command shape was corrected, but no valid Nsight Compute report was generated. The profiler emitted `ERR_NVGPUCTRPERM` when attempting to access GPU performance counters, so this run does not yet provide usable hotspot metrics for `ampere_sgemm_32x32_sliced1x4_tn`.
+- kernel_findings:
+  - No kernel metrics were collected because host-side NVIDIA GPU performance counter access is disabled for the current user.
+  - The bounded train workload itself completed under the direct `ncu` launch path, which confirms command/runtime viability once counter permissions are enabled.
+- confidence: high
+- caveats:
+  - No `.ncu-rep` artifact was produced, so there is no profiler evidence to interpret for hotspot behavior.
+  - This is a host-permissions blocker, not a hotspot-selection, dataset, or script-path blocker.
+- next_action: Enable NVIDIA GPU performance counter access for the current user on GPU3, then rerun `TR-N1` unchanged against hotspot_1.

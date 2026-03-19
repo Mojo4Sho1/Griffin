@@ -1092,3 +1092,56 @@ For autonomous scenario chains, include these additional lines under `actions_ta
   - `handoff/SESSION_LOG.md`
   - `handoff/NEXT_TASK.md`
 - next_hint: `ncu_allowed=true`; approved hotspot shortlist is in `gfm-20260304-r02-realistic-review-gate-01`; next task is realistic-scale ncu on `ampere_sgemm_32x32_sliced1x4_tn` in the train scenario; check GPU3 occupancy and run with `CUDA_VISIBLE_DEVICES=3`.
+
+## 2026-03-18T17:52:01Z - TR-N1 realistic-scale ncu attempt blocked by GPU3 occupancy
+- task_scope: Execute `gfm-20260304-r02 / TR-N1 / ncu_post_review` for the first realistic-scale train hotspot deep dive targeting `ampere_sgemm_32x32_sliced1x4_tn`.
+- actions_taken:
+  - Ran required occupancy checks: `nvidia-smi` and `nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv`.
+  - Ran `make profiling-preflight` in the `griffin-profiling` conda environment; preflight passed.
+  - Confirmed GPU3 had active compute processes attached (python PIDs `2841863`, `2842223`, `2843966`, `2845611`), so the `ncu` profiler launch was intentionally skipped per shared-host policy.
+  - Recorded the blocked `TR-N1` attempt and the exact planned hotspot-targeted `ncu` command in `profiling/CAMPAIGN_PLAN.md` and `profiling/RUNS.md`.
+- outcome: partial
+- blockers:
+  - GPU3 occupancy blocker on shared host; no profiling may run until GPU3 has no active compute process attached.
+- files_updated:
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+  - `handoff/NEXT_TASK.md`
+- next_hint: Re-run the same `TR-N1` hotspot_1 `ncu` command unchanged once GPU3 is clear; if occupancy persists, keep documenting the blocker rather than launching on another GPU.
+
+## 2026-03-18T19:46:00Z - TR-N1 launched, but ncu metric capture blocked by counter permissions
+- task_scope: Retry `gfm-20260304-r02 / TR-N1 / ncu_post_review` after GPU3 cleared, collect the first realistic-scale train hotspot deep dive, and update profiling/handoff docs.
+- actions_taken:
+  - Re-ran `nvidia-smi` and compute-app occupancy checks; GPU3 was clear.
+  - Re-ran `make profiling-preflight` in `griffin-profiling`; preflight passed.
+  - Attempted the documented wrapper form and discovered a local `ncu` CLI compatibility issue caused by the extra separator before the application command.
+  - Fixed `scripts/profile_baseline.sh` `ncu` mode to use direct `ncu [options] [program] [program-arguments]` syntax.
+  - Re-launched `TR-N1` with the corrected direct `ncu` command and kernel filter for hotspot_1; the bounded workload completed, but `ncu` emitted `ERR_NVGPUCTRPERM` and produced no `.ncu-rep` report.
+- outcome: partial
+- blockers:
+  - Host-side NVIDIA GPU performance counter permissions are disabled for the current user (`ERR_NVGPUCTRPERM`), preventing valid `ncu` metric capture.
+- files_updated:
+  - `scripts/profile_baseline.sh`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+  - `handoff/NEXT_TASK.md`
+- next_hint: Ask the system owner/operator to enable NVIDIA GPU performance counter access for this user on GPU3, then rerun `TR-N1` with the same hotspot_1 filter; command shape is now correct.
+
+## 2026-03-19T00:00:00Z - Handoff clarified for user-run sudo ncu path
+- task_scope: Reframe the `TR-N1` execution plan so a fresh agent can continue without prior conversation context.
+- actions_taken:
+  - Confirmed with the human that they do not want to change shared-host module policy or reboot the machine.
+  - Agreed on the operational path: the human will run the bounded `sudo ncu` command manually in a normal terminal session, and the next agent will analyze the resulting `.ncu-rep` artifact and update profiling docs.
+  - Updated handoff state to make the user-run privileged step explicit and remove ambiguity about whether the next agent should attempt non-sudo `ncu` again.
+- outcome: success
+- blockers:
+  - Valid `ncu` evidence still depends on the human executing the privileged `sudo ncu` command and producing an artifact.
+- files_updated:
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+  - `handoff/NEXT_TASK.md`
+- next_hint: Wait for the human to run the bounded `sudo ncu` command for `TR-N1`; once `artifacts/profiles/ncu/<run_id>.ncu-rep` exists, inspect it, record hotspot findings in `profiling/RESULTS.md`, and update all handoff docs.
