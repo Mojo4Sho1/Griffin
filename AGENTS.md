@@ -25,6 +25,13 @@ This fork exists to profile and analyze Griffin GPU execution behavior to identi
 - Keep instrumentation isolated and easy to remove.
 - Avoid broad or invasive changes during profiling setup.
 
+## Operational Efficiency
+- Work efficiently and be conscious of human/operator friction and agent context budget.
+- When a profiling workflow depends on long or repeated commands, prefer collapsing the canonical invocation into a small reusable script or wrapper instead of repeatedly expanding the full command by hand.
+- Keep wrappers auditable: they should print or otherwise preserve the fully resolved command, run ID, and key parameters so run history remains reviewable in `profiling/RUNS.md`.
+- When a new helper script or wrapper becomes part of the expected workflow, update the relevant profiling and handoff documentation in the same task so future agents can discover and use it without re-deriving command shapes.
+- Prefer changes that improve repeatability for the next profiling project as well as the current one.
+
 ## Artifact Rules
 - Keep raw profiling artifacts out of Git.
 - Store raw profiler outputs under `artifacts/profiles/`.

@@ -1145,3 +1145,22 @@ For autonomous scenario chains, include these additional lines under `actions_ta
   - `handoff/SESSION_LOG.md`
   - `handoff/NEXT_TASK.md`
 - next_hint: Wait for the human to run the bounded `sudo ncu` command for `TR-N1`; once `artifacts/profiles/ncu/<run_id>.ncu-rep` exists, inspect it, record hotspot findings in `profiling/RESULTS.md`, and update all handoff docs.
+
+## 2026-03-19T00:30:00Z - Added reusable ncu hotspot helper for human and agent workflows
+- task_scope: Reduce command friction for post-review `ncu` hotspot captures while preserving auditable run metadata and blocker history.
+- actions_taken:
+  - Added `scripts/run_ncu_hotspot.sh` as the canonical helper for realistic-scale `ncu` deep dives across `train`, `finetune`, and `inference`.
+  - Implemented built-in GPU3 occupancy checks, default `make profiling-preflight`, fresh UTC run ID generation, hotspot alias mapping, and direct `sudo ncu` launch printing/execution.
+  - Updated `profiling/COMMANDS.md`, `profiling/CAMPAIGN_PLAN.md`, `profiling/RESULTS.md`, `handoff/CURRENT_STATUS.md`, and `handoff/NEXT_TASK.md` so the helper is now the documented retry path for `TR-N1`.
+- outcome: success
+- blockers:
+  - Valid `ncu` evidence still depends on the human executing the helper in an environment where `sudo` can access NVIDIA GPU performance counters on GPU3.
+- files_updated:
+  - `scripts/run_ncu_hotspot.sh`
+  - `profiling/COMMANDS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: From `griffin-profiling`, run `scripts/run_ncu_hotspot.sh train hotspot_1`; once `artifacts/profiles/ncu/<run_id>.ncu-rep` exists, inspect it and complete the `TR-N1` results/handoff updates.

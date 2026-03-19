@@ -678,4 +678,4 @@ It is for conclusions and interpretation, not raw logs.
 - caveats:
   - No `.ncu-rep` artifact was produced, so there is no profiler evidence to interpret for hotspot behavior.
   - This is a host-permissions blocker, not a hotspot-selection, dataset, or script-path blocker.
-- next_action: Enable NVIDIA GPU performance counter access for the current user on GPU3, then rerun `TR-N1` unchanged against hotspot_1.
+- next_action: Rerun `TR-N1` against hotspot_1 with a fresh run ID via `scripts/run_ncu_hotspot.sh train hotspot_1`; this helper preserves the corrected direct `ncu` launch shape and uses `sudo` by default for the required GPU counter access path.

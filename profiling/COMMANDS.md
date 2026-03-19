@@ -323,19 +323,47 @@ Staged exception:
 - A one-time staged `ncu` tooling smoke is allowed for path validation only.
 - Mark staged exception entries as `ncu_intent: tooling_smoke`; do not treat them as optimization-prioritization evidence.
 
+Preferred wrapper:
+```bash
+conda activate griffin-profiling
+scripts/run_ncu_hotspot.sh <train|finetune|inference> <hotspot_1|hotspot_2|hotspot_3> [--run-id <run_id>] [--print-only]
+```
+
+Wrapper behavior:
+- Generates a fresh UTC run ID automatically when `--run-id` is omitted.
+- Runs the required GPU3 occupancy checks and blocks if GPU3 is busy.
+- Runs `make profiling-preflight` by default before launch.
+- Prints the fully resolved `sudo env CUDA_VISIBLE_DEVICES=3 ncu ...` command before execution for auditability.
+- Uses `sudo` by default because this host requires elevated access for valid Nsight Compute counter collection; use `--no-sudo` only if GPU counter permissions are already available without sudo.
+- Accepts either approved hotspot aliases (`hotspot_1`, `hotspot_2`, `hotspot_3`) or a raw kernel name/regex fragment.
+
+Current realistic-scale train retry (`TR-N1`, hotspot_1):
+```bash
+conda activate griffin-profiling
+scripts/run_ncu_hotspot.sh train hotspot_1
+```
+
+Print the exact command without launching:
+```bash
+conda activate griffin-profiling
+scripts/run_ncu_hotspot.sh train hotspot_1 --print-only
+```
+
+Direct command shape remains valid when manual control is needed.
+
 Train:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh ncu <YYYYMMDD-HHMM-train-completion-hotspot-01> hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-hotspot-ncu -- --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+sudo env PATH="$PATH" CUDA_VISIBLE_DEVICES=3 ncu -k regex:<kernel_name> --kernel-name-base function --set full --export artifacts/profiles/ncu/<YYYYMMDD-HHMM-train-completion-01> --target-processes all accelerate launch --config_file hconfig_profiling_single_gpu.yaml hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-hotspot-ncu --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 Finetune:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh ncu <YYYYMMDD-HHMM-finetune-combine-hotspot-01> hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof finetune-hotspot-ncu -- --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+sudo env PATH="$PATH" CUDA_VISIBLE_DEVICES=3 ncu -k regex:<kernel_name> --kernel-name-base function --set full --export artifacts/profiles/ncu/<YYYYMMDD-HHMM-finetune-combine-01> --target-processes all accelerate launch --config_file hconfig_profiling_single_gpu.yaml hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof finetune-hotspot-ncu --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 Inference:
 ```bash
-CUDA_VISIBLE_DEVICES=3 scripts/profile_baseline.sh ncu <YYYYMMDD-HHMM-inference-combine-hotspot-01> hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof inference-hotspot-ncu -- --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --max_eval_steps 4 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+sudo env PATH="$PATH" CUDA_VISIBLE_DEVICES=3 ncu -k regex:<kernel_name> --kernel-name-base function --set full --export artifacts/profiles/ncu/<YYYYMMDD-HHMM-inference-combine-01> --target-processes all accelerate launch --config_file hconfig_profiling_single_gpu.yaml hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof inference-hotspot-ncu --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --max_eval_steps 4 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
 ## Preflight Command Snippets

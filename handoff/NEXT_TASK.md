@@ -2,7 +2,7 @@
 # Next Task
 
 ## Single Bounded Task
-Complete `gfm-20260304-r02 / TR-N1 / ncu_post_review` via user-run privileged execution and post-run analysis — the human operator should run the bounded `sudo ncu` hotspot capture for hotspot_1 (`ampere_sgemm_32x32_sliced1x4_tn`) in the `train` scenario, then the next agent should analyze the produced artifact and finish the documentation updates.
+Complete `gfm-20260304-r02 / TR-N1 / ncu_post_review` via user-run privileged execution and post-run analysis — the human operator should run the bounded hotspot capture for hotspot_1 (`ampere_sgemm_32x32_sliced1x4_tn`) in the `train` scenario with a fresh run ID via `scripts/run_ncu_hotspot.sh`, then the next agent should analyze the produced artifact and finish the documentation updates.
 - next_action: `continue_scenario`
 
 ## Why This Is Immediate Priority
@@ -24,6 +24,7 @@ Complete `gfm-20260304-r02 / TR-N1 / ncu_post_review` via user-run privileged ex
 - Run `make profiling-preflight` in the `griffin-profiling` conda environment.
 - Human operator runs one realistic-scale bounded `sudo ncu` capture targeting `ampere_sgemm_32x32_sliced1x4_tn` in the train scenario.
 - Preferred command shape is direct `ncu [options] [program] [program-arguments]` form, not the older wrapper form with an extra `--`.
+- Preferred invocation path is now `scripts/run_ncu_hotspot.sh train hotspot_1`, which performs occupancy checks, runs preflight, generates a fresh UTC run ID when omitted, prints the fully resolved command, and launches the bounded `sudo ncu` capture.
 - Use `--kernel-name ampere_sgemm_32x32_sliced1x4_tn` (or equivalent filter) and appropriate metric sets (e.g. `--set full` or `--metrics sm__throughput,l1tex__throughput,dram__throughput,sm__warps_active`).
 - After the run completes, the next agent must:
   - inspect the resulting `.ncu-rep` artifact
@@ -32,12 +33,23 @@ Complete `gfm-20260304-r02 / TR-N1 / ncu_post_review` via user-run privileged ex
   - update `handoff/CURRENT_STATUS.md` ncu_success counters if the run is valid
   - append to `handoff/SESSION_LOG.md` and rotate `handoff/NEXT_TASK.md`
 
-## Canonical Manual Command
+## Canonical Wrapper Command
 ```bash
-sudo CUDA_VISIBLE_DEVICES=3 ncu -k regex:ampere_sgemm_32x32_sliced1x4_tn --kernel-name-base function --set full --export artifacts/profiles/ncu/20260318-1946-train-completion-01 --target-processes all accelerate launch --config_file hconfig_profiling_single_gpu.yaml hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-hotspot-ncu --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+conda activate griffin-profiling
+scripts/run_ncu_hotspot.sh train hotspot_1
 ```
 
-If the human prefers a fresh run ID, the next agent may substitute a new canonical run ID and must then update all docs consistently.
+The helper generates a fresh UTC run ID automatically. If the human prefers to pin one explicitly, use:
+
+```bash
+conda activate griffin-profiling
+scripts/run_ncu_hotspot.sh train hotspot_1 --run-id 20260319-<HHMM>-train-completion-01
+```
+
+## Direct Command Shape (Reference)
+```bash
+sudo env PATH="$PATH" CUDA_VISIBLE_DEVICES=3 ncu -k regex:ampere_sgemm_32x32_sliced1x4_tn --kernel-name-base function --set full --export artifacts/profiles/ncu/<run_id> --target-processes all accelerate launch --config_file hconfig_profiling_single_gpu.yaml hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-hotspot-ncu --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+```
 
 ## next_action Contract
 - `continue_scenario`: current state; use while planning and executing ncu runs within this ncu scenario.
