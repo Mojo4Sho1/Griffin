@@ -1,9 +1,9 @@
 # Current Status
 
 ## Snapshot
-- Date: 2026-03-18 (UTC)
+- Date: 2026-03-24 (UTC)
 - Branch: `main-public`
-- Commit: `44a2c99`
+- Commit: `104115b6bd5f`
 - Profiling effort phase: Baseline validation gates (Phases 4a/4b/4c), Phase 5 (`steady_unannotated` representativeness), Phase 6 (`coarse` NVTX insertion), Phase 7 (`steady_annotated` capture execution), Phase 8 (`review_gate`), and Phase 3b autonomous slice-chaining validation are complete; realistic-scale policy is `realistic-v2` (single-agent full-scenario multi-slice `nsys` chains) with fixed-resume checkpointless inference continuation now validated; cross-scenario realistic review `RV-R2` is complete with decision PASS and `ncu_allowed=true`; approved hotspot shortlist is recorded in `gfm-20260304-r02-realistic-review-gate-01`.
 - Tooling snapshot:
   - `nsys`: `/usr/local/bin/nsys` (version `2023.4.4.54-234433681190v0`)
@@ -12,6 +12,10 @@
   - `conda`: `/home/jxc02713/miniconda3/bin/conda` (version `25.3.1`; `griffin-profiling` activation now works)
   - `accelerate`: available in `griffin-profiling`
   - `torch_geometric`: available in `griffin-profiling` (import verified)
+  - `ncu` derived-bundle generator: `scripts/analyze_ncu_run.py`
+  - `ncu` SQLite query library: `profiling/sql/manual_queries_ncu.sql`
+  - notebook review surface: `profiling/notebooks/ncu_sqlite_review.ipynb`
+  - `ncu` coverage tracker: `profiling/NCU_COVERAGE.md`
 
 ## Campaign Counters (`gfm-20260303-r01`, `run_class=minimal_staged`)
 - baseline_nsys_success:
@@ -48,11 +52,11 @@
   - finetune: 0
   - inference: 0
 - ncu_success:
-  - train: 0
+  - train: 1
   - finetune: 0
   - inference: 0
 - counter_interpretation:
-  - `realistic_scale.ncu_success` will increase after realistic-scale `ncu` runs execute against the approved hotspot shortlist.
+  - `realistic_scale.ncu_success.train=1` now reflects the successful privileged `TR-N1` hotspot_1 capture `20260319-1514-train-completion-01`.
   - Realistic-scale `ncu` is now allowed (`ncu_allowed=true`); approved hotspot shortlist is in `gfm-20260304-r02-realistic-review-gate-01`.
   - Realistic-scale `ncu` remains the default source of optimization-oriented deep-dive evidence.
 
@@ -266,14 +270,17 @@
   - `IF-B1` realistic metadata state is now `execution_policy_version=realistic-v2`, `legacy_policy_evidence=false`, `slice_size_tier=8/4`, `scenario_completion_state=complete`.
   - `gfm-20260304-r02 / RV-R2` cross-scenario realistic review is complete with decision PASS (`gfm-20260304-r02-realistic-review-gate-01`); `realistic_cross_scenario_review_complete=true`, `ncu_allowed=true`.
   - Approved hotspot shortlist for realistic-scale `ncu`: (1) `ampere_sgemm_32x32_sliced1x4_tn` (~30-32%), (2) `fmha_cutlassF_f32_aligned_64x64_rf_sm80` (~12.5-13%), (3) `ampere_sgemm_32x128_tn` (~9.3-9.8%); all three confirmed stable and present across TR-B1, FT-B1, and IF-B1.
-  - `gfm-20260304-r02 / TR-N1 / ncu_post_review` cleared the earlier GPU3 occupancy blocker and launched on `2026-03-18`, but valid `ncu` capture is now blocked by host-side NVIDIA GPU performance counter permissions: direct `ncu` launch for `20260318-1946-train-completion-01` emitted `ERR_NVGPUCTRPERM` and produced no `.ncu-rep` artifact.
-  - Dedicated post-review hotspot helper `scripts/run_ncu_hotspot.sh` now exists for realistic-scale `ncu` retries. It performs the required GPU3 occupancy checks, runs `make profiling-preflight`, generates a fresh UTC run ID by default, prints the fully resolved command, and launches the bounded `sudo ncu` capture with scenario-specific arguments.
-  - Current agreed execution plan: the human operator will run `scripts/run_ncu_hotspot.sh train hotspot_1` from the activated `griffin-profiling` environment in their own terminal (no reboot/module-policy change), then the next agent should inspect the produced `.ncu-rep` artifact and complete results/handoff updates.
+  - `gfm-20260304-r02 / TR-N1 / ncu_post_review` remains the canonical validation artifact: `20260319-1514-train-completion-01` produced a valid but oversized legacy `7.8G` `ncu` report under user-run `sudo` using historical `--set full` with no launch cap.
+  - On `2026-03-24`, the upgraded `python scripts/analyze_ncu_run.py --run-id 20260319-1514-train-completion-01` workflow completed in `tmux` with no default import timeout and produced a clean derived bundle at `artifacts/profiles/analysis/20260319-1514-train-completion-01/`, including `ncu_analysis.sqlite`, `ncu_summary.md`, `ncu_metrics.json`, `ncu_progress.log`, and stable section sidecars under `sections/` for all eight core Nsight Compute views.
+  - Resume validation is now proven: after interrupting the re-analysis mid-run, the next launch reused completed `session`, `LaunchStats`, and `Occupancy` sidecars and resumed at the next missing section instead of redoing completed work.
+  - Core import timings on the legacy `TR-N1` report are now recorded from the no-timeout validation runs: `LaunchStats ~162s`, `SchedulerStats ~157s`, `WarpStateStats ~150s`, `ComputeWorkloadAnalysis ~148s`, `MemoryWorkloadAnalysis ~151s`, `SpeedOfLight ~167s`, and `WorkloadDistribution ~155s`.
+  - Dedicated post-review hotspot helper `scripts/run_ncu_hotspot.sh` now defaults future capture policy to `core + cap` (`--sections-profile core`, `--launch-count 5`); tooling-smoke validation should generally use `--launch-count 1`, and `--set full` is explicit escalation only.
+  - Long-running privileged `ncu` captures and large post-capture `ncu --import` analysis jobs must now default to a user-started `tmux` session: the human owns `tmux` session creation and `sudo` entry for capture, then detaches; the agent or human can monitor with `tmux capture-pane` or reattach with `tmux attach`.
 - Optimization/recommendation policy surface:
   - Optimization recommendations require both `review_complete=true` and explicit `optimization_discussion_allowed=true`; `optimization_discussion_allowed` remains `false` pending `ncu` evidence.
   - Realistic-scale `ncu` is now allowed (`ncu_allowed=true`) and should target the approved hotspot shortlist.
   - `targeted_fine_allowed=false`; NVTX label expansion remains prohibited until a later review explicitly approves hotspot focus after `ncu` evidence is in hand.
-  - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields.
+  - Analysis bundle policy: every new successful `nsys` run must include `artifacts/profiles/analysis/<run_id>/` and corresponding `profiling/RUNS.md` metadata fields; successful `ncu` runs should now generate a derived SQLite bundle via `python scripts/analyze_ncu_run.py --run-id <run_id>`, with no default import timeout, atomic section sidecars, and resumable reruns.
 - Canonical smoke and `nsys` commands are executable end-to-end for bounded `train`, `finetune`, and `inference` baseline-validation slices, and `nsys` emits `.nsys-rep`.
-- Remaining uncertainty: no unresolved environment or command-shape issue is blocking realistic-scale `ncu`; the remaining blocker is host-side GPU performance counter access (`ERR_NVGPUCTRPERM`) for non-sudo runs. The current plan is not to change host policy; instead, the human will execute the bounded hotspot helper `scripts/run_ncu_hotspot.sh` (which uses `sudo` by default) and hand off the resulting artifact for analysis.
+- Remaining uncertainty: no unresolved environment or command-shape issue is blocking realistic-scale `ncu`; the main operational risk is operator over-collection if future runs fall back to legacy `--set full` without a launch cap. The current notebook now executes cleanly against the upgraded `TR-N1` bundle and surfaces structured capture health, launch/occupancy, compute-vs-memory, WorkloadDistribution, scheduler/warp, per-launch distribution, and guidance-card views for the core sections; the remaining below-parity gap is now source/instruction-level pages plus broader roofline/source UI parity.
 - NCU transition interpretation (staged optional tooling smoke vs realistic default deep-dive path) is canonical in `profiling/SCALE_PROFILES.md` under `NCU Transition Policy`.

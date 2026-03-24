@@ -665,17 +665,20 @@ It is for conclusions and interpretation, not raw logs.
 - campaign_id: gfm-20260304-r02
 - scenario: train
 - profile_stage: ncu_post_review
-- date_time_utc: 2026-03-18T19:46:00Z
+- date_time_utc: 2026-03-19T18:55:37Z
 - related_runs:
+  - 20260319-1514-train-completion-01
   - 20260318-1946-train-completion-01
   - 20260312-1537-trb1-realistic-20260312a-s03
 - hotspot_id: hotspot_1
-- summary: TR-N1 was relaunched successfully after GPU3 cleared and the local `ncu` command shape was corrected, but no valid Nsight Compute report was generated. The profiler emitted `ERR_NVGPUCTRPERM` when attempting to access GPU performance counters, so this run does not yet provide usable hotspot metrics for `ampere_sgemm_32x32_sliced1x4_tn`.
+- summary: `TR-N1` now has both a valid realistic-scale `ncu` artifact and a validated upgraded derived bundle for `20260319-1514-train-completion-01`. The March 19 rerun under `sudo` produced a valid but oversized `7.8G` legacy report (`--set full` with no launch cap), and the March 24 no-timeout `tmux` re-analysis completed the original seven core section imports, proved resumable reuse after interruption, then added `WorkloadDistribution` as the new eighth core section and executed the review notebook successfully. First-pass analysis still indicates the hotspot is not blocked by permissions or command shape; the dominant signals remain low launch waves and low scheduler eligibility.
 - kernel_findings:
-  - No kernel metrics were collected because host-side NVIDIA GPU performance counter access is disabled for the current user.
-  - The bounded train workload itself completed under the direct `ncu` launch path, which confirms command/runtime viability once counter permissions are enabled.
-- confidence: high
+  - The derived bundle at `artifacts/profiles/analysis/20260319-1514-train-completion-01/` now contains a searchable SQLite database (`ncu_analysis.sqlite`), summary markdown, metrics JSON, stable core section sidecars under `sections/`, and a progress log for long-running imports.
+  - The no-timeout validation run completed `LaunchStats`, `Occupancy`, `SchedulerStats`, `WarpStateStats`, `ComputeWorkloadAnalysis`, `MemoryWorkloadAnalysis`, and `SpeedOfLight`, and the resumed rerun reused completed `session`, `LaunchStats`, and `Occupancy` outputs without recomputing them before the follow-on `WorkloadDistribution` import.
+  - Derived rule metrics still show average `full_waves=0.617`, `issue_every_cycles=3.314`, `active_warps_per_scheduler=1.838`, and `eligible_warps_per_cycle=0.387`, reinforcing an underfilled / low-eligibility first-pass bottleneck signature. The new `WorkloadDistribution` view adds hierarchy context with active/elapsed ratios of roughly `L2 1.003%`, `DRAM 0.946%`, `L1/SM 0.553%`, and `SMSP 0.134%`.
+- confidence: medium
 - caveats:
-  - No `.ncu-rep` artifact was produced, so there is no profiler evidence to interpret for hotspot behavior.
-  - This is a host-permissions blocker, not a hotspot-selection, dataset, or script-path blocker.
-- next_action: Rerun `TR-N1` against hotspot_1 with a fresh run ID via `scripts/run_ncu_hotspot.sh train hotspot_1`; this helper preserves the corrected direct `ncu` launch shape and uses `sudo` by default for the required GPU counter access path.
+  - The `7.8G` report is now explicitly treated as a legacy oversized capture caused by historical `--set full` with no launch cap; it is valid evidence, but not the preferred default report shape for future hotspot work.
+  - The current notebook executes cleanly against the upgraded bundle and now surfaces structured launch/occupancy, compute-vs-memory, WorkloadDistribution, scheduler/warp, per-launch distribution, and guidance-card views for the imported core sections, but it still remains below full Nsight UI parity.
+  - These findings are intentionally descriptive only; optimization recommendations remain gated until the team decides the current `ncu` evidence is sufficient for strategy discussion.
+- next_action: Resume `gfm-20260304-r02 / TR-N2 / ncu_post_review` for hotspot_2 (`fmha_cutlassF_f32_aligned_64x64_rf_sm80`) now that the `TR-N1` bundle upgrade is validated; default to the user-started `tmux` workflow with `scripts/run_ncu_hotspot.sh train hotspot_2` (`core + cap`, `launch-count=5`), and use `--launch-count 1` for any explicit `ncu_intent: tooling_smoke` preflight.

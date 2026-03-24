@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  cat <<'EOF'
+  cat <<'USAGE'
 Usage:
   scripts/run_ncu_hotspot.sh <scenario> <hotspot> [options]
 
@@ -18,20 +18,72 @@ Hotspots:
   <kernel_name>   Raw kernel name/regex fragment if needed
 
 Options:
-  --run-id <id>        Override the auto-generated UTC run ID.
-  --set <set_name>     Nsight Compute set to collect (default: full).
-  --metrics <csv>      Explicit metrics list to collect instead of --set.
-  --no-sudo            Launch without sudo (useful only when counters are already accessible).
-  --skip-preflight     Skip `make profiling-preflight`.
-  --print-only         Print the resolved command after checks but do not launch it.
-  -h, --help           Show this help text.
+  --run-id <id>             Override the auto-generated UTC run ID.
+  --sections-profile <id>   Section profile to collect (default: core).
+  --set <set_name>          Explicit Nsight Compute set to collect instead of section-profile mode.
+  --metrics <csv>           Explicit metrics list to collect instead of section-profile mode.
+  --launch-count <n>        Limit matched launches collected (default: 5).
+  --launch-skip <n>         Skip matched launches before collecting.
+  --no-sudo                 Launch without sudo (useful only when counters are already accessible).
+  --skip-preflight          Skip `make profiling-preflight`.
+  --print-only              Print the resolved command after checks but do not launch it.
+  -h, --help                Show this help text.
 
 Examples:
   conda activate griffin-profiling
   scripts/run_ncu_hotspot.sh train hotspot_1
-  scripts/run_ncu_hotspot.sh finetune hotspot_2 --print-only
+  scripts/run_ncu_hotspot.sh train hotspot_1 --launch-count 1 --print-only
+  scripts/run_ncu_hotspot.sh finetune hotspot_2 --set full
   scripts/run_ncu_hotspot.sh inference fmha_cutlassF_f32_aligned_64x64_rf_sm80 --run-id 20260319-2140-inference-combine-01
-EOF
+USAGE
+}
+
+resolve_hotspot_kernel() {
+  case "$1" in
+    hotspot_1)
+      printf '%s\n' "ampere_sgemm_32x32_sliced1x4_tn"
+      ;;
+    hotspot_2)
+      printf '%s\n' "fmha_cutlassF_f32_aligned_64x64_rf_sm80"
+      ;;
+    hotspot_3)
+      printf '%s\n' "ampere_sgemm_32x128_tn"
+      ;;
+    *)
+      printf '%s\n' "$1"
+      ;;
+  esac
+}
+
+resolve_sections_profile() {
+  local profile="$1"
+  case "$profile" in
+    core)
+      printf '%s\n' \
+        "LaunchStats" \
+        "Occupancy" \
+        "SchedulerStats" \
+        "WarpStateStats" \
+        "ComputeWorkloadAnalysis" \
+        "MemoryWorkloadAnalysis" \
+        "SpeedOfLight" \
+        "WorkloadDistribution"
+      ;;
+    basic)
+      printf '%s\n' \
+        "LaunchStats" \
+        "Occupancy" \
+        "SpeedOfLight" \
+        "WorkloadDistribution"
+      ;;
+    *,*)
+      printf '%s\n' "$profile" | tr ',' '\n' | sed '/^$/d'
+      ;;
+    *)
+      echo "error: unknown sections profile '$profile' (expected core, basic, or a comma-separated list of section identifiers)" >&2
+      exit 2
+      ;;
+  esac
 }
 
 if [[ $# -gt 0 ]]; then
@@ -53,8 +105,12 @@ HOTSPOT_INPUT="$2"
 shift 2
 
 RUN_ID=""
-METRIC_MODE="set"
-METRIC_VALUE="full"
+COLLECT_MODE="sections"
+COLLECT_MODE_EXPLICIT=0
+SECTIONS_PROFILE="core"
+COLLECT_VALUE=""
+LAUNCH_COUNT=5
+LAUNCH_SKIP=""
 USE_SUDO=1
 SKIP_PREFLIGHT=0
 PRINT_ONLY=0
@@ -65,22 +121,42 @@ while [[ $# -gt 0 ]]; do
       RUN_ID="$2"
       shift 2
       ;;
-    --set)
-      if [[ "$METRIC_MODE" == "metrics" ]]; then
-        echo "error: --set and --metrics are mutually exclusive" >&2
+    --sections-profile)
+      if [[ "$COLLECT_MODE_EXPLICIT" -eq 1 && "$COLLECT_MODE" != "sections" ]]; then
+        echo "error: --sections-profile is mutually exclusive with --set and --metrics" >&2
         exit 2
       fi
-      METRIC_MODE="set"
-      METRIC_VALUE="$2"
+      COLLECT_MODE="sections"
+      COLLECT_MODE_EXPLICIT=1
+      SECTIONS_PROFILE="$2"
+      shift 2
+      ;;
+    --set)
+      if [[ "$COLLECT_MODE_EXPLICIT" -eq 1 && "$COLLECT_MODE" != "set" ]]; then
+        echo "error: --set is mutually exclusive with --sections-profile and --metrics" >&2
+        exit 2
+      fi
+      COLLECT_MODE="set"
+      COLLECT_MODE_EXPLICIT=1
+      COLLECT_VALUE="$2"
       shift 2
       ;;
     --metrics)
-      if [[ "$METRIC_MODE" == "set" && "$METRIC_VALUE" != "full" ]]; then
-        echo "error: --set and --metrics are mutually exclusive" >&2
+      if [[ "$COLLECT_MODE_EXPLICIT" -eq 1 && "$COLLECT_MODE" != "metrics" ]]; then
+        echo "error: --metrics is mutually exclusive with --sections-profile and --set" >&2
         exit 2
       fi
-      METRIC_MODE="metrics"
-      METRIC_VALUE="$2"
+      COLLECT_MODE="metrics"
+      COLLECT_MODE_EXPLICIT=1
+      COLLECT_VALUE="$2"
+      shift 2
+      ;;
+    --launch-count)
+      LAUNCH_COUNT="$2"
+      shift 2
+      ;;
+    --launch-skip)
+      LAUNCH_SKIP="$2"
       shift 2
       ;;
     --no-sudo)
@@ -106,23 +182,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-resolve_hotspot_kernel() {
-  case "$1" in
-    hotspot_1)
-      printf '%s\n' "ampere_sgemm_32x32_sliced1x4_tn"
-      ;;
-    hotspot_2)
-      printf '%s\n' "fmha_cutlassF_f32_aligned_64x64_rf_sm80"
-      ;;
-    hotspot_3)
-      printf '%s\n' "ampere_sgemm_32x128_tn"
-      ;;
-    *)
-      printf '%s\n' "$1"
-      ;;
-  esac
-}
 
 HOTSPOT_KERNEL="$(resolve_hotspot_kernel "$HOTSPOT_INPUT")"
 CONFIG_FILE="${CONFIG_FILE:-hconfig_profiling_single_gpu.yaml}"
@@ -244,12 +303,26 @@ if [[ "$SKIP_PREFLIGHT" -eq 0 ]]; then
   make profiling-preflight
 fi
 
-NCU_CMD=(ncu -k "regex:${HOTSPOT_KERNEL}" --kernel-name-base function)
-if [[ "$METRIC_MODE" == "set" ]]; then
-  NCU_CMD+=(--set "$METRIC_VALUE")
-else
-  NCU_CMD+=(--metrics "$METRIC_VALUE")
+NCU_CMD=(ncu -k "regex:${HOTSPOT_KERNEL}" --kernel-name-base function -c "$LAUNCH_COUNT")
+if [[ -n "$LAUNCH_SKIP" ]]; then
+  NCU_CMD+=(-s "$LAUNCH_SKIP")
 fi
+
+case "$COLLECT_MODE" in
+  sections)
+    mapfile -t SECTION_IDS < <(resolve_sections_profile "$SECTIONS_PROFILE")
+    for section_id in "${SECTION_IDS[@]}"; do
+      NCU_CMD+=(--section "$section_id")
+    done
+    ;;
+  set)
+    NCU_CMD+=(--set "$COLLECT_VALUE")
+    ;;
+  metrics)
+    NCU_CMD+=(--metrics "$COLLECT_VALUE")
+    ;;
+esac
+
 NCU_CMD+=(
   --export "artifacts/profiles/ncu/$RUN_ID"
   --target-processes all
@@ -270,17 +343,35 @@ if [[ "$USE_SUDO" -eq 1 ]]; then
   fi
   CMD+=("CUDA_VISIBLE_DEVICES=$GPU_INDEX")
 else
-  CMD=("env" "CUDA_VISIBLE_DEVICES=$GPU_INDEX")
+  CMD=(env "CUDA_VISIBLE_DEVICES=$GPU_INDEX")
 fi
 CMD+=("${NCU_CMD[@]}")
 
 echo "Resolved run metadata:"
-echo "  scenario: $SCENARIO"
-echo "  hotspot:  $HOTSPOT_INPUT"
-echo "  kernel:   $HOTSPOT_KERNEL"
-echo "  run_id:   $RUN_ID"
-echo "  output:   artifacts/profiles/ncu/$RUN_ID.ncu-rep"
+echo "  scenario:         $SCENARIO"
+echo "  hotspot:          $HOTSPOT_INPUT"
+echo "  kernel:           $HOTSPOT_KERNEL"
+echo "  run_id:           $RUN_ID"
+echo "  output:           artifacts/profiles/ncu/$RUN_ID.ncu-rep"
+echo "  launch_count:     $LAUNCH_COUNT"
+echo "  launch_skip:      ${LAUNCH_SKIP:-0}"
+case "$COLLECT_MODE" in
+  sections)
+    echo "  collect_mode:     sections_profile"
+    echo "  sections_profile: $SECTIONS_PROFILE"
+    printf '  sections:         %s\n' "$(printf '%s,' "${SECTION_IDS[@]}" | sed 's/,$//')"
+    ;;
+  set)
+    echo "  collect_mode:     set"
+    echo "  set:              $COLLECT_VALUE"
+    ;;
+  metrics)
+    echo "  collect_mode:     metrics"
+    echo "  metrics:          $COLLECT_VALUE"
+    ;;
+esac
 echo
+
 echo "Resolved command:"
 printf '%q ' "${CMD[@]}"
 echo

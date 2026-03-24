@@ -1164,3 +1164,127 @@ For autonomous scenario chains, include these additional lines under `actions_ta
   - `handoff/NEXT_TASK.md`
   - `handoff/SESSION_LOG.md`
 - next_hint: From `griffin-profiling`, run `scripts/run_ncu_hotspot.sh train hotspot_1`; once `artifacts/profiles/ncu/<run_id>.ncu-rep` exists, inspect it and complete the `TR-N1` results/handoff updates.
+
+## 2026-03-23T19:45:00Z - TR-N1 successful ncu artifact recorded and tmux workflow formalized
+- task_scope: Inspect the successful privileged `TR-N1` `ncu` artifact, convert it into first-pass documented hotspot evidence, and harden the future user/agent `tmux` workflow.
+- actions_taken:
+  - Confirmed `artifacts/profiles/ncu/20260319-1514-train-completion-01.ncu-rep` exists (`7.8G`) and paired it with the new hotspot event file under `logs/prof/train-hotspot-ncu/`.
+  - Attempted terminal-side `ncu --import` analysis; full CLI import/export remained expensive on this host and exceeded a `120s` timeout with no CSV output.
+  - Extracted first-pass findings from embedded report strings and Nsight rule text instead: hotspot_1 report sections are present, launch waves are small (`0.7` full waves), and scheduler eligibility is low (`2.02` active warps/scheduler`, `0.54` eligible warps/cycle`, one issue every `2.4` cycles).
+  - Updated campaign/results/handoff docs so `TR-N1` is now marked complete, `realistic_scale.ncu_success.train=1`, and the next task advances to hotspot_2.
+  - Formalized the user-started `tmux` pattern for future privileged `ncu` runs: user creates the attached session and handles `sudo`, then detaches; agent or human monitors with `tmux capture-pane` / `tmux attach`.
+- outcome: success
+- blockers:
+  - Full terminal-side import/export of large evidence-grade `.ncu-rep` files is still slow on this host; first-pass analysis may need to rely on partial import or UI/manual inspection unless a lighter reporting/export path is adopted.
+- files_updated:
+  - `profiling/COMMANDS.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Use the documented user-started `tmux` workflow for `scripts/run_ncu_hotspot.sh train hotspot_2`; if the user wants a shorter confidence-building pass first, record it explicitly as `ncu_intent: tooling_smoke` before the full evidence-grade run.
+
+## 2026-03-23T20:35:00Z - NCU SQLite bundle and notebook workflow implemented
+- task_scope: Implement a reusable `ncu` analysis workflow with a derived SQLite bundle, SQL queries, and notebook-first review surface.
+- actions_taken:
+  - Added `scripts/analyze_ncu_run.py` to generate `ncu_analysis.sqlite`, `ncu_summary.md`, `ncu_metrics.json`, metadata, and sidecar extracts under `artifacts/profiles/analysis/<run_id>/`.
+  - Added `profiling/sql/manual_queries_ncu.sql` as the reusable query library for derived `ncu` bundles.
+  - Added `profiling/notebooks/ncu_sqlite_review.ipynb` as the notebook-first review surface for `ncu` analysis.
+  - Ran the new analyzer on `20260319-1514-train-completion-01`; session-page import succeeded in about `45s`, `details`/`raw` timed out at `60s`, and the resulting SQLite bundle is queryable with derived metrics for hotspot_1.
+  - Updated profiling + handoff docs so successful `ncu` runs now default to generating a derived SQLite bundle before final write-up, and the next-task instructions for `TR-N2` now include `python scripts/analyze_ncu_run.py --run-id <run_id>`.
+- outcome: success
+- blockers:
+  - Large `ncu` reports can still exceed practical `details`/`raw` import times on this host, so first-pass bundles may rely on session CSV plus embedded-string extraction until a lighter export strategy is added.
+- files_updated:
+  - `environment.yml`
+  - `scripts/analyze_ncu_run.py`
+  - `profiling/sql/manual_queries_ncu.sql`
+  - `profiling/notebooks/ncu_sqlite_review.ipynb`
+  - `profiling/COMMANDS.md`
+  - `profiling/MANUAL_ANALYSIS.md`
+  - `profiling/_PROFILING_GUIDE.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: After the next successful `ncu` capture, immediately run `python scripts/analyze_ncu_run.py --run-id <run_id>` and review the resulting SQLite bundle with `profiling/sql/manual_queries_ncu.sql` and `profiling/notebooks/ncu_sqlite_review.ipynb` before updating `profiling/RESULTS.md`.
+
+## 2026-03-24T18:12:04Z - TR-N1 no-timeout re-analysis validated and NCU defaults shifted to core-plus-cap
+- task_scope: Finish the `TR-N1` Nsight Compute analysis-workflow upgrade, validate the resumable no-timeout import path, and update documentation before resuming `TR-N2`.
+- actions_taken:
+  - Reworked `scripts/analyze_ncu_run.py` to default to no import timeout, write atomic section sidecars, reuse completed imports on rerun, and expand the SQLite bundle with structured core-section data.
+  - Reworked `scripts/run_ncu_hotspot.sh` so future hotspot capture defaults to `core + cap` (`--sections-profile core`, `--launch-count 5`) while keeping `--set full` as an explicit escalation path.
+  - Validated `TR-N1` in detached `tmux`: interrupted the first no-timeout re-analysis after completed sections, relaunched it, and confirmed the rerun reused `session`, `LaunchStats`, and `Occupancy` before completing the remaining core sections.
+  - Executed `profiling/notebooks/ncu_sqlite_review.ipynb` top-to-bottom with `jupyter nbconvert` in `griffin-profiling` and added `profiling/NCU_COVERAGE.md` as the dedicated coverage tracker.
+  - Updated profiling and handoff docs so `TR-N2` resumes with the new `core + cap` default and long `ncu` import jobs are documented as `tmux`-first and no-timeout by default.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `scripts/analyze_ncu_run.py`
+  - `scripts/run_ncu_hotspot.sh`
+  - `profiling/sql/manual_queries_ncu.sql`
+  - `profiling/notebooks/ncu_sqlite_review.ipynb`
+  - `profiling/NCU_COVERAGE.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/MANUAL_ANALYSIS.md`
+  - `profiling/_PROFILING_GUIDE.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/CHECKLIST.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: Resume `gfm-20260304-r02 / TR-N2 / ncu_post_review` with `scripts/run_ncu_hotspot.sh train hotspot_2`; keep the default `core + cap` capture path unless the run record explicitly justifies escalation.
+
+## 2026-03-24T18:39:13Z - NCU notebook upgraded to structured core-section review
+- task_scope: Turn the Nsight Compute gap list into a concrete upgrade checklist and implement the missing notebook views before commit.
+- actions_taken:
+  - Rebuilt `profiling/notebooks/ncu_sqlite_review.ipynb` around the structured SQLite section tables instead of relying mainly on string-derived rule parsing.
+  - Added capture-health, kernel-scope, launch/occupancy, compute-vs-memory, scheduler/warp, per-launch distribution, guidance-card, guided-interpretation, and coverage-gap sections to the notebook.
+  - Added a notebook-upgrade checklist and refreshed section-status wording in `profiling/NCU_COVERAGE.md`, `profiling/RESULTS.md`, and `handoff/CURRENT_STATUS.md`.
+  - Executed the upgraded notebook end-to-end with `jupyter nbconvert --to notebook --execute profiling/notebooks/ncu_sqlite_review.ipynb --output /tmp/ncu_sqlite_review.executed.ipynb` and confirmed success.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `profiling/notebooks/ncu_sqlite_review.ipynb`
+  - `profiling/NCU_COVERAGE.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: The notebook now covers the structured core sections well enough to proceed with commit preparation and then resume `TR-N2`; the main remaining scope-expansion candidate is `WorkloadDistribution`.
+
+## 2026-03-24T21:28:45Z - WorkloadDistribution promoted into the default NCU core review flow
+- task_scope: Add `WorkloadDistribution` to the default Nsight Compute core profile, validate it on `TR-N1`, and extend the notebook/docs before commit preparation.
+- actions_taken:
+  - Added `WorkloadDistribution` to the analyzer `core` profile, embedded-section tracking, and the hotspot wrapper's default `--sections-profile core` output.
+  - Re-ran `python scripts/analyze_ncu_run.py --run-id 20260319-1514-train-completion-01` in detached `tmux`, confirmed reuse of the prior seven sidecars, and imported only the new `WorkloadDistribution` section in `154.785s`.
+  - Patched `safe_float` in `scripts/analyze_ncu_run.py` so comma-separated cycle values ingest into `numeric_metric_summaries` and sampled-launch views instead of remaining text-only.
+  - Expanded `profiling/notebooks/ncu_sqlite_review.ipynb` with a dedicated `GPU and Memory Workload Distribution` section, derived active/elapsed ratio tables/charts, updated per-launch distributions, refreshed guided interpretation, and updated coverage reporting.
+  - Added WorkloadDistribution-specific ratio/cycle queries to `profiling/sql/manual_queries_ncu.sql` and refreshed `profiling/NCU_COVERAGE.md`, `profiling/COMMANDS.md`, `profiling/_PROFILING_GUIDE.md`, `profiling/RUNS.md`, `profiling/RESULTS.md`, `profiling/CAMPAIGN_PLAN.md`, `handoff/CURRENT_STATUS.md`, and `handoff/NEXT_TASK.md`.
+  - Executed `profiling/notebooks/ncu_sqlite_review.ipynb` top-to-bottom with `jupyter nbconvert --to notebook --execute ... --output /tmp/ncu_sqlite_review.executed.ipynb` and confirmed success.
+- outcome: success
+- blockers:
+  - none
+- files_updated:
+  - `scripts/analyze_ncu_run.py`
+  - `scripts/run_ncu_hotspot.sh`
+  - `profiling/sql/manual_queries_ncu.sql`
+  - `profiling/notebooks/ncu_sqlite_review.ipynb`
+  - `profiling/NCU_COVERAGE.md`
+  - `profiling/COMMANDS.md`
+  - `profiling/_PROFILING_GUIDE.md`
+  - `profiling/CAMPAIGN_PLAN.md`
+  - `profiling/RUNS.md`
+  - `profiling/RESULTS.md`
+  - `handoff/CURRENT_STATUS.md`
+  - `handoff/NEXT_TASK.md`
+  - `handoff/SESSION_LOG.md`
+- next_hint: The default NCU review flow now covers eight structured sections including `WorkloadDistribution`; source/instruction pages remain deferred, and the next bounded task is still `TR-N2` using `scripts/run_ncu_hotspot.sh train hotspot_2`.

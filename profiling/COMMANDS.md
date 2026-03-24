@@ -57,6 +57,12 @@ Post-`nsys` analysis policy:
 - The generated bundle at `artifacts/profiles/analysis/<run_id>/` is the default human-review input.
 - For historical data migration, backfill analysis bundles for gate-critical runs only; all new successful `nsys` runs are mandatory.
 
+Post-`ncu` analysis policy:
+- After each successful `ncu` run, generate:
+  - `python scripts/analyze_ncu_run.py --run-id <run_id>`
+- The generated derived bundle at `artifacts/profiles/analysis/<run_id>/` is the default notebook/SQL review input.
+- `ncu` derived bundles are expected to contain `ncu_analysis.sqlite`, summary sidecars, `ncu_progress.log`, and stable `sections/<section_id>.csv` sidecars for each completed import; interrupted `*.tmp` files are debug-only and are never ingested as final structured data.
+
 ## Campaign Conventions
 
 - Run IDs follow `profiling/RUNS.md` canonical format:
@@ -319,14 +325,17 @@ Run only after:
 - human review gate is marked done
 - realistic-scale review outputs provide the hotspot shortlist by default
 
-Staged exception:
-- A one-time staged `ncu` tooling smoke is allowed for path validation only.
-- Mark staged exception entries as `ncu_intent: tooling_smoke`; do not treat them as optimization-prioritization evidence.
+Two-tier policy:
+- `ncu_intent: hotspot_deep_dive` is the evidence-grade path. The preferred default is `core + cap`: collect the core Nsight Compute sections we actually review and cap matched launches at `5` unless the run record justifies a different value.
+- `ncu_intent: tooling_smoke` is the operator-friendly validation path. Use it to validate `sudo`, `tmux`, command shape, and artifact creation before committing to a longer evidence-grade capture. Recommended launch cap is `1`.
+- `tooling_smoke` runs are non-gating and must not be treated as optimization-prioritization evidence unless a later review explicitly promotes them.
+- `--set full` is now an explicit escalation path only. Do not use it as the default capture mode for new hotspot work.
+- Historical note: `TR-N1` (`20260319-1514-train-completion-01`) used legacy `--set full` with no launch cap, produced an oversized `7.8G` report, and remains valid source evidence, but it is not the preferred default report shape for future runs.
 
 Preferred wrapper:
 ```bash
 conda activate griffin-profiling
-scripts/run_ncu_hotspot.sh <train|finetune|inference> <hotspot_1|hotspot_2|hotspot_3> [--run-id <run_id>] [--print-only]
+scripts/run_ncu_hotspot.sh <train|finetune|inference> <hotspot_1|hotspot_2|hotspot_3> [--run-id <run_id>] [--launch-count <n>] [--sections-profile <profile>] [--print-only]
 ```
 
 Wrapper behavior:
@@ -335,12 +344,45 @@ Wrapper behavior:
 - Runs `make profiling-preflight` by default before launch.
 - Prints the fully resolved `sudo env CUDA_VISIBLE_DEVICES=3 ncu ...` command before execution for auditability.
 - Uses `sudo` by default because this host requires elevated access for valid Nsight Compute counter collection; use `--no-sudo` only if GPU counter permissions are already available without sudo.
+- Defaults to `--sections-profile core` and `--launch-count 5`.
 - Accepts either approved hotspot aliases (`hotspot_1`, `hotspot_2`, `hotspot_3`) or a raw kernel name/regex fragment.
+- Supports `--launch-skip` when a later run record needs a specific match offset.
 
-Current realistic-scale train retry (`TR-N1`, hotspot_1):
+Default unattended pattern for privileged `ncu` capture:
+- The human operator creates the `tmux` session and owns `sudo` credential entry.
+- The human runs the helper inside the attached `tmux` session, confirms the command, enters the `sudo` password if prompted, then detaches with `Ctrl-b d`.
+- The agent or human can monitor progress with `tmux capture-pane` or reattach with `tmux attach`.
+
+Canonical user-started `tmux` flow for capture:
+```bash
+tmux new -s tr-ncu-h1-<YYYYMMDD-HHMM>
+cd /home/jxc02713/projects/GFM/Griffin
+conda activate griffin-profiling
+scripts/run_ncu_hotspot.sh train hotspot_1 |& tee artifacts/profiles/ncu/tr-ncu-h1-<YYYYMMDD-HHMM>.log
+```
+
+Canonical monitor commands:
+```bash
+tmux capture-pane -pt tr-ncu-h1-<YYYYMMDD-HHMM> | tail -n 80
+tmux attach -t tr-ncu-h1-<YYYYMMDD-HHMM>
+```
+
+Evidence-grade realistic train deep dive default (`core + cap`):
 ```bash
 conda activate griffin-profiling
 scripts/run_ncu_hotspot.sh train hotspot_1
+```
+
+Operator-friendly tooling smoke default (`core + launch-count 1`):
+```bash
+conda activate griffin-profiling
+scripts/run_ncu_hotspot.sh train hotspot_1 --launch-count 1
+```
+
+Explicit escalation back to the full set (document rationale in `profiling/RUNS.md` first):
+```bash
+conda activate griffin-profiling
+scripts/run_ncu_hotspot.sh train hotspot_1 --set full --launch-count 5
 ```
 
 Print the exact command without launching:
@@ -349,22 +391,44 @@ conda activate griffin-profiling
 scripts/run_ncu_hotspot.sh train hotspot_1 --print-only
 ```
 
-Direct command shape remains valid when manual control is needed.
+Current `core` section list: `LaunchStats`, `Occupancy`, `SchedulerStats`, `WarpStateStats`, `ComputeWorkloadAnalysis`, `MemoryWorkloadAnalysis`, `SpeedOfLight`, `WorkloadDistribution`.
 
-Train:
+Use the wrapper for manual command generation whenever possible. If fully manual control is needed, the preferred train command shape now mirrors the wrapper defaults:
 ```bash
-sudo env PATH="$PATH" CUDA_VISIBLE_DEVICES=3 ncu -k regex:<kernel_name> --kernel-name-base function --set full --export artifacts/profiles/ncu/<YYYYMMDD-HHMM-train-completion-01> --target-processes all accelerate launch --config_file hconfig_profiling_single_gpu.yaml hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-hotspot-ncu --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+sudo env PATH="$PATH" CUDA_VISIBLE_DEVICES=3 ncu -k regex:<kernel_name> --kernel-name-base function -c 5 --section LaunchStats --section Occupancy --section SchedulerStats --section WarpStateStats --section ComputeWorkloadAnalysis --section MemoryWorkloadAnalysis --section SpeedOfLight --section WorkloadDistribution --export artifacts/profiles/ncu/<YYYYMMDD-HHMM-train-completion-01> --target-processes all accelerate launch --config_file hconfig_profiling_single_gpu.yaml hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-hotspot-ncu --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
 ```
 
-Finetune:
+## Post-`ncu` Derived Bundle Command
+
+Preferred long-running analysis pattern for large reports:
 ```bash
-sudo env PATH="$PATH" CUDA_VISIBLE_DEVICES=3 ncu -k regex:<kernel_name> --kernel-name-base function --set full --export artifacts/profiles/ncu/<YYYYMMDD-HHMM-finetune-combine-01> --target-processes all accelerate launch --config_file hconfig_profiling_single_gpu.yaml hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof finetune-hotspot-ncu --mode train --loadpath checkpoints/single-completion/best_checkpoint --savepath checkpoints/single-sft --tasks ALLTASK --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --patience 5 --eval_per_epoch 1 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --lr 3e-4 --wd 2e-4 --num_mp 4 --use_rev True --use_gate True --hiddim 512
+tmux new -s tr-ncu-analyze-<YYYYMMDD-HHMM>
+cd /home/jxc02713/projects/GFM/Griffin
+conda activate griffin-profiling
+python scripts/analyze_ncu_run.py --run-id <run_id> |& tee artifacts/profiles/analysis/<run_id>/ncu_reanalysis_<YYYYMMDD-HHMM>.log
 ```
 
-Inference:
-```bash
-sudo env PATH="$PATH" CUDA_VISIBLE_DEVICES=3 ncu -k regex:<kernel_name> --kernel-name-base function --set full --export artifacts/profiles/ncu/<YYYYMMDD-HHMM-inference-combine-01> --target-processes all accelerate launch --config_file hconfig_profiling_single_gpu.yaml hmaintask_combine.py datasets/single-pretrain-v3-hf logs/prof inference-hotspot-ncu --mode test --loadpath checkpoints/single-sft/best_checkpoint --tasks ALLTASK --max_eval_steps 4 --batchsize 64 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512
-```
+Analyzer behavior:
+- No default import timeout. Large reports should run in `tmux` and be allowed to finish naturally.
+- Optional explicit overrides remain available via `--session-timeout-sec` and `--section-timeout-sec`.
+- Section imports are atomic: completed imports are promoted from `*.tmp` to stable sidecars only after a clean exit.
+- Interrupted or timed-out `*.tmp` files are debug-only evidence and are never ingested as complete structured data.
+- Rerunning the analyzer reuses completed sidecars and resumes the remaining sections instead of starting over.
+
+Expected outputs:
+- `artifacts/profiles/analysis/<run_id>/ncu_analysis.sqlite`
+- `artifacts/profiles/analysis/<run_id>/ncu_summary.md`
+- `artifacts/profiles/analysis/<run_id>/ncu_metrics.json`
+- `artifacts/profiles/analysis/<run_id>/ncu_meta.txt`
+- `artifacts/profiles/analysis/<run_id>/ncu_session.csv` (when session import completes)
+- `artifacts/profiles/analysis/<run_id>/sections/<section_id>.csv` for each completed section import
+- `artifacts/profiles/analysis/<run_id>/ncu_progress.log`
+- `artifacts/profiles/analysis/<run_id>/ncu_strings_excerpt.txt`
+
+Default review surfaces:
+- SQL: `sqlite3 -header -column artifacts/profiles/analysis/<run_id>/ncu_analysis.sqlite < profiling/sql/manual_queries_ncu.sql`
+- Notebook: `profiling/notebooks/ncu_sqlite_review.ipynb`
+- Coverage tracker: `profiling/NCU_COVERAGE.md`
 
 ## Preflight Command Snippets
 

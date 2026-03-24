@@ -17,8 +17,12 @@ It does not store raw profiler binaries or large traces.
 - `RESULTS.md`: compact findings, comparisons, and conclusions.
 - `MANUAL_ANALYSIS.md`: human-focused deep-dive workflow and interpretation checklist.
 - `sql/manual_queries.sql`: reusable query library for SQLite deep dives.
+- `sql/manual_queries_ncu.sql`: reusable query library for derived Nsight Compute SQLite bundles.
+- `notebooks/ncu_sqlite_review.ipynb`: notebook-first review surface for derived `ncu` bundles.
+- `NCU_COVERAGE.md`: current extraction/notebook/capture-policy status tracker for Nsight Compute workflows.
 - `scripts/profile_baseline.sh`: lightweight wrapper for smoke/`nsys`/`ncu` baseline commands.
 - `scripts/analyze_nsys_run.sh`: post-run summary generator for `nsys` traces.
+- `scripts/analyze_ncu_run.py`: post-run bundle generator for `ncu` reports.
 - `scripts/run_slice_chain.sh`: autonomous multi-slice runner with checkpoint/state handoff and per-chain markdown summaries.
 
 ## What Does Not Belong Here
@@ -45,7 +49,7 @@ Raw profiling outputs belong under `artifacts/profiles/` and remain out of Git.
    - staged/historical rows: bounded single-run commands as documented.
 4. Record run metadata in `RUNS.md` (including `campaign_id`, `scenario`, `slice_id`, `profile_stage`).
 5. Update row status and run IDs in `CAMPAIGN_PLAN.md`.
-6. Generate analysis bundle for each successful `nsys` run (`scripts/analyze_nsys_run.sh --run-id <run_id>`).
+6. Generate analysis bundle for each successful `nsys` run (`scripts/analyze_nsys_run.sh --run-id <run_id>`) and derived SQLite bundle for each successful `ncu` run (`python scripts/analyze_ncu_run.py --run-id <run_id>`). Large `ncu` bundle generation should run in `tmux` and is no-timeout by default.
 7. Summarize findings in `RESULTS.md`:
    - baseline unannotated summaries first (`nsys`)
    - then coarse NVTX-annotated summaries (`nsys`)
@@ -69,6 +73,7 @@ For realistic-scale (`realistic-v2`) specifically:
 - Default training config remains `hconfig.yaml` (repo baseline).
 - Profiling baseline slices should prefer `hconfig_profiling_single_gpu.yaml` to reduce multi-process noise and improve reproducibility for first-pass traces.
 - Workflow order is strict: baseline `nsys` -> minimal NVTX annotation -> annotated `nsys` validation -> hotspot shortlist -> targeted `ncu`.
+- Default future `ncu` capture policy is `core + cap`: collect `LaunchStats`, `Occupancy`, `SchedulerStats`, `WarpStateStats`, `ComputeWorkloadAnalysis`, `MemoryWorkloadAnalysis`, `SpeedOfLight`, and `WorkloadDistribution`, then cap matched launches by default; `--set full` is explicit escalation only.
 - For realistic-scale capture sequencing:
   - complete scenario rows `TR-B1`, `FT-B1`, and `IF-B1` under active policy
   - run cross-scenario review gate (`RV-R2`)
@@ -77,15 +82,26 @@ For realistic-scale (`realistic-v2`) specifically:
 ## Trace and Analysis Artifact Roles
 
 - `*.nsys-rep` is the canonical source trace artifact for profiling analysis.
+- `*.ncu-rep` is the canonical source artifact for Nsight Compute deep dives.
 - `artifacts/profiles/analysis/<run_id>/` is the standard per-run analysis bundle for routine review.
 - `summary.md` and `metrics.json` are the default first-pass review inputs.
+- For `ncu`, the default first-pass review inputs are:
+  - `ncu_summary.md`
+  - `ncu_metrics.json`
+  - `ncu_analysis.sqlite`
+  - `artifacts/profiles/analysis/<run_id>/sections/<section_id>.csv`
+  - `artifacts/profiles/analysis/<run_id>/ncu_progress.log`
+  - `profiling/notebooks/ncu_sqlite_review.ipynb`
+  - `profiling/NCU_COVERAGE.md`
 - For deeper manual inspection, use:
   - `profiling/MANUAL_ANALYSIS.md`
   - `profiling/sql/manual_queries.sql`
+  - `profiling/sql/manual_queries_ncu.sql`
 
 Historical migration policy:
 - Backfill analysis bundles for gate-critical historical runs only.
 - For new successful `nsys` runs, analysis bundle generation is mandatory.
+- For new successful `ncu` runs, derived bundle generation is now the default workflow and should happen before writing final hotspot conclusions.
 
 ## Realistic-Scale Metadata Contract (`realistic-v2`)
 

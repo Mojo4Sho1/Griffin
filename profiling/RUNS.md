@@ -2817,3 +2817,63 @@ Example:
 - overrun_reason_if_any: none
 - review_gate_state_at_run: done
 - ncu_intent: hotspot_deep_dive
+
+### Run: 20260319-1514-train-completion-01
+- campaign_id: gfm-20260304-r02
+- scenario: train
+- slice_id: TR-N1
+- run_class: realistic_scale
+- profile_stage: ncu_post_review
+- execution_policy_version: realistic-v2
+- legacy_policy_evidence: false
+- slice_size_tier: 8/4
+- scenario_completion_state: complete
+- label_tier: na
+- label_schema_version: na
+- hotspot_focus_id: hotspot_1
+- parent_label_anchor: na
+- rank_emission_mode: all_ranks
+- rank_filter_if_any: none
+- nvtx_report_used: na
+- nvtx_force_export: na
+- nvtx_retry_on_empty: na
+- nvtx_coverage_status: na
+- date_time_utc: 2026-03-19T15:14:47Z
+- mode: train
+- dataset: `datasets/single-pretrain-v3-hf`
+- command: `sudo env PATH="$PATH" CUDA_VISIBLE_DEVICES=3 ncu -k regex:ampere_sgemm_32x32_sliced1x4_tn --kernel-name-base function --set full --export artifacts/profiles/ncu/20260319-1514-train-completion-01 --target-processes all accelerate launch --config_file hconfig_profiling_single_gpu.yaml hmaintask_completion.py datasets/single-pretrain-v3-hf logs/prof train-hotspot-ncu --savepath checkpoints/single-completion --maxepoch 1 --max_train_steps 8 --max_eval_steps 4 --batchsize 64 --eval_per_epoch 1 --hop 0 --fanout 10 --fewshotfanout 0 --num_mp 4 --use_rev True --use_gate True --hiddim 512`
+- git_commit: `104115b6bd5f`
+- config: `hconfig_profiling_single_gpu.yaml`; kernel filter `-k regex:ampere_sgemm_32x32_sliced1x4_tn --kernel-name-base function`; metric set `--set full`
+- slice_definition: Realistic-scale bounded train hotspot deep dive on approved hotspot_1 with `max_train_steps=8` and `max_eval_steps=4`, launched by the user inside `tmux` with privileged `sudo` access retained on the host tty.
+- profiler: ncu
+- outputs:
+  - `logs/prof/train-hotspot-ncu/events.out.tfevents.1773933282.cse-139634.2882186.0`
+  - `artifacts/profiles/ncu/20260319-1514-train-completion-01.ncu-rep`
+  - `artifacts/profiles/analysis/20260319-1514-train-completion-01/ncu_analysis.sqlite`
+  - `artifacts/profiles/analysis/20260319-1514-train-completion-01/ncu_summary.md`
+  - `artifacts/profiles/analysis/20260319-1514-train-completion-01/ncu_metrics.json`
+  - `artifacts/profiles/analysis/20260319-1514-train-completion-01/sections/`
+  - `artifacts/profiles/analysis/20260319-1514-train-completion-01/ncu_progress.log`
+- findings_notes:
+  - The report file was written successfully (`7.8G`) and remains the first canonical realistic-scale `ncu` evidence artifact for `TR-N1`, but it is now explicitly classified as a legacy oversized capture because it used historical `--set full` with no launch cap.
+  - On `2026-03-24`, the upgraded `python scripts/analyze_ncu_run.py --run-id 20260319-1514-train-completion-01` workflow completed successfully in `tmux`, generated stable sidecars for the seven original core Nsight Compute sections, and rebuilt the SQLite-first bundle under `artifacts/profiles/analysis/20260319-1514-train-completion-01/`.
+  - Resume validation is now proven: after interrupting the first re-analysis session during `Occupancy`, the rerun reused completed `session`, `LaunchStats`, and `Occupancy` outputs and resumed at `SchedulerStats` instead of restarting from scratch.
+  - The no-timeout validation run completed `SchedulerStats` in `157.161s`, `WarpStateStats` in `149.786s`, `ComputeWorkloadAnalysis` in `148.318s`, `MemoryWorkloadAnalysis` in `150.965s`, and `SpeedOfLight` in `166.770s`; a follow-on rerun then imported `WorkloadDistribution` in `154.785s` and rebuilt the bundle with numeric cycle summaries.
+  - Derived rule metrics for the target kernel continue to show average `full_waves=0.617`, `issue_every_cycles=3.314`, `active_warps_per_scheduler=1.838`, and `eligible_warps_per_cycle=0.387`, and the notebook now executes top-to-bottom against the upgraded bundle.
+  - `WorkloadDistribution` is now part of the default `core` profile; on `TR-N1`, its derived active/elapsed ratios rank `L2 ~1.003%`, `DRAM ~0.946%`, `L1/SM ~0.553%`, and `SMSP ~0.134%`, which adds hierarchy context without displacing the broader underfill / low-eligibility read.
+- analysis_artifacts_path: `artifacts/profiles/analysis/20260319-1514-train-completion-01/`
+- analysis_status: success
+- analysis_warnings: none
+- status: success
+- blocker_if_any: none
+- window_warmup_iterations: na
+- window_profile_iterations: na
+- stability_pair_run_id: na
+- top3_overlap: na
+- timeshare_drift_pct: na
+- representative_pass: na
+- planned_soft_cap_minutes: 30
+- actual_runtime_minutes: 220.7
+- overrun_reason_if_any: evidence-grade `--set full` replay over a multi-task train-plus-eval path produced a very large report and long wall-clock runtime
+- review_gate_state_at_run: done
+- ncu_intent: hotspot_deep_dive
