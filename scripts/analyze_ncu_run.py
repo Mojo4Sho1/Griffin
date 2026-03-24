@@ -50,6 +50,11 @@ SCHEDULER_RE = re.compile(
     r"([0-9]+(?:\.[0-9]+)?) active warps per scheduler, but only an average of "
     r"([0-9]+(?:\.[0-9]+)?) warps were eligible per cycle"
 )
+FINISHED_IMPORT_RE = re.compile(
+    r"^\[(?P<timestamp>[^\]]+)\] Finished import for (?P<target>[^:]+): "
+    r"status=(?P<status>\S+) elapsed_sec=(?P<elapsed>[0-9]+(?:\.[0-9]+)?) "
+    r"line_count=(?P<line_count>[0-9]+)"
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -176,6 +181,51 @@ def display_name_for_section(section_id: str) -> str:
     return SECTION_DISPLAY_NAMES.get(section_id, section_id)
 
 
+def load_historical_import_timings(
+    metrics_json_path: Path,
+    progress_log_path: Path,
+) -> dict[str, dict[str, float]]:
+    history: dict[str, dict[str, float]] = {}
+
+    if metrics_json_path.exists():
+        try:
+            payload = json.loads(metrics_json_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            payload = None
+        if isinstance(payload, dict):
+            attempts: list[dict[str, object]] = []
+            session_attempt = payload.get("session_import_attempt")
+            if isinstance(session_attempt, dict):
+                attempts.append(session_attempt)
+            section_attempts = payload.get("section_import_attempts", [])
+            if isinstance(section_attempts, list):
+                attempts.extend(item for item in section_attempts if isinstance(item, dict))
+            for attempt in attempts:
+                target_name = attempt.get("section_id") or attempt.get("page")
+                if not isinstance(target_name, str) or not target_name:
+                    continue
+                import_elapsed = attempt.get("import_elapsed_sec")
+                if import_elapsed is None and attempt.get("status") == "success":
+                    import_elapsed = attempt.get("elapsed_sec")
+                try:
+                    elapsed_value = float(import_elapsed) if import_elapsed is not None else None
+                except (TypeError, ValueError):
+                    elapsed_value = None
+                if elapsed_value is not None and elapsed_value > 0:
+                    history[target_name] = {"import_elapsed_sec": round(elapsed_value, 3)}
+
+    if progress_log_path.exists():
+        for line in progress_log_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            match = FINISHED_IMPORT_RE.match(line)
+            if not match or match.group("status") != "success":
+                continue
+            history[match.group("target")] = {
+                "import_elapsed_sec": round(float(match.group("elapsed")), 3)
+            }
+
+    return history
+
+
 def line_count(path: Path) -> int:
     if not path.exists() or path.stat().st_size == 0:
         return 0
@@ -218,9 +268,12 @@ def run_import_csv(
     stdout_path: Path,
     stderr_path: Path,
     log_path: Path,
+    historical_imports: dict[str, dict[str, float]] | None = None,
     section_id: str | None = None,
 ) -> dict[str, object]:
     target_name = section_id or page
+    historical_import = (historical_imports or {}).get(target_name, {})
+    import_elapsed_sec = historical_import.get("import_elapsed_sec")
     if stdout_path.exists() and stdout_path.stat().st_size > 0:
         log_message(log_path, f"Reusing existing complete import for {target_name}: {stdout_path}")
         return {
@@ -230,6 +283,7 @@ def run_import_csv(
             "status": "cached_success",
             "timeout_sec": timeout_sec,
             "elapsed_sec": 0.0,
+            "import_elapsed_sec": import_elapsed_sec,
             "stdout_path": str(stdout_path),
             "stderr_path": str(stderr_path),
             "line_count": line_count(stdout_path),
@@ -296,6 +350,7 @@ def run_import_csv(
         "status": status,
         "timeout_sec": timeout_sec,
         "elapsed_sec": elapsed,
+        "import_elapsed_sec": elapsed if status == "success" else import_elapsed_sec,
         "stdout_path": str(result_stdout),
         "stderr_path": str(result_stderr),
         "line_count": line_count(result_stdout),
@@ -502,6 +557,7 @@ def create_schema(conn: sqlite3.Connection) -> None:
           status TEXT NOT NULL,
           timeout_sec INTEGER,
           elapsed_sec REAL NOT NULL,
+          import_elapsed_sec REAL,
           stdout_path TEXT NOT NULL,
           stderr_path TEXT NOT NULL,
           line_count INTEGER NOT NULL,
@@ -516,6 +572,7 @@ def create_schema(conn: sqlite3.Connection) -> None:
           status TEXT NOT NULL,
           timeout_sec INTEGER,
           elapsed_sec REAL NOT NULL,
+          import_elapsed_sec REAL,
           stdout_path TEXT NOT NULL,
           stderr_path TEXT NOT NULL,
           line_count INTEGER NOT NULL,
@@ -796,13 +853,14 @@ def write_sqlite_bundle(
           status,
           timeout_sec,
           elapsed_sec,
+          import_elapsed_sec,
           stdout_path,
           stderr_path,
           line_count,
           row_count,
           return_code,
           reused_existing
-        ) VALUES(:page, :status, :timeout_sec, :elapsed_sec, :stdout_path, :stderr_path, :line_count, :row_count, :return_code, :reused_existing)
+        ) VALUES(:page, :status, :timeout_sec, :elapsed_sec, :import_elapsed_sec, :stdout_path, :stderr_path, :line_count, :row_count, :return_code, :reused_existing)
         """,
         session_attempt,
     )
@@ -815,13 +873,14 @@ def write_sqlite_bundle(
           status,
           timeout_sec,
           elapsed_sec,
+          import_elapsed_sec,
           stdout_path,
           stderr_path,
           line_count,
           row_count,
           return_code,
           reused_existing
-        ) VALUES(:section_id, :display_name, :page, :status, :timeout_sec, :elapsed_sec, :stdout_path, :stderr_path, :line_count, :row_count, :return_code, :reused_existing)
+        ) VALUES(:section_id, :display_name, :page, :status, :timeout_sec, :elapsed_sec, :import_elapsed_sec, :stdout_path, :stderr_path, :line_count, :row_count, :return_code, :reused_existing)
         """,
         section_attempts,
     )
@@ -939,6 +998,8 @@ def main() -> int:
     metrics_json = out_dir / "ncu_metrics.json"
     sqlite_path = out_dir / "ncu_analysis.sqlite"
 
+    historical_imports = load_historical_import_timings(metrics_json, progress_log)
+
     log_message(progress_log, f"Starting analyze_ncu_run for run_id={args.run_id}")
     log_message(progress_log, f"Using sections_profile={args.sections_profile} sections={','.join(sections)}")
 
@@ -950,6 +1011,7 @@ def main() -> int:
         session_csv,
         session_err,
         progress_log,
+        historical_imports=historical_imports,
     )
 
     section_attempts: list[dict[str, object]] = []
@@ -964,6 +1026,7 @@ def main() -> int:
             section_csv,
             section_err,
             progress_log,
+            historical_imports=historical_imports,
             section_id=section_id,
         )
         section_attempts.append(attempt)
@@ -1070,13 +1133,13 @@ def main() -> int:
         f"- progress_log: `{progress_log}`",
         "",
         "## Import Attempts",
-        f"- session: status=`{session_attempt['status']}` elapsed_sec=`{session_attempt['elapsed_sec']}` line_count=`{session_attempt['line_count']}`",
+        f"- session: status=`{session_attempt['status']}` attempt_elapsed_sec=`{session_attempt['elapsed_sec']}` import_elapsed_sec=`{session_attempt.get('import_elapsed_sec', 'n/a')}` line_count=`{session_attempt['line_count']}`",
         "",
         "## Section Import Attempts",
     ]
     for attempt in section_attempts:
         lines.append(
-            f"- {attempt['section_id']}: status=`{attempt['status']}` elapsed_sec=`{attempt['elapsed_sec']}` line_count=`{attempt['line_count']}` row_count=`{attempt['row_count']}`"
+            f"- {attempt['section_id']}: status=`{attempt['status']}` attempt_elapsed_sec=`{attempt['elapsed_sec']}` import_elapsed_sec=`{attempt.get('import_elapsed_sec', 'n/a')}` line_count=`{attempt['line_count']}` row_count=`{attempt['row_count']}`"
         )
 
     lines.extend(["", "## Embedded Section Hits"])
