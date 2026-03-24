@@ -4,7 +4,7 @@ This guide is for humans who want to inspect profiling results beyond high-level
 
 ## Purpose
 
-Use this playbook to move from quick triage to detailed validation when interpreting `nsys` captures.
+Use this playbook to move from quick triage to detailed validation when interpreting `nsys` and `ncu` captures.
 
 ## When To Use Manual Analysis
 
@@ -23,6 +23,16 @@ Primary inputs:
 
 Optional deep-dive input:
 - `artifacts/profiles/nsys/<run_id>.sqlite`
+
+For `ncu`, primary inputs are:
+- `artifacts/profiles/ncu/<run_id>.ncu-rep`
+- `artifacts/profiles/analysis/<run_id>/ncu_summary.md`
+- `artifacts/profiles/analysis/<run_id>/ncu_metrics.json`
+- `artifacts/profiles/analysis/<run_id>/ncu_analysis.sqlite`
+
+Optional notebook/manual inputs:
+- `profiling/notebooks/ncu_sqlite_review.ipynb`
+- vendor UI on another machine via `ncu --import <run>.ncu-rep --open-in-ui`
 
 Before interpreting hotspots, confirm run class and evidence semantics in:
 - `profiling/SCALE_PROFILES.md`
@@ -72,6 +82,48 @@ Or run targeted query blocks one-by-one in `sqlite3`.
 
 Use this layer to validate hypotheses with exact counts/times.
 
+## `ncu` Workflow
+
+### Layer 1: Derived Bundle Generation
+
+Generate the bundle once, preferably inside `tmux` for large reports:
+
+```bash
+tmux new -s tr-ncu-analyze-<YYYYMMDD-HHMM>
+cd /home/jxc02713/projects/GFM/Griffin
+conda activate griffin-profiling
+python scripts/analyze_ncu_run.py --run-id <run_id> |& tee artifacts/profiles/analysis/<run_id>/ncu_reanalysis_<YYYYMMDD-HHMM>.log
+```
+
+Analyzer behavior to expect:
+- No default import timeout. Large reports should run in `tmux` and be allowed to complete naturally.
+- Optional explicit timeout overrides are available via `--session-timeout-sec` and `--section-timeout-sec` only when the operator wants them.
+- Completed section imports are atomic and become stable sidecars under `artifacts/profiles/analysis/<run_id>/sections/`.
+- Interrupted or timed-out `*.tmp` sidecars are debug-only and are not ingested as complete structured data.
+- Reruns are resumable and reuse completed sidecars automatically.
+
+The bundle is SQLite-first and is the default working format for later analysis.
+
+### Layer 2: SQL / Notebook Review
+
+Use the query library:
+- `profiling/sql/manual_queries_ncu.sql`
+
+Example:
+
+```bash
+sqlite3 -header -column artifacts/profiles/analysis/<run_id>/ncu_analysis.sqlite   < profiling/sql/manual_queries_ncu.sql
+```
+
+For guided review and plots, open:
+- `profiling/notebooks/ncu_sqlite_review.ipynb`
+- `profiling/NCU_COVERAGE.md`
+
+### Layer 3: Optional Vendor UI Validation
+
+If `ncu-ui` is available on another machine, use it as an occasional manual cross-check only.
+It is not the primary workflow on this host.
+
 ## Interpretation Checklist
 
 Before finalizing conclusions, verify:
@@ -79,6 +131,7 @@ Before finalizing conclusions, verify:
 - NVTX alignment: do expensive kernels align with expected labeled phases?
 - Runtime overhead: are CUDA runtime APIs unusually expensive (launch/sync/mem ops)?
 - Stability context: is this behavior consistent with paired or prior runs?
+- For `ncu`: which rules fired, which sections are present, and which derived metrics support the interpretation?
 
 ## Confidence and Caveats Rubric
 
@@ -90,7 +143,7 @@ Always record caveats (dataset scale, synthetic assets, partial visibility, etc.
 
 ## Manual + Agent Collaboration Rule
 
-- Agents generate standard analysis bundles after successful `nsys` runs.
+- Agents generate standard analysis bundles after successful `nsys` runs and derived SQLite bundles after successful `ncu` runs.
 - Humans review bundles and perform deeper checks when needed.
 - Interpretive conclusions should be human-reviewed before gate decisions are finalized.
 
@@ -99,6 +152,7 @@ Always record caveats (dataset scale, synthetic assets, partial visibility, etc.
 Current policy for the new analysis bundle system:
 - Backfill gate-critical historical runs only.
 - For all new successful `nsys` runs, analysis bundle generation is mandatory.
+- For new successful `ncu` runs, derived bundle generation is the default and should happen before final hotspot write-up.
 
 Backfill set for this campaign:
 - Baseline validation (latest per scenario):
