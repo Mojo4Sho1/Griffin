@@ -10,6 +10,25 @@ import matplotlib.pyplot as plt
 from safetensors.torch import load_file
 import os
 
+# ---------------------------------------------------------------------------
+# EXP01B: Environment-gated NVTX instrumentation helper
+# Enable with: GFM_EXP01B_NVTX=1  (no-op when unset or CUDA unavailable)
+# ---------------------------------------------------------------------------
+_EXP01B_NVTX = (
+    os.environ.get("GFM_EXP01B_NVTX", "0") == "1"
+    and torch.cuda.is_available()
+)
+
+class _nvtx:
+    """Lightweight NVTX push/pop context manager, active only when _EXP01B_NVTX is True."""
+    __slots__ = ("_label",)
+    def __init__(self, label: str) -> None: self._label = label
+    def __enter__(self):
+        if _EXP01B_NVTX: torch.cuda.nvtx.range_push(self._label)
+    def __exit__(self, *_):
+        if _EXP01B_NVTX: torch.cuda.nvtx.range_pop()
+
+
 class SelfAverageAggregator(nn.Module):
     def __init__(self,
                  hiddim: int,
@@ -26,15 +45,18 @@ class SelfAverageAggregator(nn.Module):
         )
     
     def forward(self, column_name_emb: Tensor, x, mask=None):
-        column_name_emb = column_name_emb.unsqueeze(0).expand(x.shape[0], -1, -1)
-        ret = self.crossattention(
-            column_name_emb,
-            column_name_emb,
-            x,
-            key_padding_mask=mask,
-            need_weights=False,
-        )[0]
-        return self.linq(ret)
+        with _nvtx("gfm.exp01b.SelfAverageAggregator.forward"):
+            column_name_emb = column_name_emb.unsqueeze(0).expand(x.shape[0], -1, -1)
+            with _nvtx("gfm.exp01b.SelfAverageAggregator.crossattention"):
+                ret = self.crossattention(
+                    column_name_emb,
+                    column_name_emb,
+                    x,
+                    key_padding_mask=mask,
+                    need_weights=False,
+                )[0]
+            with _nvtx("gfm.exp01b.SelfAverageAggregator.linq"):
+                return self.linq(ret)
 
 class SelfAttentionAggregator(nn.Module):
     def __init__(
@@ -72,17 +94,21 @@ class SelfAttentionAggregator(nn.Module):
         # x: (batch_size, seq_len, hiddim)
         # column_name_emb: (seq_len, hiddim)
         # return: (batch_size, q_len, hiddim)
-        column_name_emb = column_name_emb.unsqueeze(0)
-        # column_name_emb = self.attention_layer(column_name_emb)# transformer encoder has res + column_name_emb
-        q = tar  # self.linq(tar)
-        ret = self.crossattention(
-            q,
-            column_name_emb.expand(x.shape[0], -1, -1),
-            x,
-            key_padding_mask=mask,
-            need_weights=False,
-        )[0]
-        return ret * self.linq(tar)
+        with _nvtx("gfm.exp01b.SelfAttentionAggregator.forward"):
+            column_name_emb = column_name_emb.unsqueeze(0)
+            # column_name_emb = self.attention_layer(column_name_emb)# transformer encoder has res + column_name_emb
+            q = tar  # self.linq(tar)
+            with _nvtx("gfm.exp01b.SelfAttentionAggregator.crossattention"):
+                ret = self.crossattention(
+                    q,
+                    column_name_emb.expand(x.shape[0], -1, -1),
+                    x,
+                    key_padding_mask=mask,
+                    need_weights=False,
+                )[0]
+            with _nvtx("gfm.exp01b.SelfAttentionAggregator.linq"):
+                linq_val = self.linq(tar)
+            return ret * linq_val
 
 
 def checktaskfeat(taskfeat: List[Tensor], node: List[Tuple[Tensor, Tensor]]):
@@ -165,7 +191,8 @@ class RMPNN(nn.Module):
     ) -> Tensor:
         if edge_index is None or edge_index.shape[1] == 0:
             return 0 * self.rellin(x[0])
-        edge_attr = self.rellin(edge_attr) # [edge_attr_type]
+        with _nvtx("gfm.exp01b.RMPNN.rellin"):
+            edge_attr = self.rellin(edge_attr) # [edge_attr_type]
 
         center, inv = torch.unique(torch.stack((edge_index[0], edge_attr_type), dim=0), dim=1, return_inverse=True)
         out1 = self.aggr1(x[edge_index[1]], inv, dim_size=center.shape[1])
