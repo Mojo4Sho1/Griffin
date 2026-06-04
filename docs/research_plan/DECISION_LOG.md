@@ -58,6 +58,63 @@ Format: `## YYYY-MM-DD — Decision Title`
 
 ---
 
+## 2026-06-03 — EXP01A Complete: Proceed to EXP02 Shape Census
+
+**Decision:** EXP01A source localization is complete and conclusive. Both hotspots are localized to `gfm.eval_task` → `GriffinMod.forward()` → per-node-type aggregation loop (`hmodel.py:343–369`). Proceed to EXP02 shape census. EXP01B targeted instrumentation is not needed.
+
+**Evidence:**
+- sgemm_32x32 launches: 22,731 (train, 153 eval_tasks) vs 7,477 (inference, 51 eval_tasks). Ratio 3.039 matches eval_task ratio 3.000 exactly. Source: `artifacts/profiles/analysis/*/cuda_gpu_kern_sum.txt` (direct read).
+- fmha launches: 2,420 (train) vs 796 (inference). Ratio 3.040 matches eval_task ratio 3.000 exactly. Same source.
+- NCU launch_settings (ncu_analysis.sqlite): NCU run used `--hop 0 --fewshotfanout 0 --batchsize 64`. All 5 sampled sgemm_32x32 launches had grid (16,18,1) → GEMM M=576=64×9 (batchsize×n_columns_per_table), N=512, K=512.
+- GriffinMod.forward() (hmodel.py:327–394): explicit Python for-loop over node types (tables) at lines 343–369; each iteration calls `crossattention` (fmha source) and inner-projection GEMMs (sgemm_32x32 source) independently per table type.
+- eval_task() call path confirmed: hmaintask_completion.py:264,294,330 → eval_task() → compute_output():105 → model(*data) = GriffinMod.forward().
+
+**Uncertainty documented:**
+- Exact GEMM shapes at realistic scale (hop=2, batchsize=512) unknown — NCU used simplified hop=0.
+- T (number of node types per forward pass) estimated ~1 from fmha ratio but uncertain.
+- RMPNN.rellin edge_attr shape (#edge_types) not measured.
+
+**Next action:** Execute EXP02 shape census per `docs/research_plan/experiments/EXP02_SHAPE_CENSUS.md` and `EXPERIMENT_PROTOCOLS.md`. Primary instrumentation sites: `hmodel.py:343–369` (per-node-type loop) and `hmodel.py:168` (RMPNN.rellin). Write `scripts/exp02_shape_census.py`.
+
+---
+
+## 2026-06-03 — EXP01B User Authorization and Approval Record
+
+**Decision:** User explicitly authorized EXP01B fine-grained NVTX confirmation despite EXP01A session concluding it was not needed.
+
+**Reason:** User wanted direct NVTX evidence to confirm the EXP01A source localization before proceeding to EXP02. This is the "explicit user approval" required by CAMPAIGN_PLAN.md Section EXP01B. The EXP01A session recommended skipping EXP01B but noted that EXP01B could be run if user requested it.
+
+**Evidence:** User-provided prompt in current session explicitly requests EXP01B with detailed instrumentation and profiling requirements.
+
+**Constraints accepted:** EXP01B remains scoped to instrumentation-only changes and one bounded nsys capture. No semantic model changes. No EXP02 shape census during EXP01B.
+
+---
+
+## 2026-06-03 — EXP01B Complete: Hotspots Confirmed at Sub-Module Level; Proceed to EXP02
+
+**Decision:** EXP01B targeted NVTX confirmation is complete. Direct NVTX evidence confirms EXP01A localization at the sub-module level. Proceed to EXP02 shape census.
+
+**Evidence:**
+- Run ID `exp01b-nvtx-confirm-20260603-2100` (nsys, hop=0, batchsize=64, max_train_steps=8, max_eval_steps=4, CUDA_VISIBLE_DEVICES=3).
+- hotspot_2 (fmha): 2,420/2,420 launches = 100% inside `gfm.exp01b.SelfAverageAggregator.crossattention` or `gfm.exp01b.SelfAttentionAggregator.crossattention`. Split 605/1815 = 25.4%/74.6% matches 1:3 = layer-0:layers-1,2,3 ratio exactly.
+- hotspot_1 (sgemm_32x32): 8,460/22,731 launches; 75.52/137.1 ms = 55.1% inside aggregator NVTX ranges. Remaining 44.9% in uninstrumented GriffinMod MLP/backward regions (expected). Crossattention sub-ranges alone account for 49.3% of hotspot_1 GPU time.
+- SelfAttentionAggregator.linq: 1,806 launches, 7.97 ms = 5.8% of total hotspot_1 GPU time. Material contributor.
+- RMPNN.rellin NVTX range: 0 instances fired (hop=0, no edges). Cannot assess from this capture.
+- SQLite time-range join query: `CUPTI_ACTIVITY_KIND_KERNEL.start >= NVTX_EVENTS.start AND end <= NVTX_EVENTS.end`.
+
+**Uncertainty documented:**
+- RMPNN.rellin: cannot assess at hop=0. EXP02 must use hop≥1.
+- GriffinMod MLP/lintask/gatelin contribution to hotspot_1: 44.9% in uninstrumented regions; consistent with expected but not directly confirmed.
+- Capture scale (hop=0) differs from realistic scale (hop=2); kernel identities match but shapes are different.
+
+**Source changes:** Instrumentation only. `hmodel.py` modified to add env-gated NVTX ranges. Disable with `GFM_EXP01B_NVTX=0` (default is disabled). Remove by reverting the hmodel.py diff.
+
+**Full report:** `docs/research_plan/reports/EXP01B_TARGETED_NVTX_CONFIRMATION_REPORT.md`
+
+**Next action:** Execute EXP02 shape census. Primary sites: `hmodel.py:343–369` (per-node-type loop) and `hmodel.py:168` (RMPNN.rellin; requires hop=2). Write `scripts/exp02_shape_census.py`.
+
+---
+
 ## 2026-06-03 — EXP00 Documentation Structure Established
 
 **Decision:** Create `docs/research_plan/` as the canonical documentation location for the new research campaign. Retire `docs/agent_trace.md` as the primary record.
